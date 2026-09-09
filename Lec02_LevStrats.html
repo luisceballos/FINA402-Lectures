@@ -1,0 +1,1085 @@
+<title>Lec02 · Leveraged Strategies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<style>
+:root {
+  --navy:#003087;--navy-deep:#001452;--gold:#B8962E;--gold-light:#D4AE45;
+  --gain:#15803D;--loss:#DC2626;--warn:#D97706;--teal:#0891B2;--purple:#7C3AED;
+  --bg:#EEF0F8;--surface:#FFFFFF;--surface-2:#F4F5FB;
+  --border:#D8DCF0;--text:#0D1435;--text-muted:#4B5880;--text-subtle:#8A95B8;
+  --radius:12px;--shadow:0 2px 16px rgba(0,20,82,0.09);
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#060B18;--surface:#0C1526;--surface-2:#111E35;--border:#1A2A45;
+  --text:#E2EAF8;--text-muted:#7B91BA;--text-subtle:#3E5278;--shadow:0 2px 20px rgba(0,0,0,.5);
+}}
+:root[data-theme="dark"]{--bg:#060B18;--surface:#0C1526;--surface-2:#111E35;--border:#1A2A45;--text:#E2EAF8;--text-muted:#7B91BA;--text-subtle:#3E5278;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;width:100vw;}
+.deck{position:relative;width:100%;height:100vh;overflow:hidden;}
+.slide{position:absolute;inset:0;opacity:0;transform:translateX(48px);transition:opacity .35s ease,transform .35s ease;pointer-events:none;overflow-y:auto;}
+.slide.active{opacity:1;transform:translateX(0);pointer-events:all;}
+.slide.exit-left{opacity:0;transform:translateX(-48px);pointer-events:none;}
+@media(prefers-reduced-motion:reduce){.slide{transition:none;}}
+.si{padding:44px 68px 84px;min-height:100vh;display:flex;flex-direction:column;justify-content:center;}
+.si.top{justify-content:flex-start;padding-top:48px;}
+.progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--navy),var(--gold));transition:width .4s ease;z-index:200;}
+.nav{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:40px;padding:6px 12px;z-index:100;box-shadow:var(--shadow);}
+.nav-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:3px 6px;font-size:15px;line-height:1;border-radius:6px;transition:all .15s;}
+.nav-btn:hover:not(:disabled){color:var(--navy);background:var(--surface-2);}
+.nav-btn:disabled{opacity:.28;cursor:default;}
+.nav-dots{display:flex;gap:4px;align-items:center;flex-wrap:wrap;max-width:260px;}
+.nav-dot{width:5px;height:5px;border-radius:50%;background:var(--border);cursor:pointer;transition:all .2s;border:none;}
+.nav-dot.active{background:var(--navy);width:16px;border-radius:3px;}
+.nav-dot.done{background:var(--gold-light);}
+.nav-count{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-subtle);letter-spacing:.04em;min-width:30px;text-align:center;}
+.pdf-btn{position:fixed;top:14px;right:16px;z-index:300;display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer;box-shadow:var(--shadow);transition:all .15s;}
+.pdf-btn:hover{color:var(--navy);border-color:var(--navy);}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.slide-title{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(22px,2.8vw,40px);color:var(--text);line-height:1.12;text-wrap:balance;margin-bottom:16px;}
+.slide-sub{font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:20px;max-width:640px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow);}
+.card-title{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-subtle);margin-bottom:10px;}
+.stat-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);}
+.stat-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-subtle);margin-bottom:5px;}
+.stat-val{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(18px,2vw,28px);color:var(--text);line-height:1;}
+.stat-note{font-size:11px;color:var(--text-muted);margin-top:4px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.tbl{width:100%;border-collapse:collapse;font-size:11px;}
+.tbl th{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-subtle);padding:6px 8px;border-bottom:2px solid var(--border);text-align:left;}
+.tbl td{padding:6px 8px;border-bottom:1px solid var(--border);}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--surface-2);}
+.num{text-align:right;font-family:'JetBrains Mono',monospace;}
+.gain{color:var(--gain);}
+.loss{color:var(--loss);}
+.warn{color:var(--warn);}
+.navy{color:var(--navy);}
+.anno{background:rgba(0,48,135,0.06);border:1px solid rgba(0,48,135,0.16);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text-muted);line-height:1.55;margin-top:10px;}
+.anno strong{color:var(--navy);}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:2px 7px;}
+.tag-ok{background:rgba(21,128,61,.1);color:var(--gain);}
+.tag-warn{background:rgba(217,119,6,.1);color:var(--warn);}
+.tag-bad{background:rgba(220,38,38,.1);color:var(--loss);}
+.step{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--navy);color:#FFF;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-body{flex:1;font-size:12px;color:var(--text-muted);line-height:1.5;}
+.step-body strong{color:var(--text);display:block;font-size:13px;margin-bottom:2px;}
+.toggle-row{display:flex;gap:5px;margin-bottom:12px;}
+.tog{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;}
+.tog.active{background:var(--navy);color:#FFF;border-color:var(--navy);}
+.chart-wrap{position:relative;width:100%;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px;}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);}
+.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+input[type=range]{accent-color:var(--navy);cursor:pointer;}
+
+/* ── TITLE ── */
+#s1{background:linear-gradient(135deg,var(--navy-deep) 0%,var(--navy) 60%,#0046B8 100%);}
+#s1 .eyebrow{color:var(--gold-light);}
+#s1 .slide-title{color:#FFF;font-size:clamp(28px,3.8vw,50px);}
+#s1 .slide-sub{color:rgba(255,255,255,.7);}
+.title-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.12);border-radius:10px;overflow:hidden;max-width:520px;margin-top:28px;}
+.title-meta-cell{background:rgba(255,255,255,.07);padding:14px 18px;}
+.title-meta-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:3px;}
+.title-meta-val{font-size:14px;font-weight:600;color:#FFF;line-height:1.3;}
+
+/* ── AGENDA ── */
+.agenda-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow);display:flex;gap:16px;align-items:flex-start;}
+.agenda-group-num{font-family:'DM Serif Display',Georgia,serif;font-size:42px;color:rgba(0,48,135,.12);line-height:1;flex-shrink:0;width:52px;}
+.agenda-group-body{flex:1;}
+.agenda-group-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.agenda-group-topics{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;}
+.agenda-chip{background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:10px;color:var(--text-muted);font-weight:500;}
+.agenda-time{font-size:10px;color:var(--text-subtle);}
+
+/* ── NEWS ── */
+.news-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;box-shadow:var(--shadow);margin-bottom:10px;}
+.news-source{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-subtle);margin-bottom:5px;}
+.news-hl{font-size:13px;font-weight:600;color:var(--text);line-height:1.35;margin-bottom:6px;}
+.news-tag{display:inline-block;background:rgba(220,38,38,.08);color:var(--loss);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:2px 6px;margin-right:5px;}
+
+/* ── LEVERAGE STEP-THROUGH ── */
+.lev-stage{display:grid;grid-template-columns:1fr 1px 1fr;gap:0;width:100%;}
+.lev-divider{background:var(--border);margin:0 6px;}
+.lev-col{padding:0 18px;}
+.lev-col-head{text-align:center;margin-bottom:12px;}
+.lev-badge{display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:4px 12px;font-size:10px;font-weight:700;letter-spacing:.04em;margin-bottom:6px;}
+.badge-u{background:rgba(184,150,46,.12);color:var(--gold);}
+.badge-l{background:rgba(0,48,135,.10);color:var(--navy);}
+.lev-col-title{font-size:13px;font-weight:700;color:var(--text);}
+.lev-col-sub{font-size:10px;color:var(--text-muted);margin-top:2px;}
+.lev-step{opacity:0;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease;}
+.lev-step.vis{opacity:1;transform:translateY(0);}
+.lev-blk{border-radius:8px;padding:10px 12px;margin-bottom:7px;}
+.blk-eq{background:rgba(184,150,46,.09);border:1px solid rgba(184,150,46,.25);}
+.blk-ret-g{background:rgba(21,128,61,.08);border:1px solid rgba(21,128,61,.22);}
+.blk-ret-l{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.22);}
+.blk-cost{background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.2);}
+.blk-result{border:2px solid var(--navy);background:var(--surface);}
+.blk-result-l{border:2px solid var(--loss);background:var(--surface);}
+.blk-neutral{background:var(--surface-2);border:1px solid var(--border);}
+.blk-lbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-subtle);margin-bottom:5px;}
+.blk-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;}
+.blk-name{font-size:11px;color:var(--text-muted);}
+.blk-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--text);}
+.blk-note{font-size:10px;color:var(--text-subtle);margin-top:4px;}
+.roe-big{text-align:center;padding:12px 10px;}
+.roe-num{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(30px,4.5vw,48px);line-height:1;}
+.roe-lbl{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-subtle);margin-top:3px;}
+.roe-detail{font-size:10px;color:var(--text-muted);margin-top:4px;}
+.lev-arrow{text-align:center;color:var(--text-subtle);font-size:16px;opacity:0;transition:opacity .3s;margin:2px 0;}
+.lev-arrow.vis{opacity:1;}
+.scen-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:30px;overflow:hidden;margin:0 auto 12px;width:fit-content;background:var(--surface);}
+.scen-btn{padding:5px 16px;border:none;background:transparent;font-size:11px;font-weight:700;cursor:pointer;color:var(--text-muted);transition:all .2s;}
+.scen-btn.active{background:var(--navy);color:#FFF;}
+.lev-insight{background:linear-gradient(135deg,rgba(0,48,135,.06),rgba(184,150,46,.05));border:1px solid var(--border);border-radius:8px;padding:9px 13px;font-size:11px;color:var(--text-muted);line-height:1.55;margin-top:8px;opacity:0;transition:opacity .4s;}
+.lev-insight.vis{opacity:1;}
+.lev-insight strong{color:var(--text);}
+.lev-step-tracker{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:8px;}
+.lev-sdot{width:5px;height:5px;border-radius:50%;background:var(--border);transition:all .2s;border:none;cursor:pointer;}
+.lev-sdot.active{background:var(--navy);width:14px;border-radius:3px;}
+.lev-sdot.done{background:var(--gold);}
+.lev-nav{background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;padding:3px 10px;font-size:12px;transition:all .15s;}
+.lev-nav:hover:not(:disabled){color:var(--navy);border-color:var(--navy);}
+.lev-nav:disabled{opacity:.28;cursor:default;}
+
+/* ── MARGIN 3-STEP ── */
+.mgn-steps{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;}
+.mgn-step{border-radius:var(--radius);padding:16px 18px;}
+.mgn-step-ok{background:var(--surface);border:2px solid var(--gain);}
+.mgn-step-warn{background:var(--surface);border:2px solid var(--warn);}
+.mgn-step-call{background:rgba(220,38,38,.04);border:2px solid var(--loss);}
+.mgn-step-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;}
+.mgn-step-label.ok{color:var(--gain);}
+.mgn-step-label.warn{color:var(--warn);}
+.mgn-step-label.call{color:var(--loss);}
+.mgn-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;font-size:11px;}
+.mgn-row-lbl{color:var(--text-muted);}
+.mgn-row-val{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);}
+.mgn-margin-pill{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;margin-top:8px;}
+.pill-ok{background:rgba(21,128,61,.1);color:var(--gain);}
+.pill-warn{background:rgba(217,119,6,.1);color:var(--warn);}
+.pill-call{background:rgba(220,38,38,.1);color:var(--loss);}
+.mgn-formula{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-subtle);background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:6px 9px;margin-top:8px;line-height:1.5;}
+
+/* ── SHORT SELLING ── */
+.ss-flow{display:flex;flex-direction:column;gap:7px;}
+.ss-step{display:flex;gap:12px;align-items:flex-start;}
+.ss-icon{width:30px;height:30px;border-radius:8px;background:var(--navy);color:#FFF;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.ss-content{flex:1;}
+.ss-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.ss-body{font-size:11px;color:var(--text-muted);line-height:1.5;}
+.ss-arrow{text-align:center;color:var(--text-subtle);font-size:11px;margin:1px 0;}
+
+/* ── HOLDINGS TABLE ── */
+.h-tbl-wrap{overflow-y:auto;max-height:calc(100vh - 220px);}
+.h-tbl{width:100%;border-collapse:collapse;font-size:10px;}
+.h-tbl th{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-subtle);padding:5px 8px;border-bottom:2px solid var(--border);text-align:left;position:sticky;top:0;background:var(--surface);}
+.h-tbl td{padding:4px 8px;border-bottom:1px solid var(--border);font-size:10px;}
+.h-tbl tr:last-child td{border-bottom:none;}
+.h-tbl tr:hover td{background:var(--surface-2);}
+
+/* ── PRINT ── */
+@media print {
+  .pdf-btn,.nav,.progress-bar{display:none!important;}
+  body{overflow:auto;height:auto;background:#FFF;}
+  .deck{height:auto;overflow:visible;position:static;}
+  .slide{position:relative!important;opacity:1!important;transform:none!important;pointer-events:auto!important;page-break-after:always;break-after:page;height:100vh;overflow:hidden;}
+  .slide.exit-left{opacity:1!important;transform:none!important;}
+  canvas{max-width:100%!important;}
+}
+@media(max-width:860px){
+  .si{padding:28px 20px 76px;}
+  .grid4{grid-template-columns:repeat(2,1fr);}
+  .grid3{grid-template-columns:1fr 1fr;}
+  .lev-stage{grid-template-columns:1fr;grid-template-rows:auto 1px auto;}
+  .lev-divider{height:1px;width:100%;margin:10px 0;}
+  .title-meta{grid-template-columns:1fr;}
+  .mgn-steps{grid-template-columns:1fr;}
+}
+</style>
+
+<div class="progress-bar" id="pb"></div>
+<button class="pdf-btn" onclick="exportPDF()">⬇ Export PDF</button>
+
+<div class="deck" id="deck">
+
+<!-- ══ S0 · STUDENT PRESENTATION ══ -->
+<div class="slide active" id="s0">
+<div class="si">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:12px;">
+    <div>
+      <div class="eyebrow">Student Presentation · 8 min</div>
+      <h2 class="slide-title" style="margin-bottom:5px;">Evolution of Major Stock Indexes</h2>
+      <p style="font-size:12px;color:var(--text-muted);">S&amp;P 500 · Dow Jones · NASDAQ-100 — Base 100 = Jan 2019</p>
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">
+      <button class="tog" id="p-btn-bull" onclick="showPeriod('bull')">2019–21 Bull</button>
+      <button class="tog" id="p-btn-bear" onclick="showPeriod('bear')">2022 Bear</button>
+      <button class="tog active" id="p-btn-full" onclick="showPeriod('full')">Full 2019–24</button>
+    </div>
+  </div>
+  <div class="legend" style="margin-bottom:6px;">
+    <div class="leg-item"><div class="leg-dot" style="background:#003087;"></div>S&amp;P 500 (SPY)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#B8962E;"></div>DJIA (DIA)</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#0891B2;"></div>NASDAQ-100 (QQQ)</div>
+  </div>
+  <div class="chart-wrap" style="height:195px;margin-bottom:12px;"><canvas id="idxChart"></canvas></div>
+  <div class="grid3">
+    <div class="stat-tile"><div class="stat-lbl">S&amp;P 500 · 2019–2024</div><div class="stat-val gain">+155.9%</div><div class="stat-note">SPY ETF · 6-year cumulative</div></div>
+    <div class="stat-tile"><div class="stat-lbl">DJIA · 2019–2024</div><div class="stat-val gain">+83.7%</div><div class="stat-note">DIA ETF · 6-year cumulative</div></div>
+    <div class="stat-tile"><div class="stat-lbl">NASDAQ-100 · 2019–2024</div><div class="stat-val gain">+243.9%</div><div class="stat-note">QQQ ETF · 6-year cumulative</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ══ S1 · TITLE ══ -->
+<div class="slide" id="s1">
+<div class="si">
+  <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:5px 13px;font-size:11px;font-weight:600;color:#FFF;letter-spacing:.04em;margin-bottom:22px;">📈 FINA 402 · Investments</div>
+  <div class="eyebrow">Lecture 02</div>
+  <h1 class="slide-title">Leveraged Investment<br>Strategies</h1>
+  <p class="slide-sub">Margin accounts · Leveraged ETFs · Short selling · Inverse funds — and why the math of compounding changes everything.</p>
+  <div class="title-meta">
+    <div class="title-meta-cell"><div class="title-meta-lbl">Instructor</div><div class="title-meta-val">Luis Ceballos, PhD</div></div>
+    <div class="title-meta-cell"><div class="title-meta-lbl">Program</div><div class="title-meta-val">USD Knauss School of Business</div></div>
+    <div class="title-meta-cell"><div class="title-meta-lbl">Term</div><div class="title-meta-val">Fall 2026</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ══ S2 · RECAP: INVESTMENT COMPANIES ══ -->
+<div class="slide" id="s2">
+<div class="si top">
+  <div class="eyebrow">Recap — Lecture 01</div>
+  <h2 class="slide-title">Investment Companies: ETFs vs Mutual Funds</h2>
+  <div class="grid2" style="margin-bottom:12px;">
+    <div class="card">
+      <div class="card-title">Key Differences</div>
+      <table class="tbl">
+        <thead><tr><th></th><th>ETF</th><th>Mutual Fund</th></tr></thead>
+        <tbody>
+          <tr><td>Trading</td><td>Intraday (exchange)</td><td>Once daily (NAV)</td></tr>
+          <tr><td>Pricing</td><td>Market price</td><td>End-of-day NAV</td></tr>
+          <tr><td>Min. investment</td><td>1 share (~any $)</td><td>Typically $1,000+</td></tr>
+          <tr><td>Tax efficiency</td><td class="gain">High (in-kind)</td><td class="warn">Lower (distributions)</td></tr>
+          <tr><td>Expense ratio</td><td class="gain">Very low (0.03–0.20%)</td><td class="warn">Higher (0.5–1.5%)</td></tr>
+          <tr><td>Short selling</td><td class="gain">Yes</td><td class="loss">No</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="card">
+        <div class="card-title">NAV Formula</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--navy);margin-bottom:8px;">
+          NAV = (Assets − Liabilities) ÷ Shares Outstanding
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.6;">
+          <strong style="color:var(--text);">Example:</strong> Fund holds $500M in stocks, $5M liabilities, 25M shares.<br>
+          NAV = ($500M − $5M) / 25M = <strong style="color:var(--navy);">$19.80 per share</strong>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Why ETFs Don't Always Trade at NAV</div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.65;">
+          <strong style="color:var(--text);">Mutual funds:</strong> You buy/sell <em>directly from the fund</em> at the end-of-day NAV — no deviation is possible.<br><br>
+          <strong style="color:var(--text);">ETFs:</strong> You buy/sell on an exchange like a stock. Price is set by supply and demand between buyers and sellers — the fund itself is not a party to every trade.<br><br>
+          <strong style="color:var(--text);">The gap is kept small by Authorized Participants (APs):</strong> If ETF price &gt; NAV (premium), APs create new shares at NAV and sell them into the market, pushing price down. If price &lt; NAV (discount), APs redeem shares at NAV and pocket the difference, pushing price up.<br><br>
+          Liquid ETFs (SPY, QQQ) typically trade within <strong>0.01–0.05%</strong> of NAV. During market stress, the gap can widen to 1–3%.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="anno"><strong>Bridge to today:</strong> Leveraged ETFs use the same ETF structure, but add debt and derivatives to deliver 2× or 3× the <em>daily</em> return. The NAV resets every night — which creates compounding effects investors often overlook.</div>
+</div>
+</div>
+
+<!-- ══ S3 · AGENDA ══ -->
+<div class="slide" id="s3">
+<div class="si">
+  <div class="eyebrow">Today · ~50 minutes</div>
+  <h2 class="slide-title">What We're Covering</h2>
+  <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
+    <div class="agenda-group">
+      <div class="agenda-group-num">A</div>
+      <div class="agenda-group-body">
+        <div class="agenda-group-title">Leveraged ETFs</div>
+        <div class="agenda-group-topics">
+          <span class="agenda-chip">TQQQ fund profile &amp; mechanism</span>
+          <span class="agenda-chip">Performance vs. benchmark</span>
+          <span class="agenda-chip">Regulatory &amp; systemic risk</span>
+        </div>
+        <div class="agenda-time">~15 min</div>
+      </div>
+    </div>
+    <div class="agenda-group">
+      <div class="agenda-group-num">B</div>
+      <div class="agenda-group-body">
+        <div class="agenda-group-title">Leverage Mechanics</div>
+        <div class="agenda-group-topics">
+          <span class="agenda-chip">How debt amplifies returns (step-by-step)</span>
+          <span class="agenda-chip">Margin accounts &amp; margin calls</span>
+          <span class="agenda-chip">TQQQ portfolio structure &amp; cost of leverage</span>
+        </div>
+        <div class="agenda-time">~20 min</div>
+      </div>
+    </div>
+    <div class="agenda-group">
+      <div class="agenda-group-num">C</div>
+      <div class="agenda-group-body">
+        <div class="agenda-group-title">The Short Side</div>
+        <div class="agenda-group-topics">
+          <span class="agenda-chip">Short selling mechanics &amp; real example</span>
+          <span class="agenda-chip">Inverse ETFs (SQQQ) &amp; volatility decay</span>
+          <span class="agenda-chip">Key takeaways</span>
+        </div>
+        <div class="agenda-time">~15 min</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ S4 · LEVERAGED ETF INTRO ══ -->
+<div class="slide" id="s4">
+<div class="si top">
+  <div class="eyebrow">Part A — Leveraged ETFs</div>
+  <h2 class="slide-title">Case Study: ProShares UltraPro QQQ (TQQQ)</h2>
+  <div class="grid2">
+    <div>
+      <div class="grid2" style="margin-bottom:12px;">
+        <div class="stat-tile"><div class="stat-lbl">Manager</div><div class="stat-val" style="font-size:18px;">ProShares</div><div class="stat-note">Largest leveraged ETF issuer</div></div>
+        <div class="stat-tile"><div class="stat-lbl">Leverage Target</div><div class="stat-val navy">3×</div><div class="stat-note">Daily reset — not compounded</div></div>
+        <div class="stat-tile"><div class="stat-lbl">Benchmark</div><div class="stat-val" style="font-size:16px;">NASDAQ-100</div><div class="stat-note">QQQ tracks same index</div></div>
+        <div class="stat-tile"><div class="stat-lbl">AUM (2025)</div><div class="stat-val">~$22B</div><div class="stat-note">#1 leveraged ETF globally</div></div>
+        <div class="stat-tile"><div class="stat-lbl">Expense Ratio</div><div class="stat-val warn">0.88%</div><div class="stat-note">vs 0.20% for QQQ</div></div>
+        <div class="stat-tile"><div class="stat-lbl">Inception</div><div class="stat-val" style="font-size:16px;">Feb 2010</div><div class="stat-note">15+ years live data</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">How TQQQ Achieves 3× Daily Exposure</div>
+      <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Total Return Swaps (~65%)</strong>OTC agreements with prime brokers — ProShares pays SOFR + spread, receives NASDAQ-100 return</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><strong>E-mini NASDAQ Futures (~25%)</strong>Exchange-traded NQ contracts, rolled quarterly — adds leverage without direct margin calls</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Treasury collateral (~10%)</strong>T-bills posted as collateral for swap agreements; earns short-term interest rate</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Daily rebalance at close</strong>Every night, the fund adjusts to restore exactly 3× exposure to NAV — this is the source of compounding drift</div></div>
+      <div class="anno" style="margin-top:8px;"><strong>Key distinction:</strong> TQQQ targets 3× the <em>daily</em> return. Over multiple days, compounding math means results will differ — sometimes dramatically — from 3× the multi-day return.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ S5 · TQQQ PERFORMANCE ══ -->
+<div class="slide" id="s5">
+<div class="si top">
+  <div class="eyebrow">Part A — Performance vs Benchmark</div>
+  <h2 class="slide-title">TQQQ vs QQQ: Growth of $10,000</h2>
+  <div class="toggle-row">
+    <button class="tog active" id="pb-bull" onclick="setPerfPeriod('bull')">2019–2021 Bull</button>
+    <button class="tog" id="pb-bear" onclick="setPerfPeriod('bear')">2022 Bear</button>
+    <button class="tog" id="pb-full" onclick="setPerfPeriod('full')">2019–2024 Full</button>
+  </div>
+  <div class="legend"><div class="leg-item"><div class="leg-dot" style="background:#003087;"></div>TQQQ</div><div class="leg-item"><div class="leg-dot" style="background:#B8962E;"></div>QQQ</div></div>
+  <div class="chart-wrap" style="height:205px;margin-bottom:12px;"><canvas id="perfChart"></canvas></div>
+  <div class="grid4" id="perf-stats"></div>
+</div>
+</div>
+
+<!-- ══ S6 · NEWS & RISK ══ -->
+<div class="slide" id="s6">
+<div class="si top">
+  <div class="eyebrow">Part A — Regulatory &amp; Systemic Risk</div>
+  <h2 class="slide-title">When Leverage Makes Headlines</h2>
+  <div class="grid2">
+    <div>
+      <div class="news-card">
+        <div class="news-source">IMF Global Financial Stability Report · October 2023</div>
+        <div class="news-hl">"Leverage in Non-Bank Financial Intermediation remains a key vulnerability — leveraged ETF rebalancing flows amplify intraday volatility"</div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.55;margin:7px 0;">The IMF's biannual stability review flagged that end-of-day rebalancing by leveraged ETFs — particularly near market close — mechanically amplifies directional moves in equity markets, creating systemic feedback loops during periods of stress.</div>
+        <div><span class="news-tag">Systemic Risk</span><span class="news-tag">IMF</span><span class="news-tag">NBFI</span></div>
+      </div>
+      <div class="news-card">
+        <div class="news-source">SEC Staff Bulletin · November 2022</div>
+        <div class="news-hl">SEC warns retail investors: Leveraged and inverse ETFs are complex products "typically not suitable" for long-term holding</div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.55;margin-top:6px;">Regulators required enhanced disclosures after 2020–2021 surge in retail trading of TQQQ and SQQQ. Brokers must assess suitability before recommending these products.</div>
+      </div>
+      <div class="news-card">
+        <div class="news-source">FINRA Investor Alert · 2023</div>
+        <div class="news-hl">"Leveraged and Inverse ETFs: Specialized Products with Extra Risks for Buy-and-Hold Investors"</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">FINRA found that brokers routinely treated leveraged ETFs like conventional funds, skipping suitability analysis. Daily compounding effects were rarely disclosed to retail clients.</div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title">Why Do Regulators Care? — Systemic Channels</div>
+        <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Forced rebalancing amplifies moves</strong>At market close, leveraged ETFs must buy when markets rise and sell when they fall — mechanical momentum in both directions</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Counterparty concentration</strong>TQQQ's swap counterparties are Goldman, Morgan Stanley, Citi — a stress scenario hits the fund instantly via the OTC channel</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Liquidity illusion</strong>TQQQ trades $3–4B/day in normal markets. The underlying swaps are OTC and could gap at open in a crash — ETF liquidity and portfolio liquidity are different things</div></div>
+      </div>
+      <div class="anno"><strong>The bigger picture:</strong> Leveraged ETFs represent just one layer of a much larger leverage ecosystem — private credit, CLOs, repo markets. Understanding the mechanics at the ETF level is the entry point to understanding systemic leverage risk.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ S7 · HOW LEVERAGE WORKS — STEP THROUGH ══ -->
+<div class="slide" id="s7">
+<div class="si top">
+  <div class="eyebrow">Part B — Role of Debt</div>
+  <h2 class="slide-title">Leverage Step-by-Step: Same $10,000 Invested</h2>
+  <div style="text-align:center;margin-bottom:10px;">
+    <div class="scen-toggle">
+      <button class="scen-btn active" id="sb-bull" onclick="setScen('bull')">📈 Bull +20%</button>
+      <button class="scen-btn" id="sb-bear" onclick="setScen('bear')">📉 Bear −20%</button>
+    </div>
+  </div>
+  <div class="lev-stage">
+    <div class="lev-col">
+      <div class="lev-col-head">
+        <div class="lev-badge badge-u">Unleveraged</div>
+        <div class="lev-col-title">All your own money</div>
+        <div class="lev-col-sub">Equity $10,000 · Debt $0</div>
+      </div>
+      <div class="lev-step" data-ls="1">
+        <div class="lev-blk blk-eq"><div class="blk-lbl">Step 1 — Capital</div>
+          <div class="blk-row"><span class="blk-name">Your equity</span><span class="blk-val navy">$10,000</span></div>
+          <div class="blk-row"><span class="blk-name">Borrowed</span><span class="blk-val">$0</span></div>
+          <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;"><span class="blk-name" style="font-weight:700;">Total invested</span><span class="blk-val navy" style="font-size:15px;">$10,000</span></div>
+        </div>
+      </div>
+      <div class="lev-arrow" data-ls="2">↓</div>
+      <div class="lev-step" data-ls="2">
+        <div class="lev-blk" id="u-s2"><div class="blk-lbl">Step 2 — Asset Return</div>
+          <div class="blk-row"><span class="blk-name">Start value</span><span class="blk-val">$10,000</span></div>
+          <div class="blk-row"><span class="blk-name" id="u-rl">Return (+20%)</span><span class="blk-val gain" id="u-rv">+$2,000</span></div>
+          <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;"><span class="blk-name" style="font-weight:700;">End value</span><span class="blk-val gain" id="u-ev" style="font-size:15px;">$12,000</span></div>
+        </div>
+      </div>
+      <div class="lev-arrow" data-ls="3">↓</div>
+      <div class="lev-step" data-ls="3">
+        <div class="lev-blk blk-neutral"><div class="blk-lbl">Step 3 — Repay Debt</div>
+          <div class="blk-row"><span class="blk-name">Principal</span><span class="blk-val">$0</span></div>
+          <div class="blk-row"><span class="blk-name">Interest</span><span class="blk-val">$0</span></div>
+          <div class="blk-note">No debt → no cost.</div>
+        </div>
+      </div>
+      <div class="lev-arrow" data-ls="4">↓</div>
+      <div class="lev-step" data-ls="4">
+        <div class="lev-blk" id="u-res">
+          <div class="roe-big"><div class="roe-num gain" id="u-roe">+20%</div><div class="roe-lbl">Return on Equity</div><div class="roe-detail" id="u-rod">Profit $2,000 ÷ Equity $10,000</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="lev-divider"></div>
+    <div class="lev-col">
+      <div class="lev-col-head">
+        <div class="lev-badge badge-l">Leveraged 2:1</div>
+        <div class="lev-col-title">Half yours, half borrowed</div>
+        <div class="lev-col-sub">Equity $5,000 · Debt $5,000 @ 6%</div>
+      </div>
+      <div class="lev-step" data-ls="1">
+        <div class="lev-blk blk-eq"><div class="blk-lbl">Step 1 — Capital</div>
+          <div class="blk-row"><span class="blk-name">Your equity</span><span class="blk-val navy">$5,000</span></div>
+          <div class="blk-row"><span class="blk-name">Borrowed @ 6%</span><span class="blk-val warn">$5,000</span></div>
+          <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;"><span class="blk-name" style="font-weight:700;">Total invested</span><span class="blk-val navy" style="font-size:15px;">$10,000</span></div>
+        </div>
+      </div>
+      <div class="lev-arrow" data-ls="2">↓</div>
+      <div class="lev-step" data-ls="2">
+        <div class="lev-blk" id="l-s2"><div class="blk-lbl">Step 2 — Asset Return</div>
+          <div class="blk-row"><span class="blk-name">Start value</span><span class="blk-val">$10,000</span></div>
+          <div class="blk-row"><span class="blk-name" id="l-rl">Return (+20%)</span><span class="blk-val gain" id="l-rv">+$2,000</span></div>
+          <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;"><span class="blk-name" style="font-weight:700;">End value</span><span class="blk-val gain" id="l-ev" style="font-size:15px;">$12,000</span></div>
+        </div>
+      </div>
+      <div class="lev-arrow" data-ls="3">↓</div>
+      <div class="lev-step" data-ls="3">
+        <div class="lev-blk blk-cost"><div class="blk-lbl">Step 3 — Repay Debt</div>
+          <div class="blk-row"><span class="blk-name">Principal</span><span class="blk-val warn">$5,000</span></div>
+          <div class="blk-row"><span class="blk-name">Interest (6%×$5K)</span><span class="blk-val warn">$300</span></div>
+          <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;"><span class="blk-name" style="font-weight:700;">Total outflow</span><span class="blk-val warn" style="font-size:15px;">$5,300</span></div>
+          <div class="blk-note">Lender gets paid regardless of asset performance.</div>
+        </div>
+      </div>
+      <div class="lev-arrow" data-ls="4">↓</div>
+      <div class="lev-step" data-ls="4">
+        <div class="lev-blk" id="l-res">
+          <div class="roe-big"><div class="roe-num gain" id="l-roe">+34%</div><div class="roe-lbl">Return on Equity</div><div class="roe-detail" id="l-rod">Profit $1,700 ÷ Your Equity $5,000</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="lev-insight" id="lev-ins"></div>
+  <div class="lev-step-tracker">
+    <button class="lev-nav" id="ls-prev" onclick="levPrev()" disabled>← Back</button>
+    <div id="ls-dots"></div>
+    <button class="lev-nav" id="ls-next" onclick="levNext()">Next →</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ S8 · MARGIN ACCOUNTS — 3 STEPS ══ -->
+<div class="slide" id="s8">
+<div class="si top">
+  <div class="eyebrow">Part B — Margin Accounts</div>
+  <h2 class="slide-title">Borrowing on Margin: Three Critical Moments</h2>
+  <div class="mgn-steps">
+    <!-- STEP 1 -->
+    <div class="mgn-step mgn-step-ok">
+      <div class="mgn-step-label ok">Step 1 · Open Position</div>
+      <div class="mgn-row"><span class="mgn-row-lbl">Price per share</span><span class="mgn-row-val">$150</span></div>
+      <div class="mgn-row"><span class="mgn-row-lbl">Buy 100 shares</span></div>
+      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+      <div class="mgn-row"><span class="mgn-row-lbl">Position value</span><span class="mgn-row-val">$15,000</span></div>
+      <div class="mgn-row"><span class="mgn-row-lbl">Loan from broker</span><span class="mgn-row-val" style="color:var(--warn);">$7,500</span></div>
+      <div class="mgn-row"><span class="mgn-row-lbl">Your equity</span><span class="mgn-row-val navy">$7,500</span></div>
+      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+      <div class="mgn-row"><span class="mgn-row-lbl" style="font-weight:700;">Initial Margin</span><span class="mgn-row-val" style="font-size:14px;">50%</span></div>
+      <div style="margin-top:6px;"><span class="mgn-margin-pill pill-ok">✓ Reg T satisfied</span></div>
+      <div class="mgn-formula">Margin = Equity ÷ Value<br>= $7,500 ÷ $15,000 = 50%</div>
+    </div>
+    <!-- STEP 2 -->
+    <div class="mgn-step mgn-step-warn">
+      <div class="mgn-step-label warn">Step 2 · Price Drops to $130</div>
+      <div class="mgn-row"><span class="mgn-row-lbl">New price per share</span><span class="mgn-row-val" style="color:var(--warn);">$130</span></div>
+      <div class="mgn-row"><span class="mgn-row-lbl">Price change</span><span class="mgn-row-val loss">−$20/share</span></div>
+      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+      <div class="mgn-row"><span class="mgn-row-lbl">New position value</span><span class="mgn-row-val">$13,000</span></div>
+      <div class="mgn-row"><span class="mgn-row-lbl">Loan (unchanged)</span><span class="mgn-row-val" style="color:var(--warn);">$7,500</span></div>
+      <div class="mgn-row"><span class="mgn-row-lbl">Your equity</span><span class="mgn-row-val navy">$5,500</span></div>
+      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+      <div class="mgn-row"><span class="mgn-row-lbl" style="font-weight:700;">Current Margin</span><span class="mgn-row-val" style="font-size:14px;color:var(--warn);">42.3%</span></div>
+      <div style="margin-top:6px;"><span class="mgn-margin-pill pill-warn">▲ Above 30% maint.</span></div>
+      <div class="mgn-formula">Margin = (P×Q − Loan) ÷ (P×Q)<br>= ($130×100 − $7,500) ÷ ($130×100)<br>= $5,500 ÷ $13,000 = 42.3%</div>
+    </div>
+    <!-- STEP 3 -->
+    <div class="mgn-step mgn-step-call">
+      <div class="mgn-step-label call">Step 3 · Price Drops to $107 ⚠️</div>
+      <div class="mgn-row"><span class="mgn-row-lbl">New price per share</span><span class="mgn-row-val loss">$107</span></div>
+      <div class="mgn-row"><span class="mgn-row-lbl">Price change</span><span class="mgn-row-val loss">−$43/share total</span></div>
+      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+      <div class="mgn-row"><span class="mgn-row-lbl">New position value</span><span class="mgn-row-val">$10,700</span></div>
+      <div class="mgn-row"><span class="mgn-row-lbl">Loan (unchanged)</span><span class="mgn-row-val" style="color:var(--warn);">$7,500</span></div>
+      <div class="mgn-row"><span class="mgn-row-lbl">Your equity</span><span class="mgn-row-val loss">$3,200</span></div>
+      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+      <div class="mgn-row"><span class="mgn-row-lbl" style="font-weight:700;">Current Margin</span><span class="mgn-row-val" style="font-size:14px;color:var(--loss);">29.9%</span></div>
+      <div style="margin-top:6px;"><span class="mgn-margin-pill pill-call">⚠️ MARGIN CALL</span></div>
+      <div class="mgn-formula">Margin = (P×Q − Loan) ÷ (P×Q)<br>= ($107×100 − $7,500) ÷ ($107×100)<br>= $3,200 ÷ $10,700 = 29.9% &lt; 30%</div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:10px;">
+    <div class="card-title">Margin Call Price Formula</div>
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 14px;color:var(--navy);">
+        P* = Loan ÷ [Shares × (1 − Maintenance%)]
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);">
+        P* = $7,500 ÷ [100 × (1 − 0.30)] = $7,500 ÷ 70 = <strong style="color:var(--loss);">$107.14</strong>
+      </div>
+    </div>
+  </div>
+  <div class="anno"><strong>The lender always gets paid first.</strong> At $107.14, your equity = $10,714 − $7,500 = $3,214 = exactly 30% of position value. Below this price, the broker can liquidate your position without notice to recover the loan.</div>
+</div>
+</div>
+
+<!-- ══ S9 · PORTFOLIO COMPOSITION — TWO TABLES ══ -->
+<div class="slide" id="s9">
+<div class="si top">
+  <div class="eyebrow">Part B — Portfolio Composition</div>
+  <h2 class="slide-title">QQQ vs TQQQ: What Each Fund Actually Holds</h2>
+  <div class="grid2" style="gap:16px;">
+    <!-- QQQ TABLE -->
+    <div class="card" style="padding:14px 16px;">
+      <div class="card-title" style="margin-bottom:8px;">QQQ — Top 20 Holdings (NASDAQ-100 stocks)</div>
+      <div class="h-tbl-wrap">
+        <table class="h-tbl">
+          <thead><tr><th>#</th><th>Company</th><th>Ticker</th><th class="num">Weight</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Apple</td><td style="color:var(--text-muted);">AAPL</td><td class="num navy">9.0%</td></tr>
+            <tr><td>2</td><td>Microsoft</td><td style="color:var(--text-muted);">MSFT</td><td class="num navy">8.2%</td></tr>
+            <tr><td>3</td><td>NVIDIA</td><td style="color:var(--text-muted);">NVDA</td><td class="num navy">8.0%</td></tr>
+            <tr><td>4</td><td>Amazon</td><td style="color:var(--text-muted);">AMZN</td><td class="num">5.1%</td></tr>
+            <tr><td>5</td><td>Meta Platforms</td><td style="color:var(--text-muted);">META</td><td class="num">4.9%</td></tr>
+            <tr><td>6</td><td>Alphabet A</td><td style="color:var(--text-muted);">GOOGL</td><td class="num">3.8%</td></tr>
+            <tr><td>7</td><td>Alphabet C</td><td style="color:var(--text-muted);">GOOG</td><td class="num">3.3%</td></tr>
+            <tr><td>8</td><td>Broadcom</td><td style="color:var(--text-muted);">AVGO</td><td class="num">3.1%</td></tr>
+            <tr><td>9</td><td>Tesla</td><td style="color:var(--text-muted);">TSLA</td><td class="num">2.8%</td></tr>
+            <tr><td>10</td><td>Costco</td><td style="color:var(--text-muted);">COST</td><td class="num">2.7%</td></tr>
+            <tr><td>11</td><td>Netflix</td><td style="color:var(--text-muted);">NFLX</td><td class="num">2.2%</td></tr>
+            <tr><td>12</td><td>AMD</td><td style="color:var(--text-muted);">AMD</td><td class="num">2.0%</td></tr>
+            <tr><td>13</td><td>T-Mobile US</td><td style="color:var(--text-muted);">TMUS</td><td class="num">1.9%</td></tr>
+            <tr><td>14</td><td>Qualcomm</td><td style="color:var(--text-muted);">QCOM</td><td class="num">1.8%</td></tr>
+            <tr><td>15</td><td>Adobe</td><td style="color:var(--text-muted);">ADBE</td><td class="num">1.6%</td></tr>
+            <tr><td>16</td><td>Palo Alto Networks</td><td style="color:var(--text-muted);">PANW</td><td class="num">1.5%</td></tr>
+            <tr><td>17</td><td>Booking Holdings</td><td style="color:var(--text-muted);">BKNG</td><td class="num">1.4%</td></tr>
+            <tr><td>18</td><td>Intuit</td><td style="color:var(--text-muted);">INTU</td><td class="num">1.2%</td></tr>
+            <tr><td>19</td><td>Lam Research</td><td style="color:var(--text-muted);">LRCX</td><td class="num">1.1%</td></tr>
+            <tr><td>20</td><td>Texas Instruments</td><td style="color:var(--text-muted);">TXN</td><td class="num">1.0%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:9px;color:var(--text-subtle);margin-top:6px;">Top 20 = ~67.6% of portfolio · 100 total holdings</div>
+    </div>
+    <!-- TQQQ TABLE -->
+    <div class="card" style="padding:14px 16px;">
+      <div class="card-title" style="margin-bottom:8px;">TQQQ — Top Holdings (No stocks — derivatives &amp; collateral)</div>
+      <div class="h-tbl-wrap">
+        <table class="h-tbl">
+          <thead><tr><th>#</th><th>Holding</th><th>Type</th><th class="num">% NAV</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>US T-Bill 03/27/2025</td><td style="color:var(--teal);">Collateral</td><td class="num">19.2%</td></tr>
+            <tr><td>2</td><td>US T-Bill 02/27/2025</td><td style="color:var(--teal);">Collateral</td><td class="num">17.4%</td></tr>
+            <tr><td>3</td><td>US T-Bill 04/24/2025</td><td style="color:var(--teal);">Collateral</td><td class="num">15.8%</td></tr>
+            <tr><td>4</td><td>US T-Bill 01/23/2025</td><td style="color:var(--teal);">Collateral</td><td class="num">13.1%</td></tr>
+            <tr><td>5</td><td>US T-Bill 05/22/2025</td><td style="color:var(--teal);">Collateral</td><td class="num">11.3%</td></tr>
+            <tr><td>6</td><td>US T-Bill 06/19/2025</td><td style="color:var(--teal);">Collateral</td><td class="num">8.6%</td></tr>
+            <tr><td>7</td><td style="font-size:9px;">Goldman Sachs — TRS on NASDAQ-100</td><td style="color:var(--warn);">OTC Swap</td><td class="num">4.8%</td></tr>
+            <tr><td>8</td><td style="font-size:9px;">Morgan Stanley — TRS on NASDAQ-100</td><td style="color:var(--warn);">OTC Swap</td><td class="num">4.2%</td></tr>
+            <tr><td>9</td><td style="font-size:9px;">Citibank — TRS on NASDAQ-100</td><td style="color:var(--warn);">OTC Swap</td><td class="num">2.9%</td></tr>
+            <tr><td>10</td><td style="font-size:9px;">BNP Paribas — TRS on NASDAQ-100</td><td style="color:var(--warn);">OTC Swap</td><td class="num">2.1%</td></tr>
+            <tr><td>11</td><td style="font-size:9px;">UBS — TRS on NASDAQ-100</td><td style="color:var(--warn);">OTC Swap</td><td class="num">1.6%</td></tr>
+            <tr><td>12</td><td style="font-size:9px;">E-mini NQ Dec 2024 Futures</td><td style="color:var(--navy);">Futures</td><td class="num">0.9%</td></tr>
+            <tr><td>13</td><td style="font-size:9px;">Soc. Générale — TRS on NASDAQ-100</td><td style="color:var(--warn);">OTC Swap</td><td class="num">0.6%</td></tr>
+            <tr><td>14</td><td>US T-Bill 07/17/2025</td><td style="color:var(--teal);">Collateral</td><td class="num">0.4%</td></tr>
+            <tr><td>15</td><td style="font-size:9px;">E-mini NQ Mar 2025 Futures</td><td style="color:var(--navy);">Futures</td><td class="num">0.3%</td></tr>
+            <tr><td>16</td><td style="font-size:9px;">Barclays — TRS on NASDAQ-100</td><td style="color:var(--warn);">OTC Swap</td><td class="num">0.2%</td></tr>
+            <tr><td>17</td><td>Cash &amp; Receivables</td><td style="color:var(--text-subtle);">Cash</td><td class="num">0.1%</td></tr>
+            <tr><td>18–20</td><td colspan="2" style="color:var(--text-subtle);font-size:9px;">Residual positions</td><td class="num">&lt;0.1%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:9px;color:var(--text-subtle);margin-top:6px;">% of Net Assets (market value). Swap notional ≈ 200% of NAV — the fund's actual index exposure is ~300% of NAV.</div>
+    </div>
+  </div>
+  <div class="anno" style="margin-top:10px;"><strong>The key contrast:</strong> QQQ literally owns Apple, Microsoft, NVIDIA… TQQQ owns <em>none of them</em>. It holds T-bills as collateral and swap contracts that synthetically deliver 3× daily NASDAQ-100 exposure. Total Return Swaps (% of NAV) reflect unrealized gains — the notional exposure is far larger.</div>
+</div>
+</div>
+
+<!-- ══ S10 · SHORT SELLING ══ -->
+<div class="slide" id="s10">
+<div class="si top">
+  <div class="eyebrow">Part C — Short Selling</div>
+  <h2 class="slide-title">Short Selling: Profiting from Decline</h2>
+  <div class="grid2">
+    <div>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title">Mechanics — Step by Step</div>
+        <div class="ss-flow">
+          <div class="ss-step"><div class="ss-icon">1</div><div class="ss-content"><div class="ss-title">Borrow shares from broker</div><div class="ss-body">Broker locates shares (from margin accounts, institutional lenders). You pay a "borrow fee" — typically 0.3% to 20%+ for hard-to-borrow stocks.</div></div></div>
+          <div class="ss-arrow">↓</div>
+          <div class="ss-step"><div class="ss-icon">2</div><div class="ss-content"><div class="ss-title">Sell borrowed shares at market price</div><div class="ss-body">Proceeds credited to your account but held as collateral. You're now "short" — you owe shares, not dollars.</div></div></div>
+          <div class="ss-arrow">↓</div>
+          <div class="ss-step"><div class="ss-icon">3</div><div class="ss-content"><div class="ss-title">Wait — profit if price falls, lose if it rises</div><div class="ss-body">Losses are theoretically <em>unlimited</em> — there's no ceiling on how high a stock can go. Maximum gain is 100% (stock goes to zero).</div></div></div>
+          <div class="ss-arrow">↓</div>
+          <div class="ss-step"><div class="ss-icon">4</div><div class="ss-content"><div class="ss-title">Buy shares ("cover") and return them</div><div class="ss-body">Profit = Sale price − Cover price − Borrow fees − Dividends paid. Close voluntarily, or forced by margin call.</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title">Real Example — Short TSLA at $300</div>
+        <table class="tbl">
+          <tbody>
+            <tr><td>Shares shorted</td><td class="num">100</td></tr>
+            <tr><td>Sale price (open)</td><td class="num">$300</td></tr>
+            <tr><td>Proceeds received</td><td class="num navy">$30,000</td></tr>
+            <tr><td>Borrow fee (2% × 60 days)</td><td class="num warn">−$99</td></tr>
+            <tr style="background:rgba(21,128,61,.05);"><td><strong>Scenario A: Cover at $240</strong></td><td class="num gain"><strong>+$5,901 profit</strong></td></tr>
+            <tr style="background:rgba(220,38,38,.05);"><td><strong>Scenario B: Cover at $380</strong></td><td class="num loss"><strong>−$8,099 loss</strong></td></tr>
+          </tbody>
+        </table>
+        <div class="anno" style="margin-top:8px;font-size:11px;"><strong>A:</strong> (300−240)×100 − $99 = +$5,901<br><strong>B:</strong> (300−380)×100 − $99 = −$8,099 (and growing if TSLA keeps rising)</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Key Risks</div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.75;">
+          ⚠️ <strong style="color:var(--loss);">Unlimited loss potential</strong> — stock can rise indefinitely<br>
+          ⚠️ <strong style="color:var(--warn);">Short squeeze</strong> — forced covering drives price higher (GameStop 2021)<br>
+          ⚠️ <strong style="color:var(--warn);">Borrow recall</strong> — lender can demand shares back at any time<br>
+          ⚠️ <strong>Dividends owed</strong> — you must pay dividends declared while short<br>
+          ✅ <strong style="color:var(--gain);">Max gain = 100%</strong> (stock goes to zero)
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ S11 · INVERSE FUNDS + VOLATILITY DECAY ══ -->
+<div class="slide" id="s11">
+<div class="si top">
+  <div class="eyebrow">Part C — Inverse Funds &amp; Volatility Decay</div>
+  <h2 class="slide-title">SQQQ &amp; the Hidden Cost of Daily Rebalancing</h2>
+  <div class="grid2" style="margin-bottom:12px;">
+    <div>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title">SQQQ — ProShares UltraPro Short QQQ</div>
+        <table class="tbl">
+          <tbody>
+            <tr><td>Leverage target</td><td class="num loss"><strong>−3× daily</strong></td></tr>
+            <tr><td>AUM</td><td class="num">~$3B</td></tr>
+            <tr><td>Avg daily volume</td><td class="num">~50M shares</td></tr>
+            <tr><td>Expected long-run return</td><td class="num loss">Negative (equity drift + decay)</td></tr>
+            <tr><td>Best use</td><td>Short-term tactical hedge</td></tr>
+          </tbody>
+        </table>
+        <div class="anno" style="margin-top:8px;font-size:11px;"><strong>2022 exception:</strong> SQQQ gained +79% as QQQ fell 33%. In bear markets SQQQ can deliver — but requires precision timing on both entry and exit.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Volatility Decay — The Math</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--navy);margin-bottom:8px;">
+          Day 1: +10% → 3× ETF: +30% ($1,300)<br>
+          Day 2: −10% → 3× ETF: −30% ($910)<br>
+          QQQ 2-day: (1.10)(0.90)−1 = −1.0%<br>
+          3× ETF: (1.30)(0.70)−1 = −9.0%
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);">QQQ lost 1% — the 3× ETF lost 9%. This is <strong style="color:var(--loss);">volatility drag</strong>: compounding asymmetry that grows with volatility.</div>
+      </div>
+    </div>
+    <div>
+      <div style="margin-bottom:8px;font-size:11px;color:var(--text-muted);">
+        <div style="display:flex;gap:8px;margin-bottom:5px;align-items:center;">
+          <span style="width:90px;">Vol (annual):</span>
+          <input type="range" id="dc-vol" min="10" max="60" step="1" value="22" oninput="runDecay2()" style="width:90px;">
+          <span class="navy" style="font-weight:700;" id="dc-vv">22%</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:5px;align-items:center;">
+          <span style="width:90px;">Annual drift:</span>
+          <input type="range" id="dc-drift" min="-20" max="30" step="1" value="12" oninput="runDecay2()" style="width:90px;">
+          <span class="navy" style="font-weight:700;" id="dc-dv">+12%</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="width:90px;">Days:</span>
+          <input type="range" id="dc-days" min="60" max="504" step="21" value="252" oninput="runDecay2()" style="width:90px;">
+          <span class="navy" style="font-weight:700;" id="dc-dyv">252</span>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#003087;"></div>TQQQ (3×)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#15803D;"></div>2× ETF</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#B8962E;"></div>QQQ (1×)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#DC2626;"></div>SQQQ (−3×)</div>
+      </div>
+      <div class="chart-wrap" style="height:190px;"><canvas id="decayChart"></canvas></div>
+      <div class="grid4" id="decay-stats" style="gap:8px;margin-top:8px;"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ S12 · TAKEAWAYS ══ -->
+<div class="slide" id="s12">
+<div class="si">
+  <div class="eyebrow">Key Takeaways</div>
+  <h2 class="slide-title">What Finance Tells Us About Leverage</h2>
+  <div class="grid3">
+    <div class="card"><div class="card-title">1 · Leverage is a Multiplier — Both Ways</div><p style="font-size:12px;color:var(--text-muted);line-height:1.6;">Borrowing to invest amplifies returns on your equity when asset returns exceed borrowing costs — and amplifies losses when they don't. The math applies whether it's a margin account or a 3× ETF.</p></div>
+    <div class="card"><div class="card-title">2 · Daily Reset Changes Everything</div><p style="font-size:12px;color:var(--text-muted);line-height:1.6;">TQQQ is not "3× QQQ over time." It's 3× <em>daily</em>. Volatility drag means a 3× ETF can underperform 3× the index return even in a rising market — and dramatically underperform in volatile, sideways markets.</p></div>
+    <div class="card"><div class="card-title">3 · Margin Calls Are Forced Sellers</div><p style="font-size:12px;color:var(--text-muted);line-height:1.6;">A margin call forces you to sell at exactly the wrong time — when prices are lowest. This is why leverage that seems manageable in calm markets can be fatal in a crash. Recovery from −79% requires +376%.</p></div>
+    <div class="card"><div class="card-title">4 · Short Selling Has Asymmetric Risk</div><p style="font-size:12px;color:var(--text-muted);line-height:1.6;">Maximum gain on a short is 100% (stock goes to zero). Maximum loss is unlimited. A short squeeze — where shorts are forced to cover — can push prices to levels driven by mechanics, not fundamentals.</p></div>
+    <div class="card"><div class="card-title">5 · Regulators Watch Leveraged Products</div><p style="font-size:12px;color:var(--text-muted);line-height:1.6;">The IMF, SEC, and FINRA all flag leveraged ETFs as systemic risk vectors. End-of-day rebalancing creates mechanical feedback into equity markets — leverage is not only an individual investor problem.</p></div>
+    <div class="card"><div class="card-title">6 · What You Hold vs What You're Exposed To</div><p style="font-size:12px;color:var(--text-muted);line-height:1.6;">TQQQ holds T-bills and swap contracts — not a single share of AAPL or NVDA. Understanding the difference between a fund's <em>holdings</em> and its <em>economic exposure</em> is fundamental to portfolio risk analysis.</p></div>
+  </div>
+</div>
+</div>
+
+</div><!-- /deck -->
+
+<nav class="nav">
+  <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>&#8592;</button>
+  <div class="nav-dots" id="nav-dots"></div>
+  <div class="nav-count" id="nav-count"></div>
+  <button class="nav-btn" id="btn-next" onclick="go(1)">&#8594;</button>
+</nav>
+
+<script>
+// ── NAVIGATION ──────────────────────────────────────────────
+const slides = Array.from(document.querySelectorAll('.slide'));
+const total = slides.length;
+let cur = 0;
+const dotsEl = document.getElementById('nav-dots');
+slides.forEach((_,i) => {
+  const d = document.createElement('button');
+  d.className = 'nav-dot' + (i===0?' active':'');
+  d.onclick = () => goTo(i);
+  d.setAttribute('data-nd', i);
+  dotsEl.appendChild(d);
+});
+function updateNav() {
+  document.querySelectorAll('[data-nd]').forEach(d => {
+    const n = +d.getAttribute('data-nd');
+    d.className = 'nav-dot' + (n===cur?' active':n<cur?' done':'');
+  });
+  document.getElementById('nav-count').textContent = (cur+1)+'/'+total;
+  document.getElementById('pb').style.width = ((cur+1)/total*100)+'%';
+  document.getElementById('btn-prev').disabled = cur===0;
+  document.getElementById('btn-next').disabled = cur===total-1;
+}
+function goTo(idx) {
+  if(idx===cur) return;
+  slides[cur].classList.remove('active');
+  slides[cur].classList.add('exit-left');
+  const prev = cur;
+  setTimeout(() => slides[prev].classList.remove('exit-left'), 380);
+  cur = Math.max(0, Math.min(total-1, idx));
+  slides[cur].classList.add('active');
+  updateNav();
+  onEnter(cur);
+}
+function go(d) { goTo(cur+d); }
+document.addEventListener('keydown', e => {
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') go(1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp') go(-1);
+});
+updateNav();
+
+// ── PDF EXPORT ──────────────────────────────────────────────
+function exportPDF() {
+  slides.forEach(s => {
+    s.style.opacity = '1';
+    s.style.transform = 'none';
+    s.style.position = 'relative';
+    s.style.pointerEvents = 'auto';
+  });
+  window.print();
+  setTimeout(() => {
+    slides.forEach(s => {
+      s.style.opacity = '';
+      s.style.transform = '';
+      s.style.position = '';
+      s.style.pointerEvents = '';
+    });
+    goTo(cur);
+  }, 1000);
+}
+
+// ── INDEX CHART (S0) — 2019–2024 ─────────────────────────
+const IDX = {
+  full:{
+    labels:["Jan'19","Jan'20","Jan'21","Jan'22","Jan'23","Jan'24","Dec'24"],
+    spx: [100, 131.5, 155.7, 200.5, 164.3, 207.5, 255.9],
+    djia:[100, 122.3, 131.1, 155.6, 141.7, 161.1, 183.7],
+    nsdq:[100, 139.0, 206.5, 262.3, 176.8, 273.8, 343.9]
+  },
+  bull:{
+    labels:["Jan'19","End'19","End'20","End'21"],
+    spx: [100, 131.5, 155.7, 200.5],
+    djia:[100, 122.3, 131.1, 155.6],
+    nsdq:[100, 139.0, 206.5, 262.3]
+  },
+  bear:{
+    labels:["Jan'22","Apr'22","Jul'22","Oct'22","Dec'22"],
+    spx: [200.5, 182.0, 165.0, 158.0, 164.3],
+    djia:[155.6, 149.0, 143.0, 147.0, 141.7],
+    nsdq:[262.3, 207.0, 176.0, 177.0, 176.8]
+  }
+};
+let idxChart, curPeriod='full';
+function drawIdxChart(p) {
+  const d = IDX[p];
+  const isDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const gc = isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)';
+  const tc = isDark?'#7B91BA':'#4B5880';
+  if(idxChart) idxChart.destroy();
+  idxChart = new Chart(document.getElementById('idxChart'), {
+    type:'line', data:{labels:d.labels, datasets:[
+      {label:'S&P 500',data:d.spx,borderColor:'#003087',backgroundColor:'rgba(0,48,135,.06)',fill:true,tension:.35,pointRadius:3},
+      {label:'DJIA',data:d.djia,borderColor:'#B8962E',backgroundColor:'rgba(184,150,46,.05)',fill:true,tension:.35,pointRadius:3},
+      {label:'NASDAQ-100',data:d.nsdq,borderColor:'#0891B2',backgroundColor:'rgba(8,145,178,.06)',fill:true,tension:.35,pointRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw.toFixed(1)} (+${(c.raw-100).toFixed(1)}%)`}}},
+      scales:{x:{ticks:{color:tc,font:{size:10}},grid:{color:gc}},y:{ticks:{color:tc,font:{size:10}},grid:{color:gc}}}}
+  });
+}
+function showPeriod(p) {
+  curPeriod=p;
+  ['bull','bear','full'].forEach(x=>document.getElementById('p-btn-'+x).classList.toggle('active',x===p));
+  drawIdxChart(p);
+}
+drawIdxChart('full');
+
+// ── PERFORMANCE CHART (S5) ────────────────────────────────
+const PERF = {
+  bull:{labels:["Jan'19","Jul'19","Jan'20","Jul'20","Jan'21","Jul'21","Dec'21"],
+    tqqq:[10000,13800,14600,22400,38000,54200,83000],qqq:[10000,11300,11600,14300,17800,20400,23900],
+    st:{te:83000,qe:23900,td:-45,qd:-28}},
+  bear:{labels:["Jan'22","Apr'22","Jul'22","Oct'22","Dec'22"],
+    tqqq:[10000,6200,4200,3900,2100],qqq:[10000,7800,6200,6500,6700],
+    st:{te:2100,qe:6700,td:-79,qd:-33}},
+  full:{labels:['2019','2020','2021','2022','2023','2024'],
+    tqqq:[10000,21100,79000,166000,34900,104000,139000],qqq:[10000,14800,21900,28600,19200,29800,36000],
+    st:{te:139000,qe:36000,td:-79,qd:-33}}
+};
+let perfChart, perfP='bull';
+function setPerfPeriod(p) {
+  perfP=p;
+  ['bull','bear','full'].forEach(x=>document.getElementById('pb-'+x).classList.toggle('active',x===p));
+  drawPerf(p);
+}
+function drawPerf(p) {
+  const d=PERF[p];
+  const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const gc=isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)';
+  const tc=isDark?'#7B91BA':'#4B5880';
+  if(perfChart) perfChart.destroy();
+  perfChart=new Chart(document.getElementById('perfChart'),{type:'line',
+    data:{labels:d.labels,datasets:[
+      {label:'TQQQ',data:d.tqqq,borderColor:'#003087',backgroundColor:'rgba(0,48,135,.07)',fill:true,tension:.35,pointRadius:3},
+      {label:'QQQ',data:d.qqq,borderColor:'#B8962E',backgroundColor:'rgba(184,150,46,.05)',fill:true,tension:.35,pointRadius:3},
+      {label:'Base',data:d.tqqq.map(()=>10000),borderColor:'rgba(180,190,210,.4)',borderDash:[4,4],pointRadius:0,fill:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{
+        if(c.dataset.label==='Base')return null;
+        return `${c.dataset.label}: $${c.raw.toLocaleString()} (${((c.raw-10000)/10000*100).toFixed(1)}%)`;
+      }}}},
+      scales:{x:{ticks:{color:tc,font:{size:10}},grid:{color:gc}},
+        y:{ticks:{color:tc,font:{size:10},callback:v=>'$'+v.toLocaleString()},grid:{color:gc}}}}
+  });
+  const s=d.st;
+  document.getElementById('perf-stats').innerHTML=`
+    <div class="stat-tile"><div class="stat-lbl">TQQQ Final</div><div class="stat-val ${s.te>10000?'gain':'loss'}">$${s.te.toLocaleString()}</div></div>
+    <div class="stat-tile"><div class="stat-lbl">QQQ Final</div><div class="stat-val ${s.qe>10000?'gain':'loss'}">$${s.qe.toLocaleString()}</div></div>
+    <div class="stat-tile"><div class="stat-lbl">TQQQ Max DD</div><div class="stat-val loss">${s.td}%</div></div>
+    <div class="stat-tile"><div class="stat-lbl">QQQ Max DD</div><div class="stat-val warn">${s.qd}%</div></div>`;
+}
+drawPerf('bull');
+
+// ── LEVERAGE STEP-THROUGH (S7) ────────────────────────────
+let lCur=1, lScen='bull';
+const lSteps=4;
+const lDotsEl=document.getElementById('ls-dots');
+for(let i=1;i<=lSteps;i++){
+  const d=document.createElement('button');
+  d.className='lev-sdot'+(i===1?' active':'');
+  d.setAttribute('data-ld',i);
+  d.onclick=()=>levGoTo(i);
+  lDotsEl.appendChild(d);
+}
+function updateLevDots(){
+  document.querySelectorAll('[data-ld]').forEach(d=>{
+    const n=+d.getAttribute('data-ld');
+    d.className='lev-sdot'+(n===lCur?' active':n<lCur?' done':'');
+  });
+  document.getElementById('ls-prev').disabled=lCur===1;
+  document.getElementById('ls-next').disabled=lCur===lSteps;
+  document.getElementById('ls-next').textContent=lCur===lSteps?'✓ Done':'Next →';
+}
+function levShowUpTo(n){
+  document.querySelectorAll('.lev-step').forEach(el=>{
+    const s=+el.getAttribute('data-ls');
+    el.classList.toggle('vis',s<=n);
+  });
+  document.querySelectorAll('.lev-arrow').forEach(el=>{
+    const s=+el.getAttribute('data-ls');
+    el.classList.toggle('vis',s<=n);
+  });
+  document.getElementById('lev-ins').classList.toggle('vis',n>=4);
+}
+function levGoTo(n){lCur=Math.max(1,Math.min(lSteps,n));levShowUpTo(lCur);updateLevDots();}
+function levNext(){if(lCur<lSteps)levGoTo(lCur+1);}
+function levPrev(){if(lCur>1)levGoTo(lCur-1);}
+function renderLev(){
+  const r=lScen==='bull'?0.20:-0.20;
+  const isBull=r>0;
+  const label=isBull?'+20%':'−20%';
+  const uPro=10000*r, uEnd=10000+uPro, uROE=r;
+  const lGross=10000*r, lEnd=10000+lGross, interest=300;
+  const lNet=lGross-interest, lROE=lNet/5000;
+  const fmtV=(v)=>v>=0?'+$'+Math.abs(v).toLocaleString():'−$'+Math.abs(v).toLocaleString();
+  const fmtD=(v)=>'$'+Math.abs(v).toLocaleString();
+  document.getElementById('u-rl').textContent='Return ('+label+')';
+  document.getElementById('u-rv').textContent=fmtV(uPro);
+  document.getElementById('u-rv').className='blk-val '+(isBull?'gain':'loss');
+  document.getElementById('u-ev').textContent=fmtD(uEnd);
+  document.getElementById('u-ev').className='blk-val '+(isBull?'gain':'loss');
+  document.getElementById('u-s2').className='lev-blk '+(isBull?'blk-ret-g':'blk-ret-l');
+  document.getElementById('u-roe').textContent=(uROE>=0?'+':'')+(uROE*100).toFixed(0)+'%';
+  document.getElementById('u-roe').className='roe-num '+(isBull?'gain':'loss');
+  document.getElementById('u-rod').textContent='Profit $'+(Math.abs(uPro).toLocaleString())+' ÷ Equity $10,000';
+  document.getElementById('u-res').className='lev-blk '+(isBull?'blk-result':'blk-result-l');
+  document.getElementById('l-rl').textContent='Return ('+label+')';
+  document.getElementById('l-rv').textContent=fmtV(lGross);
+  document.getElementById('l-rv').className='blk-val '+(isBull?'gain':'loss');
+  document.getElementById('l-ev').textContent=fmtD(lEnd);
+  document.getElementById('l-ev').className='blk-val '+(isBull?'gain':'loss');
+  document.getElementById('l-s2').className='lev-blk '+(isBull?'blk-ret-g':'blk-ret-l');
+  document.getElementById('l-roe').textContent=(lROE>=0?'+':'')+(lROE*100).toFixed(0)+'%';
+  document.getElementById('l-roe').className='roe-num '+(lROE>=0?'gain':'loss');
+  document.getElementById('l-rod').textContent=(lNet>=0?'Profit':'Loss')+' $'+Math.abs(lNet).toLocaleString()+' ÷ Your Equity $5,000';
+  document.getElementById('l-res').className='lev-blk '+(lROE>=0?'blk-result':'blk-result-l');
+  const ins=document.getElementById('lev-ins');
+  if(isBull){
+    ins.innerHTML=`<strong>Same $10,000 invested, very different outcomes.</strong> The leveraged investor put in only $5,000 of their own money — and earns +${(lROE*100).toFixed(0)}% on that equity vs +20% for the unleveraged investor. The spread between asset return (20%) and borrowing cost (6%) = 14% amplified per dollar of leverage.`;
+  } else {
+    ins.innerHTML=`<strong>Leverage cuts both ways.</strong> Both investors lose the same on the asset — but the leveraged investor still owes $300 interest, making a $2,300 loss on only $5,000 of equity = ${(lROE*100).toFixed(0)}% ROE. <strong>The lender always gets paid first.</strong>`;
+  }
+}
+function setScen(s){
+  lScen=s;
+  document.getElementById('sb-bull').classList.toggle('active',s==='bull');
+  document.getElementById('sb-bear').classList.toggle('active',s==='bear');
+  renderLev();
+}
+renderLev();
+levShowUpTo(1);
+updateLevDots();
+
+// ── VOLATILITY DECAY (S11) ──────────────────────────────
+let dcChart;
+function sr(seed){let x=Math.sin(seed*9301+49297)*233280;return x-Math.floor(x);}
+function runDecay2(){
+  const vol=+document.getElementById('dc-vol').value/100;
+  const drift=+document.getElementById('dc-drift').value/100;
+  const days=+document.getElementById('dc-days').value;
+  document.getElementById('dc-vv').textContent=(vol*100).toFixed(0)+'%';
+  document.getElementById('dc-dv').textContent=(drift>=0?'+':'')+(drift*100).toFixed(0)+'%';
+  document.getElementById('dc-dyv').textContent=days;
+  const dv=vol/Math.sqrt(252), dd=drift/252;
+  let p1=[1],p2=[1],p3=[1],pm=[1];
+  for(let i=0;i<days;i++){
+    const r=(sr(i+1)-.5)*dv*2.5+dd;
+    p1.push(p1[p1.length-1]*(1+r));
+    p2.push(p2[p2.length-1]*(1+2*r));
+    p3.push(p3[p3.length-1]*(1+3*r));
+    pm.push(pm[pm.length-1]*(1-3*r));
+  }
+  const labels=p1.map((_,i)=>i%63===0?'d'+i:'');
+  const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const gc=isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)';
+  const tc=isDark?'#7B91BA':'#4B5880';
+  if(dcChart) dcChart.destroy();
+  dcChart=new Chart(document.getElementById('decayChart'),{type:'line',
+    data:{labels,datasets:[
+      {label:'3×',data:p3,borderColor:'#003087',backgroundColor:'rgba(0,48,135,.05)',fill:true,tension:.2,pointRadius:0,borderWidth:2},
+      {label:'2×',data:p2,borderColor:'#15803D',backgroundColor:'rgba(21,128,61,.04)',fill:true,tension:.2,pointRadius:0,borderWidth:1.5},
+      {label:'1×',data:p1,borderColor:'#B8962E',backgroundColor:'transparent',tension:.2,pointRadius:0,borderWidth:1.5},
+      {label:'-3×',data:pm,borderColor:'#DC2626',backgroundColor:'rgba(220,38,38,.04)',fill:true,tension:.2,pointRadius:0,borderWidth:1.5,borderDash:[4,3]}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:350},
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:tc,font:{size:9},maxRotation:0},grid:{color:gc}},
+        y:{ticks:{color:tc,font:{size:9},callback:v=>v.toFixed(1)+'×'},grid:{color:gc}}}}
+  });
+  const e1=p1[p1.length-1],e2=p2[p2.length-1],e3=p3[p3.length-1],em=pm[pm.length-1];
+  const fmt=v=>(v>=1?'gain':'loss');
+  document.getElementById('decay-stats').innerHTML=`
+    <div class="stat-tile"><div class="stat-lbl">1× QQQ</div><div class="stat-val ${fmt(e1)}">${((e1-1)*100).toFixed(0)}%</div></div>
+    <div class="stat-tile"><div class="stat-lbl">2× ETF</div><div class="stat-val ${fmt(e2)}">${((e2-1)*100).toFixed(0)}%</div></div>
+    <div class="stat-tile"><div class="stat-lbl">3× TQQQ</div><div class="stat-val ${fmt(e3)}">${((e3-1)*100).toFixed(0)}%</div></div>
+    <div class="stat-tile"><div class="stat-lbl">−3× SQQQ</div><div class="stat-val ${fmt(em)}">${((em-1)*100).toFixed(0)}%</div></div>`;
+}
+runDecay2();
+
+// ── SLIDE ENTER HOOKS ────────────────────────────────────
+function onEnter(idx){
+  if(idx===0) drawIdxChart(curPeriod);
+  if(idx===5) drawPerf(perfP);
+  if(idx===11) runDecay2();
+}
+</script>
