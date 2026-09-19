@@ -1,0 +1,2088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lec04 · Asset Allocation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<!-- Firebase (fill in your config below) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- SheetJS for Excel download -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --accent:#6B1A2B;--gold:#B8962E;--gold-lt:#FAF3DC;
+  --bg:#F7F4F0;--surface:#FFFFFF;--border:#E2DDD8;
+  --text:#1A1614;--muted:#6B6461;
+  --radius:10px;--shadow:0 2px 12px rgba(0,0,0,.08);
+  --green:#1A7A4A;--red:#C0392B;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#151210;--surface:#1F1B18;--border:#2E2926;
+  --text:#EDE8E3;--muted:#9A948F;--gold-lt:#2A2210;
+}}
+:root[data-theme="dark"]{--bg:#151210;--surface:#1F1B18;--border:#2E2926;--text:#EDE8E3;--muted:#9A948F;--gold-lt:#2A2210;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* TOP BAR */
+#topbar{display:flex;align-items:center;gap:12px;padding:0 20px;height:50px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+#topbar .course{font-family:'DM Serif Display',serif;font-size:.95rem;color:var(--accent)}
+#topbar .sep{color:var(--border)}
+#topbar #slide-ctr{font-size:.78rem;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+#topbar .spacer{flex:1}
+#topbar #user-bar{font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:8px}
+#topbar #user-bar strong{color:var(--gold)}
+#topbar .btn-sm{padding:4px 10px;border-radius:5px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:.72rem;cursor:pointer;font-family:'Inter',sans-serif}
+#topbar .btn-sm:hover{border-color:var(--gold);color:var(--gold)}
+#theme-btn{padding:5px 8px;border-radius:5px;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:.8rem}
+
+/* DECK */
+#deck{flex:1;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;padding:28px 48px 16px;overflow-y:auto;background:var(--bg)}
+.slide.active{display:flex}
+.slide-header{margin-bottom:18px;flex-shrink:0}
+.eyebrow{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.slide-header h2{font-family:'DM Serif Display',serif;font-size:2rem;line-height:1.15;color:var(--text)}
+.slide-body{flex:1;display:flex;gap:28px;min-height:0}
+.col-l{flex:1.1;min-width:0;display:flex;flex-direction:column;gap:14px}
+.col-r{flex:.9;min-width:0;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+
+/* BOTTOM NAV */
+#bottom-nav{display:flex;align-items:center;justify-content:center;gap:16px;height:44px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+.nav-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:.15s}
+.nav-btn:hover{border-color:var(--gold);color:var(--gold)}
+#progress-dots{display:flex;gap:5px}
+.pdot{width:6px;height:6px;border-radius:50%;background:var(--border);cursor:pointer;transition:.15s}
+.pdot.on{background:var(--gold)}
+
+/* TITLE SLIDE */
+#s0{background:var(--accent);padding:60px}
+#s0 .kicker{font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px}
+#s0 h1{font-family:'DM Serif Display',serif;font-size:3rem;color:#fff;line-height:1.1;max-width:620px}
+#s0 .subtitle{font-size:1rem;color:rgba(255,255,255,.65);margin-top:14px;max-width:500px}
+#s0 .meta{margin-top:36px;font-size:.75rem;color:rgba(255,255,255,.35)}
+
+/* AGENDA */
+.agenda-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.ag-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:flex-start;gap:10px}
+.ag-num{width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.ag-item h4{font-size:.82rem;font-weight:600;margin-bottom:2px}
+.ag-item p{font-size:.72rem;color:var(--muted)}
+
+/* MATH */
+.math-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px}
+.math-block{display:flex;flex-direction:column;gap:5px}
+.math-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.math-line{font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.8;color:var(--text);padding:2px 0}
+.math-line.result{font-weight:700;color:var(--gold);font-size:.9rem;border-top:1px solid var(--border);padding-top:6px;margin-top:2px}
+.rho-red{color:var(--red);font-weight:700}
+.note-box{background:var(--gold-lt);border-radius:7px;padding:10px 12px;font-size:.8rem;border:1px solid rgba(184,150,46,.3)}
+
+/* CANVAS */
+canvas{border-radius:8px;border:1px solid var(--border);background:var(--surface)}
+.canvas-wrap{position:relative;display:flex;align-items:center;justify-content:center}
+.canvas-wrap canvas{max-width:100%;height:auto}
+
+/* FORMS */
+label{font-size:.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px}
+input[type=number],input[type=text],select{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:.85rem;font-family:'Inter',sans-serif}
+input:focus,select:focus{outline:none;border-color:var(--gold)}
+.btn{padding:8px 18px;border-radius:7px;border:none;cursor:pointer;font-size:.82rem;font-weight:600;font-family:'Inter',sans-serif;transition:.15s}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.msg-ok{color:var(--green);font-weight:600;font-size:.82rem;margin-top:6px}
+.msg-err{color:var(--red);font-weight:600;font-size:.82rem;margin-top:6px}
+
+/* STAT TILES */
+.stat-row{display:flex;gap:10px}
+.stat-tile{flex:1;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 6px}
+.stat-tile .val{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:600;color:var(--gold)}
+.stat-tile .lbl{font-size:.65rem;color:var(--muted);margin-top:3px}
+
+/* WEIGHTS TABLE */
+.w-table{width:100%;border-collapse:collapse;font-size:.76rem}
+.w-table th{background:var(--accent);color:#fff;padding:5px 7px;text-align:left;font-size:.7rem}
+.w-table td{padding:4px 7px;border-bottom:1px solid var(--border)}
+.w-table tr:nth-child(even) td{background:var(--gold-lt)}
+.w-bar{height:7px;border-radius:4px;background:var(--gold);display:inline-block;vertical-align:middle;margin-right:4px}
+
+/* SUBMISSION LOG */
+.sub-log{max-height:100px;overflow-y:auto;font-size:.71rem;display:flex;flex-direction:column;gap:3px;margin-top:6px}
+.sub-entry{padding:3px 8px;border-radius:4px;background:var(--gold-lt);color:var(--gold);font-family:'JetBrains Mono',monospace}
+.sub-entry.err{background:#FEE;color:var(--red)}
+
+/* SHARPE */
+.sharpe-formula{font-size:1.2rem;text-align:center;padding:14px;font-family:'JetBrains Mono',monospace;background:var(--gold-lt);border-radius:8px;border:1px solid rgba(184,150,46,.3)}
+
+/* MODAL / GATE */
+#gate{position:fixed;inset:0;background:rgba(15,12,10,.75);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#gate-box{background:var(--surface);border-radius:16px;padding:32px;width:360px;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+#gate-box .logo{font-family:'DM Serif Display',serif;font-size:1.4rem;color:var(--accent);margin-bottom:4px}
+#gate-box .sub{font-size:.8rem;color:var(--muted);margin-bottom:20px}
+.pill-tabs{display:flex;gap:5px;background:var(--bg);border-radius:8px;padding:4px;margin-bottom:16px}
+.pill-tab{flex:1;padding:7px;text-align:center;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600;color:var(--muted);transition:.15s}
+.pill-tab.on{background:var(--surface);color:var(--text);box-shadow:0 1px 5px rgba(0,0,0,.12)}
+.gate-field{margin-bottom:12px}
+.gate-field label{font-size:.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:4px}
+#gate-err{color:var(--red);font-size:.78rem;margin-top:8px;display:none}
+#gate-code-note{font-size:.72rem;color:var(--muted);margin-bottom:14px;background:var(--gold-lt);border-radius:6px;padding:7px 10px}
+
+/* OPTIMIZATION MATH */
+.opt-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.opt-section h3{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent);margin-bottom:10px}
+.opt-line{font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.9;color:var(--text)}
+.opt-line.hl{color:var(--gold);font-weight:600}
+.opt-line.comment{color:var(--muted);font-size:.72rem}
+
+/* TANGENCY */
+.cal-legend{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.cal-entry{display:flex;align-items:center;gap:8px;font-size:.78rem;padding:5px 8px;border-radius:6px;transition:.3s}
+.cal-entry .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.cal-entry.winner{background:var(--gold-lt);font-weight:600;color:var(--gold)}
+
+/* SHARPE BAR CHART */
+.sr-bars{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.sr-bar-row{display:flex;align-items:center;gap:8px;font-size:.75rem}
+.sr-bar-row .name{width:120px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;color:var(--muted);font-size:.7rem}
+.sr-bar-bg{flex:1;height:18px;background:var(--bg);border-radius:9px;overflow:hidden;border:1px solid var(--border)}
+.sr-bar-fill{height:100%;border-radius:9px;background:var(--gold);transition:width .5s}
+.sr-bar-fill.accent{background:var(--accent)}
+.sr-val{width:45px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted)}
+
+/* DOWNLOAD LINK */
+.dl-link{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:7px;border:1.5px solid var(--gold);color:var(--gold);font-size:.78rem;font-weight:600;text-decoration:none;transition:.15s}
+.dl-link:hover{background:var(--gold-lt)}
+
+/* WHAT WE LEARNED */
+.wl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.wl-item{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:8px;padding:10px 14px;font-size:.82rem;line-height:1.5}
+
+/* PART 2 WEIGHTS INPUT */
+.weights-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.wg-item{display:flex;flex-direction:column;gap:2px}
+.wg-item label{font-size:.65rem;font-weight:700;color:var(--accent)}
+.wg-item input{padding:5px 7px;font-size:.8rem;border-radius:5px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);width:100%;text-align:center}
+#wg-sum-display{font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--muted)}
+#wg-sum-display.ok{color:var(--green)}
+#wg-sum-display.bad{color:var(--red)}
+
+/* HOVER TOOLTIP */
+#canvas-tooltip{position:fixed;background:rgba(26,22,20,.9);color:#fff;padding:6px 10px;border-radius:6px;font-size:.72rem;pointer-events:none;display:none;z-index:50;font-family:'Inter',sans-serif;line-height:1.5}
+</style>
+</head>
+<body>
+
+<div id="gate">
+ <div id="gate-box">
+  <div class="logo">FINA 402 · Lecture 4</div>
+  <div class="sub">Asset Allocation &amp; Portfolio Optimization</div>
+  <div class="gate-field">
+   <label>Class Access Code</label>
+   <input type="text" id="gate-code" placeholder="Enter today's code" autocomplete="off">
+  </div>
+  <div id="gate-code-note">Your professor will announce the code at the start of class.</div>
+  <div class="pill-tabs">
+   <div class="pill-tab on" onclick="gateTab('student')">Student</div>
+   <div class="pill-tab" onclick="gateTab('prof')">Instructor</div>
+  </div>
+  <!-- Student pane -->
+  <div id="pane-student">
+   <div class="gate-field">
+    <label>Section</label>
+    <select id="gate-sec" onchange="fillNames()">
+     <option value="">— Select section —</option>
+     <option value="S01">Section 01</option>
+     <option value="S02">Section 02</option>
+     <option value="S03">Section 03</option>
+     <option value="S04">Section 04</option>
+    </select>
+   </div>
+   <div class="gate-field">
+    <label>Your Name</label>
+    <select id="gate-name"><option value="">— Select name —</option></select>
+   </div>
+  </div>
+  <!-- Prof pane -->
+  <div id="pane-prof" style="display:none">
+   <div class="gate-field">
+    <label>Instructor PIN</label>
+    <input type="password" id="gate-pin" placeholder="••••••••">
+   </div>
+   <div class="gate-field">
+    <label>Active Section (lock for students)</label>
+    <select id="gate-prof-sec">
+     <option value="">All sections</option>
+     <option value="S01">Section 01</option>
+     <option value="S02">Section 02</option>
+     <option value="S03">Section 03</option>
+     <option value="S04">Section 04</option>
+    </select>
+   </div>
+  </div>
+  <div id="session-banner" style="display:none;margin-bottom:10px;padding:8px 12px;border-radius:8px;background:#FEE2E2;color:#991B1B;font-size:.78rem;font-weight:600;text-align:center">
+   🔒 No active session. Please wait for the professor to open the session.
+  </div>
+  <div id="gate-err">Incorrect code or credentials. Try again.</div>
+  <button class="btn btn-accent" onclick="submitGate()" style="width:100%;margin-top:14px">Enter Lecture</button>
+ </div>
+</div>
+<div id="canvas-tooltip"></div>
+
+<div id="topbar">
+ <span class="course">FINA 402</span>
+ <span class="sep">›</span>
+ <span style="font-size:.82rem;color:var(--muted)">Lecture 4 · Asset Allocation</span>
+ <span class="spacer"></span>
+ <span id="slide-ctr" style="font-size:.75rem;font-family:'JetBrains Mono',monospace;color:var(--muted)">1 / 16</span>
+ <button id="theme-btn" onclick="toggleTheme()">☾</button>
+ <button id="settings-btn" onclick="toggleSettings()" style="display:none;padding:4px 10px;border-radius:5px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:.72rem;cursor:pointer;font-family:'Inter',sans-serif" title="Instructor Settings">⚙ Settings</button>
+ <div id="user-bar" style="display:none">
+  <span id="user-label">—</span>
+  <button class="btn-sm" onclick="resetGate()">Change</button>
+ </div>
+</div>
+
+<!-- Settings Panel (instructor only) -->
+<div id="settings-panel" style="display:none;position:fixed;top:50px;right:0;width:420px;height:calc(100vh - 50px);background:var(--surface);border-left:1px solid var(--border);z-index:200;overflow-y:auto;padding:20px;box-shadow:-4px 0 20px rgba(0,0,0,.12)">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+  <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent)">Instructor Settings</div>
+  <button onclick="toggleSettings()" style="border:none;background:none;color:var(--muted);font-size:1.1rem;cursor:pointer">✕</button>
+ </div>
+
+ <!-- Participation section -->
+ <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px">📋 Participation Tracker</div>
+ <div style="display:flex;gap:8px;margin-bottom:10px">
+  <select id="settings-section" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.8rem">
+   <option value="all">All Sections</option>
+   <option value="S01">Section S01</option>
+   <option value="S02">Section S02</option>
+   <option value="S03">Section S03</option>
+   <option value="S04">Section S04</option>
+  </select>
+  <button class="btn btn-gold" onclick="loadParticipation()" style="padding:6px 12px;font-size:.78rem">Refresh</button>
+  <button class="btn btn-ghost" onclick="saveParticipationToFirebase()" style="padding:6px 10px;font-size:.78rem" title="Save to Firebase">💾</button>
+ </div>
+
+ <!-- Stats row -->
+ <div id="participation-stats" style="display:flex;gap:8px;margin-bottom:12px"></div>
+
+ <!-- Non-participants -->
+ <div style="font-size:.72rem;font-weight:700;color:var(--red);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">❌ Did Not Complete / Incorrect</div>
+ <div id="missing-list" style="font-size:.75rem;color:var(--text);line-height:1.8;min-height:40px">
+  <div style="color:var(--muted);font-style:italic">Press Refresh to load</div>
+ </div>
+
+ <!-- All submitted -->
+ <div style="font-size:.72rem;font-weight:700;color:var(--green);margin-bottom:6px;margin-top:14px;text-transform:uppercase;letter-spacing:.06em">✓ Completed</div>
+ <div id="done-list" style="font-size:.75rem;color:var(--text);line-height:1.8;min-height:40px"></div>
+
+ <div id="settings-msg" style="margin-top:12px;font-size:.74rem"></div>
+
+ <!-- Session control -->
+ <hr style="border:none;border-top:1px solid var(--border);margin:18px 0">
+ <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px">🔒 Session Control</div>
+ <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+  <button id="session-toggle-btn" onclick="toggleSession()" style="padding:8px 16px;border-radius:6px;border:none;font-size:.82rem;font-weight:600;cursor:pointer;background:var(--green);color:#fff;min-width:120px">● Session Open</button>
+  <span style="font-size:.73rem;color:var(--muted)" id="session-status-text">Students can log in</span>
+ </div>
+ <div style="font-size:.7rem;color:var(--muted);margin-bottom:4px">Toggle to close the session — students will see a waiting message and cannot log in.</div>
+
+ <!-- Class code section -->
+ <hr style="border:none;border-top:1px solid var(--border);margin:18px 0">
+ <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px">🔑 Class Access Code</div>
+ <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+  <input type="text" id="new-code-input" placeholder="New code (e.g. FINA402)" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.8rem;text-transform:uppercase">
+  <button class="btn btn-accent" onclick="updateCode()" style="padding:6px 10px;font-size:.78rem">Update</button>
+ </div>
+ <div style="font-size:.7rem;color:var(--muted)">Current: <span id="current-code-display" style="font-family:'JetBrains Mono',monospace;color:var(--gold)">—</span></div>
+</div>
+<div id="deck">
+<div class="slide active" id="s0">
+ <div class="kicker">FINA 402 · Lecture 4</div>
+ <h1 style="font-family:'DM Serif Display',serif;font-size:3rem;color:#fff;line-height:1.1;max-width:640px;margin-top:24px">Asset Allocation &amp; Portfolio Optimization</h1>
+ <div class="subtitle" style="font-size:1rem;color:rgba(255,255,255,.65);margin-top:14px;max-width:520px">From two assets to the Efficient Frontier — and why your allocation matters</div>
+ <div class="meta" style="margin-top:40px;font-size:.75rem;color:rgba(255,255,255,.35)">University of San Diego · Knauss School of Business · Fall 2026</div>
+</div>
+<div class="slide" id="s1"><div class="slide-header"><div class="eyebrow">Overview</div><h2>Today's Agenda</h2></div><div class="agenda-grid"><div class="ag-item"><div class="ag-num">1</div><div><h4>Constructing the Efficient Frontier</h4><p>Two-asset intuition → N-asset opportunity set</p></div></div><div class="ag-item"><div class="ag-num">2</div><div><h4>How to Find the Efficient Frontier</h4><p>Quadratic programming & the Markowitz formulation</p></div></div><div class="ag-item"><div class="ag-num">3</div><div><h4>Sharpe Ratio</h4><p>Risk-adjusted return — measuring performance</p></div></div><div class="ag-item"><div class="ag-num">4</div><div><h4>Tangency Portfolio + Interactive Quiz</h4><p>CAL, optimal allocation & your results</p></div></div></div></div>
+<div class="slide" id="s2">
+ <div class="slide-header"><div class="eyebrow">Two-Asset Frontier · ρ = +1</div>
+  <h2>Portfolio Space: ρ = +1</h2>
+ </div>
+ <div class="slide-body">
+  <div class="col-l" style="flex:1.1">
+   <div class="card" style="padding:10px;flex:0 0 auto">
+    <canvas id="cvs2" width="460" height="260" style="width:100%;height:auto;max-height:240px"></canvas>
+   </div>
+   <div class="card" style="flex-shrink:0">
+    <div style="font-size:.78rem;color:var(--muted)">When correlation = +1, portfolios lie on a straight line. No diversification benefit.</div>
+    <div class="stat-row" style="margin-top:8px">
+     <div class="stat-tile"><div class="val">0.12</div><div class="lbl">Stock E[r]</div></div>
+     <div class="stat-tile"><div class="val">0.20</div><div class="lbl">Stock σ</div></div>
+     <div class="stat-tile"><div class="val">0.04</div><div class="lbl">Bond E[r]</div></div>
+     <div class="stat-tile"><div class="val">0.10</div><div class="lbl">Bond σ</div></div>
+    </div>
+   </div>
+  </div>
+  <div class="col-r" style="flex:.9">
+   
+<div class="math-card">
+  <div class="math-block">
+    <div class="math-label">Formula</div>
+    <div class="math-line">σ²<sub>p</sub> = w²<sub>A</sub>·σ²<sub>A</sub> + w²<sub>B</sub>·σ²<sub>B</sub> + 2w<sub>A</sub>w<sub>B</sub>σ<sub>A</sub>σ<sub>B</sub>·<span class="rho-red">ρ</span></div>
+  </div>
+  <div class="math-block">
+    <div class="math-label">Plug in  w<sub>A</sub>=w<sub>B</sub>=0.50,  σ<sub>A</sub>=0.20,  σ<sub>B</sub>=0.10</div>
+    <div class="math-line">= (0.50)²·(0.20)² + (0.50)²·(0.10)² + 2·(0.50)·(0.50)·(0.20)·(0.10)·<span class="rho-red">+1</span></div>
+    <div class="math-line">= 0.0100 + 0.0025 + 0.0100·<span class="rho-red">+1</span></div>
+    <div class="math-line">&nbsp;&nbsp;= 0.0125 + 0.0100·<span class="rho-red">+1</span></div>
+    <div class="math-line result">&nbsp;&nbsp;= 0.0225 → σ<sub>p</sub> = 15%%</div>
+  </div>
+  <div class="math-block note-box">
+    <b>50/50 Portfolio:</b> E[r] = 0.08 (8%),  σ = <b>15%%</b>
+    <br><span class="rho-red">↑ Correlation term drives the difference</span>
+  </div>
+</div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s3">
+ <div class="slide-header"><div class="eyebrow">Two-Asset Frontier · ρ = 0</div>
+  <h2>Portfolio Space: ρ = 0</h2>
+ </div>
+ <div class="slide-body">
+  <div class="col-l" style="flex:1.1">
+   <div class="card" style="padding:10px;flex:0 0 auto">
+    <canvas id="cvs3" width="460" height="260" style="width:100%;height:auto;max-height:240px"></canvas>
+   </div>
+   <div class="card" style="flex-shrink:0">
+    <div style="font-size:.78rem;color:var(--muted)">When ρ = 0, the frontier bends left. Diversification reduces risk below the weighted average.</div>
+    <div class="stat-row" style="margin-top:8px">
+     <div class="stat-tile"><div class="val">0.12</div><div class="lbl">Stock E[r]</div></div>
+     <div class="stat-tile"><div class="val">0.20</div><div class="lbl">Stock σ</div></div>
+     <div class="stat-tile"><div class="val">0.04</div><div class="lbl">Bond E[r]</div></div>
+     <div class="stat-tile"><div class="val">0.10</div><div class="lbl">Bond σ</div></div>
+    </div>
+   </div>
+  </div>
+  <div class="col-r" style="flex:.9">
+   
+<div class="math-card">
+  <div class="math-block">
+    <div class="math-label">Formula</div>
+    <div class="math-line">σ²<sub>p</sub> = w²<sub>A</sub>·σ²<sub>A</sub> + w²<sub>B</sub>·σ²<sub>B</sub> + 2w<sub>A</sub>w<sub>B</sub>σ<sub>A</sub>σ<sub>B</sub>·<span class="rho-red">ρ</span></div>
+  </div>
+  <div class="math-block">
+    <div class="math-label">Plug in  w<sub>A</sub>=w<sub>B</sub>=0.50,  σ<sub>A</sub>=0.20,  σ<sub>B</sub>=0.10</div>
+    <div class="math-line">= (0.50)²·(0.20)² + (0.50)²·(0.10)² + 2·(0.50)·(0.50)·(0.20)·(0.10)·<span class="rho-red">0</span></div>
+    <div class="math-line">= 0.0100 + 0.0025 + 0.0100·<span class="rho-red">0</span></div>
+    <div class="math-line">&nbsp;&nbsp;= 0.0125 + 0.0100·<span class="rho-red">0</span></div>
+    <div class="math-line result">&nbsp;&nbsp;= 0.0125 → σ<sub>p</sub> = 11.18%</div>
+  </div>
+  <div class="math-block note-box">
+    <b>50/50 Portfolio:</b> E[r] = 0.08 (8%),  σ = <b>11.18%</b>
+    <br><span class="rho-red">↑ Correlation term drives the difference</span>
+  </div>
+</div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s4">
+ <div class="slide-header"><div class="eyebrow">Two-Asset Frontier · ρ = −0.5</div>
+  <h2>Portfolio Space: ρ = −0.5</h2>
+ </div>
+ <div class="slide-body">
+  <div class="col-l" style="flex:1.1">
+   <div class="card" style="padding:10px;flex:0 0 auto">
+    <canvas id="cvs4" width="460" height="260" style="width:100%;height:auto;max-height:240px"></canvas>
+   </div>
+   <div class="card" style="flex-shrink:0">
+    <div style="font-size:.78rem;color:var(--muted)">At ρ = −0.5, the curve bends more. The Minimum Variance Portfolio (MVP) is clearly visible.</div>
+    <div class="stat-row" style="margin-top:8px">
+     <div class="stat-tile"><div class="val">0.12</div><div class="lbl">Stock E[r]</div></div>
+     <div class="stat-tile"><div class="val">0.20</div><div class="lbl">Stock σ</div></div>
+     <div class="stat-tile"><div class="val">0.04</div><div class="lbl">Bond E[r]</div></div>
+     <div class="stat-tile"><div class="val">0.10</div><div class="lbl">Bond σ</div></div>
+    </div>
+   </div>
+  </div>
+  <div class="col-r" style="flex:.9">
+   
+<div class="math-card">
+  <div class="math-block">
+    <div class="math-label">Formula</div>
+    <div class="math-line">σ²<sub>p</sub> = w²<sub>A</sub>·σ²<sub>A</sub> + w²<sub>B</sub>·σ²<sub>B</sub> + 2w<sub>A</sub>w<sub>B</sub>σ<sub>A</sub>σ<sub>B</sub>·<span class="rho-red">ρ</span></div>
+  </div>
+  <div class="math-block">
+    <div class="math-label">Plug in  w<sub>A</sub>=w<sub>B</sub>=0.50,  σ<sub>A</sub>=0.20,  σ<sub>B</sub>=0.10</div>
+    <div class="math-line">= (0.50)²·(0.20)² + (0.50)²·(0.10)² + 2·(0.50)·(0.50)·(0.20)·(0.10)·<span class="rho-red">−0.5</span></div>
+    <div class="math-line">= 0.0100 + 0.0025 + 0.0100·<span class="rho-red">−0.5</span></div>
+    <div class="math-line">&nbsp;&nbsp;= 0.0125 + 0.0100·<span class="rho-red">−0.5</span></div>
+    <div class="math-line result">&nbsp;&nbsp;= 0.0075 → σ<sub>p</sub> = 8.66%</div>
+  </div>
+  <div class="math-block note-box">
+    <b>50/50 Portfolio:</b> E[r] = 0.08 (8%),  σ = <b>8.66%</b>
+    <br><span class="rho-red">↑ Correlation term drives the difference</span>
+  </div>
+</div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s5">
+ <div class="slide-header"><div class="eyebrow">Two-Asset Frontier · ρ = −1</div>
+  <h2>Portfolio Space: ρ = −1</h2>
+ </div>
+ <div class="slide-body">
+  <div class="col-l" style="flex:1.1">
+   <div class="card" style="padding:10px;flex:0 0 auto">
+    <canvas id="cvs5" width="460" height="260" style="width:100%;height:auto;max-height:240px"></canvas>
+   </div>
+   <div class="card" style="flex-shrink:0">
+    <div style="font-size:.78rem;color:var(--muted)">At ρ = −1, a zero-risk portfolio exists! The two assets perfectly hedge each other.</div>
+    <div class="stat-row" style="margin-top:8px">
+     <div class="stat-tile"><div class="val">0.12</div><div class="lbl">Stock E[r]</div></div>
+     <div class="stat-tile"><div class="val">0.20</div><div class="lbl">Stock σ</div></div>
+     <div class="stat-tile"><div class="val">0.04</div><div class="lbl">Bond E[r]</div></div>
+     <div class="stat-tile"><div class="val">0.10</div><div class="lbl">Bond σ</div></div>
+    </div>
+   </div>
+  </div>
+  <div class="col-r" style="flex:.9">
+   
+<div class="math-card">
+  <div class="math-block">
+    <div class="math-label">Formula</div>
+    <div class="math-line">σ²<sub>p</sub> = w²<sub>A</sub>·σ²<sub>A</sub> + w²<sub>B</sub>·σ²<sub>B</sub> + 2w<sub>A</sub>w<sub>B</sub>σ<sub>A</sub>σ<sub>B</sub>·<span class="rho-red">ρ</span></div>
+  </div>
+  <div class="math-block">
+    <div class="math-label">Plug in  w<sub>A</sub>=w<sub>B</sub>=0.50,  σ<sub>A</sub>=0.20,  σ<sub>B</sub>=0.10</div>
+    <div class="math-line">= (0.50)²·(0.20)² + (0.50)²·(0.10)² + 2·(0.50)·(0.50)·(0.20)·(0.10)·<span class="rho-red">−1</span></div>
+    <div class="math-line">= 0.0100 + 0.0025 + 0.0100·<span class="rho-red">−1</span></div>
+    <div class="math-line">&nbsp;&nbsp;= 0.0125 + 0.0100·<span class="rho-red">−1</span></div>
+    <div class="math-line result">&nbsp;&nbsp;= 0.0025 → σ<sub>p</sub> = 5%%</div>
+  </div>
+  <div class="math-block note-box">
+    <b>50/50 Portfolio:</b> E[r] = 0.08 (8%),  σ = <b>5%%</b>
+    <br><span class="rho-red">↑ Correlation term drives the difference</span>
+  </div>
+</div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s6">
+ <div class="slide-header"><div class="eyebrow">Interactive</div><h2>How Correlation Shapes the Frontier</h2></div>
+ <div class="slide-body">
+  <div class="col-l" style="flex:1.3">
+   <div class="card" style="padding:10px;flex:1">
+    <canvas id="cvs6" width="480" height="270" style="width:100%;height:auto;max-height:240px"></canvas>
+   </div>
+  </div>
+  <div class="col-r" style="gap:10px">
+   <div class="card">
+    <label style="margin-bottom:3px">Correlation (ρ)</label>
+    <input type="range" id="rho-slider" min="-100" max="100" value="0" oninput="updateRho()">
+    <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted)"><span>−1</span><span>0</span><span>+1</span></div>
+    <div style="text-align:center;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:1.2rem;color:var(--gold)" id="rho-disp">ρ = 0.00</div>
+   </div>
+   <div class="card">
+    <label style="margin-bottom:3px">Allocation to Stock A (w<sub>A</sub>)</label>
+    <input type="range" id="w-slider" min="0" max="100" value="50" oninput="updateRho()">
+    <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted)"><span>0%</span><span>50%</span><span>100%</span></div>
+    <div style="text-align:center;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:1.2rem;color:var(--accent)" id="w-disp">w<sub>A</sub> = 0.50</div>
+   </div>
+   <div class="card" style="padding:12px">
+    <div style="font-size:.75rem;font-weight:600;margin-bottom:6px;color:var(--muted)">Selected Portfolio</div>
+    <div class="stat-row">
+     <div class="stat-tile"><div class="val" id="disp-er">8.00%</div><div class="lbl">E[r]</div></div>
+     <div class="stat-tile"><div class="val" id="disp-sig">11.18%</div><div class="lbl">σ</div></div>
+    </div>
+   </div>
+   <div class="math-card" style="font-size:.75rem">
+    <div class="math-label">Live formula (decimal)</div>
+    <div class="math-line" id="rho-formula-line">σ²=<span id="rho-formula-val">0.0125+0.0100·(0.00)</span></div>
+    <div class="math-line result" id="rho-result-line">= 0.0125 → σ = 11.18%</div>
+   </div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s7">
+ <div class="slide-header"><div class="eyebrow">From 2 to N Assets</div><h2>The Universe: 11 Sector ETFs</h2></div>
+ <div class="slide-body">
+  <div class="col-l" style="flex:1.4">
+   <div class="card" style="padding:12px;flex:1">
+    <canvas id="cvs7" width="520" height="360" style="width:100%;height:auto"></canvas>
+   </div>
+  </div>
+  <div class="col-r">
+   <div class="card">
+    <div style="font-size:.85rem;font-weight:600;margin-bottom:8px">Sector ETFs (Jan 2020 – Aug 2026)</div>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:12px">Each dot is one ETF — annualized return vs. annualized standard deviation</div>
+    <button class="dl-link" onclick="downloadExcel()" style="cursor:pointer;font-family:'Inter',sans-serif">
+     ⬇ Download Monthly Return Data (Excel)
+    </button>
+    <div style="font-size:.7rem;color:var(--muted);margin-top:6px">Jan 2020 – Aug 2026 · 80 months · Your portfolio return column is highlighted</div>
+   </div>
+   <div class="card" style="font-size:.78rem">
+    <div style="font-weight:600;color:var(--muted);margin-bottom:8px;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em">Individual ETF Stats</div>
+    <table class="w-table" style="font-size:.72rem">
+     <tr><th>ETF</th><th>E[r]</th><th>σ</th></tr>
+     <tr><td><b>XLK</b></td><td>15.0%</td><td>28.5%</td></tr>
+     <tr><td><b>XLF</b></td><td>9.0%</td><td>26.3%</td></tr>
+     <tr><td><b>XLE</b></td><td>8.0%</td><td>39.9%</td></tr>
+     <tr><td><b>XLV</b></td><td>8.0%</td><td>15.7%</td></tr>
+     <tr><td><b>XLI</b></td><td>9.0%</td><td>23.3%</td></tr>
+     <tr><td><b>XLC</b></td><td>10.0%</td><td>24.8%</td></tr>
+     <tr><td><b>XLY</b></td><td>9.0%</td><td>28.1%</td></tr>
+     <tr><td><b>XLP</b></td><td>5.5%</td><td>11.4%</td></tr>
+     <tr><td><b>XLB</b></td><td>9.0%</td><td>24.4%</td></tr>
+     <tr><td><b>XLRE</b></td><td>1.5%</td><td>23.4%</td></tr>
+     <tr><td><b>XLU</b></td><td>0.5%</td><td>18.0%</td></tr>
+    </table>
+   </div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s8">
+ <div class="slide-header"><div class="eyebrow">Part I — In-Class Activity</div><h2>Submit Your Portfolio</h2></div>
+ <div class="slide-body">
+  <div class="col-l" style="flex:1.4">
+   <div class="card" style="padding:10px;flex:1;min-height:0;position:relative">
+    <canvas id="cvs8" width="520" height="340" style="width:100%;height:auto" onmousemove="canvasHover(event,'cvs8','p1')" onmouseleave="hideTooltip()"></canvas>
+   </div>
+  </div>
+  <div class="col-r" style="overflow-y:auto">
+   <div class="card" id="my-weights-card" style="display:none">
+    <div style="font-size:.78rem;font-weight:600;margin-bottom:6px;color:var(--muted)">Your Assigned Weights</div>
+    <table class="w-table" id="my-weights-table"></table>
+    <div style="margin-top:8px;font-size:.72rem;color:var(--muted)">Use the Excel file to compute E[r] and σ for these weights.</div>
+   </div>
+   <div class="card" id="s8-login-hint" style="font-size:.82rem;color:var(--muted)">Log in as a student to see your assigned weights.</div>
+   <div class="card">
+    <div style="font-size:.8rem;font-weight:600;margin-bottom:8px">Submit Your Computation</div>
+    <div style="font-size:.75rem;color:var(--muted);margin-bottom:10px">Use the Excel file to compute E[r] and σ for your allocation, then enter below:</div>
+    <div style="display:flex;gap:10px;margin-bottom:8px">
+     <div style="flex:1"><label>E[r] (%)</label><input type="number" id="p1-er" step="0.01" placeholder="e.g. 9.25"></div>
+     <div style="flex:1"><label>σ (%)</label><input type="number" id="p1-sig" step="0.01" placeholder="e.g. 18.40"></div>
+    </div>
+    <button class="btn btn-accent" onclick="submitP1()" style="width:100%">Submit &amp; Plot</button>
+    <div id="p1-msg"></div>
+   </div>
+   <div class="card" style="padding:10px 12px" id="s8-log-card" style="display:none"><!-- professor-only -->
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Submissions</div>
+    <div class="sub-log" id="s8-log"></div>
+   </div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s9">
+ <div class="slide-header"><div class="eyebrow">Portfolio Optimization</div><h2>Efficient Frontier: An Optimization Problem</h2></div>
+ <div class="slide-body" style="gap:20px">
+  <!-- Left: two formulations -->
+  <div class="col-l" style="gap:14px">
+   <div class="opt-section" style="border-left:4px solid var(--gold)">
+    <h3>① MAX Return for Given Risk</h3>
+    <div style="margin:10px 0 4px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gold)">Objective</div>
+    <div class="opt-line hl">max<sub>w</sub>  w′μ</div>
+    <div style="margin:8px 0 4px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Subject to</div>
+    <div class="opt-line">  w′Σw  ≤  σ̄²      <span style="color:var(--muted)">(risk budget)</span></div>
+    <div class="opt-line">  Σwᵢ = 1           <span style="color:var(--muted)">(fully invested)</span></div>
+    <div class="opt-line">  wᵢ ≥ 0            <span style="color:var(--muted)">(long-only)</span></div>
+    <div class="note-box" style="margin-top:10px;font-size:.76rem">
+     <b>Fix σ̄, maximize E[r].</b> Sweep σ̄ from σ<sub>MVP</sub> upward to trace the frontier.
+    </div>
+   </div>
+   <div class="opt-section" style="border-left:4px solid var(--accent)">
+    <h3>② MIN Risk for Given Return</h3>
+    <div style="margin:10px 0 4px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">Objective</div>
+    <div class="opt-line hl">min<sub>w</sub>  w′Σw</div>
+    <div style="margin:8px 0 4px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Subject to</div>
+    <div class="opt-line">  w′μ  ≥  r̄         <span style="color:var(--muted)">(return target)</span></div>
+    <div class="opt-line">  Σwᵢ = 1           <span style="color:var(--muted)">(fully invested)</span></div>
+    <div class="opt-line">  wᵢ ≥ 0            <span style="color:var(--muted)">(long-only)</span></div>
+    <div class="note-box" style="margin-top:10px;font-size:.76rem;border-color:rgba(107,26,43,.25);background:rgba(107,26,43,.06)">
+     <b>Fix r̄, minimize σ.</b> Sweep r̄ from min to max to trace the same frontier.
+    </div>
+   </div>
+   <div class="card" style="background:var(--gold-lt);border-color:rgba(184,150,46,.3);font-size:.78rem;line-height:1.7">
+    <b>Key insight:</b> Both formulations trace the same curve. The solution is a <b>Quadratic Program (QP)</b> — solved by scipy, CVXPY, Excel Solver, or any financial optimizer.
+   </div>
+  </div>
+  <!-- Right: Markowitz diagram -->
+  <div class="col-r" style="flex:.85">
+   <div class="card" style="padding:10px;flex:1">
+    <canvas id="cvs9" width="380" height="340" style="width:100%;height:auto"></canvas>
+   </div>
+   <div class="card" style="flex-shrink:0">
+    <div class="stat-row">
+     <div class="stat-tile"><div class="val">11</div><div class="lbl">assets</div></div>
+     <div class="stat-tile"><div class="val">66</div><div class="lbl">cov terms</div></div>
+     <div class="stat-tile"><div class="val">52</div><div class="lbl">EF points</div></div>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s10">
+ <div class="slide-header"><div class="eyebrow">Part II — In-Class Activity</div><h2>Find the Optimal Portfolio</h2></div>
+ <div class="slide-body">
+  <div class="col-l" style="flex:1.4">
+   <div class="card" style="padding:10px;flex:1;min-height:0;position:relative">
+    <canvas id="cvs10" width="520" height="320" style="width:100%;height:auto" onmousemove="canvasHover(event,'cvs10','p2')" onmouseleave="hideTooltip()"></canvas>
+   </div>
+   <div class="card" style="display:flex;gap:10px;align-items:center;flex-shrink:0">
+    <button class="btn btn-gold" onclick="drawEFOverlay()" id="btn-draw-ef">Draw Efficient Frontier</button>
+    <span style="font-size:.75rem;color:var(--muted)">After everyone submits, reveal the EF</span>
+   </div>
+  </div>
+  <div class="col-r" style="overflow-y:auto">
+   <div class="card" id="p2-target-card" style="display:none">
+    <div style="font-size:.78rem;font-weight:600;margin-bottom:4px;color:var(--muted)">Your Target Risk</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:1.6rem;color:var(--accent)" id="p2-target-display">—</div>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:4px">Find the portfolio with <b>maximum E[r]</b> subject to σ = this target</div>
+   </div>
+   <div class="card" id="s10-login-hint" style="font-size:.82rem;color:var(--muted)">Log in as a student to see your target.</div>
+   <div class="card" style="background:var(--gold-lt);border-color:rgba(184,150,46,.3)">
+    <div style="font-size:.8rem;font-weight:700;margin-bottom:8px;color:var(--gold)">🎯 EF Calculator — What's Achievable?</div>
+    <div style="font-size:.74rem;color:var(--muted);margin-bottom:10px;line-height:1.6">The Efficient Frontier tells you the <b>maximum E[r]</b> for your σ target. Use this to check your Solver answer — or as a hint!</div>
+    <button class="btn btn-gold" onclick="computeOptimal()" style="width:100%;margin-bottom:8px">Find Optimal E[r] at My σ Target</button>
+    <div id="opt-result" style="display:none">
+     <div style="font-size:.74rem;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Efficient Frontier Answer</div>
+     <div class="stat-row" style="gap:8px;margin-bottom:8px">
+      <div class="stat-tile" style="background:var(--surface)"><div class="val" id="opt-er">—</div><div class="lbl">Max E[r]</div></div>
+      <div class="stat-tile" style="background:var(--surface)"><div class="val" id="opt-sig">—</div><div class="lbl">σ (target)</div></div>
+      <div class="stat-tile" style="background:var(--surface)"><div class="val" id="opt-sr">—</div><div class="lbl">Sharpe</div></div>
+     </div>
+     <div style="font-size:.73rem;font-weight:600;color:var(--muted);margin-bottom:6px">Optimal Weights (EF)</div>
+     <table class="w-table" id="opt-weights-table" style="font-size:.71rem"></table>
+    </div>
+    <div id="opt-msg" style="font-size:.74rem;color:var(--red);margin-top:6px"></div>
+   </div>
+   <div class="card">
+    <div style="font-size:.8rem;font-weight:600;margin-bottom:8px">Submit Your Optimal Portfolio</div>
+    <div style="font-size:.75rem;color:var(--muted);margin-bottom:10px">Use the calculator above or Excel Solver — enter your best allocation:</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+     <div style="flex:1"><label>Max E[r] found (%)</label><input type="number" id="p2-er" step="0.01" placeholder="e.g. 11.70"></div>
+    </div>
+    <div style="font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:6px">Weights (must sum to 100)</div>
+    <div class="weights-grid" id="p2-weights-grid"></div>
+    <div style="margin:8px 0;font-size:.75rem">Sum: <span id="wg-sum-display">0%</span></div>
+    <button class="btn btn-accent" onclick="submitP2()" style="width:100%">Submit Optimal Portfolio</button>
+    <div id="p2-msg"></div>
+   </div>
+   <div class="card" style="padding:10px 12px;display:none" id="s10-log-card"><!-- professor-only -->
+    <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Submissions</div>
+    <div class="sub-log" id="s10-log"></div>
+   </div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s11">
+ <div class="slide-header"><div class="eyebrow">Risk-Adjusted Performance</div><h2>The Sharpe Ratio</h2></div>
+ <div class="slide-body">
+  <div class="col-l">
+   <div class="card">
+    <div class="sharpe-formula">SR = (E[r<sub>p</sub>] − r<sub>f</sub>) / σ<sub>p</sub></div>
+    <div style="margin-top:14px;font-size:.82rem;line-height:1.7">
+     <b>What it measures:</b> how much excess return (above the risk-free rate) you earn per unit of risk.<br><br>
+     A higher Sharpe ratio means you are being better compensated for each unit of risk taken.
+    </div>
+   </div>
+   <div class="card">
+    <div style="font-size:.85rem;font-weight:600;margin-bottom:10px">Sharpe Ratio Calculator</div>
+    <div style="display:flex;gap:10px;margin-bottom:8px">
+     <div style="flex:1"><label>E[r] (%)</label><input type="number" id="sr-er" step="0.01" placeholder="e.g. 10.0"></div>
+     <div style="flex:1"><label>rf (%)</label><input type="number" id="sr-rf" value="4.3" step="0.01"></div>
+     <div style="flex:1"><label>σ (%)</label><input type="number" id="sr-sig" step="0.01" placeholder="e.g. 20.0"></div>
+    </div>
+    <button class="btn btn-gold" onclick="calcSR()" style="width:100%">Calculate</button>
+    <div id="sr-result" style="margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:1.3rem;color:var(--gold);text-align:center"></div>
+   </div>
+  </div>
+  <div class="col-r">
+   <div class="card">
+    <div style="font-size:.85rem;font-weight:600;margin-bottom:10px">Examples with rf = 4.3%</div>
+    <table class="w-table">
+     <tr><th>Portfolio</th><th>E[r]</th><th>σ</th><th>SR</th></tr>
+     <tr><td>XLK alone</td><td>15.0%</td><td>28.5%</td><td>0.375</td></tr>
+     <tr><td>XLV alone</td><td>8.0%</td><td>15.7%</td><td>0.236</td></tr>
+     <tr><td>MVP</td><td>6.0%</td><td>10.7%</td><td>0.159</td></tr>
+     <tr><td style="color:var(--gold);font-weight:700">Tangency</td><td style="color:var(--gold)">13.9%</td><td style="color:var(--gold)">25.5%</td><td style="color:var(--gold);font-weight:700">0.377</td></tr>
+    </table>
+   </div>
+   <div class="card">
+    <div style="font-size:.82rem;font-weight:600;margin-bottom:8px">Interpreting SR</div>
+    <div style="font-size:.78rem;line-height:1.8;color:var(--muted)">
+     SR &lt; 0: portfolio return below risk-free rate<br>
+     0 &lt; SR &lt; 0.25: poor compensation for risk<br>
+     0.25–0.50: decent risk-adjusted return<br>
+     SR &gt; 0.50: excellent (rare in practice)
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s12">
+ <div class="slide-header"><div class="eyebrow">Building Blocks</div><h2>The Risk-Free Asset</h2></div>
+ <div class="slide-body">
+  <div class="col-l">
+   <div class="card" style="flex:1;padding:12px">
+    <canvas id="cvs12" width="480" height="280" style="width:100%;height:auto"></canvas>
+   </div>
+  </div>
+  <div class="col-r">
+   <div class="card">
+    <div style="font-size:.85rem;font-weight:600;margin-bottom:10px">What is the Risk-Free Rate?</div>
+    <div style="font-size:.8rem;line-height:1.8;color:var(--muted)">
+     The risk-free rate is the return on an asset with <b>zero default risk</b> and <b>zero volatility</b> (σ = 0).<br><br>
+     <b>Common proxies:</b><br>
+     • U.S. 3-Month Treasury Bill<br>
+     • Overnight SOFR rate<br>
+     • 1-year Treasury Note<br><br>
+     <b>Current rate (Sept 2026):</b>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:2rem;color:var(--accent);margin-top:6px">r<sub>f</sub> = 4.3%</div>
+   </div>
+   <div class="card">
+    <div style="font-size:.82rem;font-weight:600;margin-bottom:8px">Why it matters for portfolios</div>
+    <div style="font-size:.78rem;line-height:1.8;color:var(--muted)">
+     Adding a risk-free asset to the opportunity set <b>linearizes</b> the frontier.<br>
+     Instead of picking a point on the curved EF, investors mix:<br>
+     • Fraction w in a risky portfolio<br>
+     • Fraction (1−w) in the risk-free asset<br><br>
+     The combination lies on a straight line from r<sub>f</sub> → risky portfolio.
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s13">
+ <div class="slide-header"><div class="eyebrow">Capital Allocation Line</div><h2>Finding the Tangency Portfolio</h2></div>
+ <div class="slide-body">
+  <div class="col-l" style="flex:1.4">
+   <div class="card" style="padding:10px;flex:1">
+    <canvas id="cvs13" width="520" height="340" style="width:100%;height:auto"></canvas>
+   </div>
+   <div style="display:flex;gap:10px;align-items:center;flex-shrink:0">
+    <button class="btn btn-gold" onclick="animateCAL()" id="btn-cal-anim">▶ Animate CAL Lines</button>
+    <button class="btn btn-ghost" onclick="resetCAL()">Reset</button>
+   </div>
+  </div>
+  <div class="col-r">
+   <div class="cal-legend" id="cal-legend">
+    <div class="cal-entry" id="cal0" style="opacity:.3">
+     <div class="dot" style="background:#888"></div>
+     <div><b>P1</b> (EF) · σ=14.2%, E[r]=10.5%<br><span style="color:var(--muted)">SR = (10.5−4.3)/14.2 = 0.437</span></div>
+    </div>
+    <div class="cal-entry" id="cal1" style="opacity:.3">
+     <div class="dot" style="background:#5B8FB9"></div>
+     <div><b>P2</b> (EF) · σ=18.9%, E[r]=12.1%<br><span style="color:var(--muted)">SR = (12.1−4.3)/18.9 = 0.413</span></div>
+    </div>
+    <div class="cal-entry winner" id="cal2" style="opacity:.3">
+     <div class="dot" style="background:var(--gold)"></div>
+     <div><b>T* Tangency</b> · σ=25.5%, E[r]=13.9%<br><span>SR = (13.9−4.3)/25.5 = <b>0.377 ← MAX SLOPE</b></span></div>
+    </div>
+    <div class="cal-entry" id="cal3" style="opacity:.3">
+     <div class="dot" style="background:#6B8E5E"></div>
+     <div><b>P4</b> (EF) · σ=31.5%, E[r]=14.3%<br><span style="color:var(--muted)">SR = (14.3−4.3)/31.5 = 0.317 ↓ slope drops</span></div>
+    </div>
+    <div class="cal-entry" id="cal4" style="opacity:.3">
+     <div class="dot" style="background:#C0392B"></div>
+     <div><b>P5 ✗ NOT ACHIEVABLE</b> · σ=20%, E[r]=16.5%<br><span style="color:var(--red)">SR = (16.5−4.3)/20 = 0.610 — above EF, impossible!</span></div>
+    </div>
+   </div>
+   <div class="card" style="margin-top:10px">
+    <div style="font-size:.78rem;font-weight:600;margin-bottom:6px">Tangency Portfolio Composition</div>
+    <table class="w-table" style="font-size:.72rem">
+     <tr><th>ETF</th><th>Weight</th></tr>
+     <tr><td><b>XLK</b> · Technology</td><td style="color:var(--gold);font-weight:700">84.3%</td></tr>
+     <tr><td><b>XLV</b> · Health Care</td><td>15.7%</td></tr>
+     <tr><td>All others</td><td style="color:var(--muted)">0%</td></tr>
+    </table>
+   </div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s14">
+ <div class="slide-header"><div class="eyebrow">Part III — Sharpe Comparison</div><h2>How Does Your Portfolio Compare?</h2></div>
+ <div class="slide-body">
+  <div class="col-l" style="flex:1.3">
+   <div class="card" style="flex:0 0 auto;padding:10px">
+    <canvas id="cvs14" width="500" height="280" style="width:100%;height:auto"></canvas>
+    <div style="display:flex;justify-content:flex-end;margin-top:6px">
+     <button class="btn btn-gold" id="btn-draw-ef-s14" onclick="drawEFS14()" style="display:none;font-size:.75rem;padding:5px 12px">📈 Draw EF</button>
+    </div>
+   </div>
+   <div class="card" style="flex:1;overflow-y:auto">
+    <div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Sharpe Ratios vs Tangency (0.377)</div>
+    <div class="sr-bars" id="sr-bars"></div>
+    <div style="margin-top:10px;padding-top:8px;border-top:2px solid var(--gold);display:flex;align-items:center;gap:8px">
+     <div class="dot" style="width:12px;height:12px;border-radius:50%;background:var(--accent);flex-shrink:0"></div>
+     <span style="font-size:.75rem;font-weight:600">Tangency T* SR = 0.377 (theoretical max)</span>
+    </div>
+   </div>
+  </div>
+  <div class="col-r">
+   <div class="card" id="sr-my-stats" style="display:none">
+    <div style="font-size:.78rem;font-weight:600;margin-bottom:8px;color:var(--muted)">Your Portfolio (from Part I)</div>
+    <div class="stat-row">
+     <div class="stat-tile"><div class="val" id="sr-my-er">—</div><div class="lbl">E[r]</div></div>
+     <div class="stat-tile"><div class="val" id="sr-my-sig">—</div><div class="lbl">σ</div></div>
+     <div class="stat-tile"><div class="val" id="sr-my-val">—</div><div class="lbl">SR</div></div>
+    </div>
+   </div>
+   <div class="card">
+    <div style="font-size:.8rem;font-weight:600;margin-bottom:8px">Submit Your Sharpe Ratio</div>
+    <div style="font-size:.75rem;color:var(--muted);margin-bottom:8px">Sharpe Ratio = (E[r] − rf) / σ, where rf = 4.3%. Enter to 3 decimal places:</div>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+     <div style="flex:1"><label>SR (3 decimals)</label><input type="number" id="sr-submit-val" step="0.001" placeholder="e.g. 0.245"></div>
+     <button class="btn btn-accent" onclick="submitSR()">Submit</button>
+    </div>
+    <div id="sr-msg"></div>
+   </div>
+   <div class="card">
+    <div style="font-size:.78rem;line-height:1.8;color:var(--muted)">
+     The tangency portfolio represents the <b>theoretical best</b> — maximum Sharpe ratio achievable with these 11 ETFs.<br><br>
+     Real portfolios often have lower Sharpe ratios due to equal weighting, constraints, or risk preferences.
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+<div class="slide" id="s15"><div class="slide-header"><div class="eyebrow">Summary</div><h2>What We Learned</h2></div><div class="wl-grid"><div class="wl-item">Diversification always helps when ρ < +1</div><div class="wl-item">The Efficient Frontier is the set of portfolios with max E[r] for each σ</div><div class="wl-item">Optimization (QP) finds the exact frontier weights</div><div class="wl-item">The Sharpe Ratio measures return per unit of risk</div><div class="wl-item">Adding a risk-free asset creates the Capital Allocation Line</div><div class="wl-item">The Tangency Portfolio maximizes the Sharpe Ratio</div><div class="wl-item">Real investors mix rf and tangency to hit their target risk</div></div><div style="margin-top:20px;padding:14px 18px;background:var(--accent);border-radius:10px;color:#fff;font-size:.85rem;line-height:1.7"><b>Key insight:</b> Diversification is free — but the right combination matters. The tangency portfolio maximizes the Sharpe ratio for this universe of assets. Most investors hold something between the risk-free asset and the tangency portfolio.</div></div>
+</div>
+<div id="bottom-nav">
+ <button class="nav-btn" onclick="goPrev()">‹</button>
+ <div id="progress-dots"></div>
+ <button class="nav-btn" onclick="goNext()">›</button>
+</div>
+<script>
+// ── Firebase Configuration ──────────────────────────────────────────────
+// ⚠️  FILL IN YOUR FIREBASE CONFIG HERE to enable cloud features
+// If left as null, the app works in local-only mode (codes are hardcoded).
+const FB_CONFIG = null;
+// const FB_CONFIG = {
+//   apiKey: "AIza...",
+//   authDomain: "yourproject.firebaseapp.com",
+//   projectId: "yourproject",
+//   storageBucket: "yourproject.appspot.com",
+//   messagingSenderId: "...",
+//   appId: "..."
+// };
+
+// ── Embedded data ───────────────────────────────────────────────────────
+const EF_DATA = {"ef":[{"r":0.5,"s":17.98,"w":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0]},{"r":1.968,"s":14.825,"w":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.2933,0.0,0.002,0.7048]},{"r":2.152,"s":14.476,"w":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.3304,0.0,0.0001,0.6696]},{"r":2.335,"s":14.14,"w":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.3671,0.0,0.0,0.6329]},{"r":2.519,"s":13.818,"w":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.4038,0.0,0.0,0.5962]},{"r":2.703,"s":13.51,"w":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.4405,0.0,0.0,0.5595]},{"r":2.886,"s":13.218,"w":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.4772,0.0,0.0,0.5228]},{"r":3.07,"s":12.943,"w":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5139,0.0,0.0,0.4861]},{"r":3.253,"s":12.685,"w":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5506,0.0,0.0,0.4494]},{"r":3.437,"s":12.446,"w":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5873,0.0,0.0,0.4127]},{"r":3.62,"s":12.225,"w":[0.0,0.0,0.0,0.0129,0.0,0.0,0.0,0.6046,0.0,0.0,0.3824]},{"r":3.804,"s":12.017,"w":[0.0,0.0,0.0,0.0304,0.0,0.0,0.0,0.6152,0.0,0.0,0.3544]},{"r":3.987,"s":11.823,"w":[0.0,0.0,0.0,0.0478,0.0,0.0,0.0,0.6258,0.0,0.0,0.3264]},{"r":4.171,"s":11.642,"w":[0.0,0.0,0.0,0.0652,0.0,0.0,0.0,0.6363,0.0,0.0,0.2984]},{"r":4.354,"s":11.477,"w":[0.0,0.0,0.0,0.0826,0.0,0.0,0.0,0.6469,0.0,0.0,0.2704]},{"r":4.538,"s":11.326,"w":[0.0,0.0,0.0,0.1001,0.0,0.0,0.0,0.6575,0.0,0.0,0.2424]},{"r":4.722,"s":11.192,"w":[0.0,0.0,0.0,0.1175,0.0,0.0,0.0,0.6681,0.0,0.0,0.2144]},{"r":4.905,"s":11.074,"w":[0.0,0.0,0.0,0.1349,0.0,0.0,0.0,0.6786,0.0,0.0,0.1864]},{"r":5.089,"s":10.973,"w":[0.0,0.0,0.0,0.1523,0.0,0.0,0.0,0.6892,0.0,0.0,0.1584]},{"r":5.272,"s":10.89,"w":[0.0,0.0,0.0,0.1698,0.0,0.0,0.0,0.6998,0.0,0.0,0.1305]},{"r":5.456,"s":10.824,"w":[0.0,0.0,0.0,0.1872,0.0,0.0,0.0,0.7104,0.0,0.0,0.1025]},{"r":5.639,"s":10.777,"w":[0.0,0.0,0.0,0.2046,0.0,0.0,0.0,0.7209,0.0,0.0,0.0745]},{"r":5.823,"s":10.749,"w":[0.0,0.0,0.0,0.222,0.0,0.0,0.0,0.7315,0.0,0.0,0.0465]},{"r":6.006,"s":10.739,"w":[0.0,0.0,0.0,0.2395,0.0,0.0,0.0,0.7421,0.0,0.0,0.0185]},{"r":6.19,"s":10.754,"w":[0.0,0.0,0.0,0.2759,0.0,0.0,0.0,0.7241,0.0,0.0,0.0]},{"r":6.373,"s":10.825,"w":[0.0177,0.0,0.0,0.282,0.0,0.0,0.0,0.7003,0.0,0.0,0.0]},{"r":6.557,"s":10.921,"w":[0.0373,0.0,0.0,0.281,0.0,0.0,0.0,0.6817,0.0,0.0,0.0]},{"r":6.741,"s":11.041,"w":[0.0569,0.0,0.0,0.2801,0.0,0.0,0.0,0.663,0.0,0.0,0.0]},{"r":6.924,"s":11.184,"w":[0.0764,0.0,0.0,0.2792,0.0,0.0,0.0,0.6444,0.0,0.0,0.0]},{"r":7.108,"s":11.349,"w":[0.096,0.0,0.0,0.2782,0.0,0.0,0.0,0.6258,0.0,0.0,0.0]},{"r":7.291,"s":11.535,"w":[0.1156,0.0,0.0,0.2773,0.0,0.0,0.0,0.6071,0.0,0.0,0.0]},{"r":7.475,"s":11.741,"w":[0.1351,0.0,0.0,0.2763,0.0,0.0,0.0,0.5885,0.0,0.0,0.0]},{"r":7.658,"s":11.966,"w":[0.1547,0.0,0.0,0.2754,0.0,0.0,0.0,0.5699,0.0,0.0,0.0]},{"r":7.842,"s":12.209,"w":[0.1743,0.0,0.0,0.2745,0.0,0.0,0.0,0.5513,0.0,0.0,0.0]},{"r":8.025,"s":12.469,"w":[0.1938,0.0,0.0,0.2735,0.0,0.0,0.0,0.5326,0.0,0.0,0.0]},{"r":8.209,"s":12.745,"w":[0.2134,0.0,0.0,0.2726,0.0,0.0,0.0,0.514,0.0,0.0,0.0]},{"r":8.392,"s":13.036,"w":[0.233,0.0,0.0,0.2717,0.0,0.0,0.0,0.4954,0.0,0.0,0.0]},{"r":8.576,"s":13.34,"w":[0.2525,0.0,0.0,0.2707,0.0,0.0,0.0,0.4767,0.0,0.0,0.0]},{"r":8.759,"s":13.658,"w":[0.2721,0.0,0.0,0.2698,0.0,0.0,0.0,0.4581,0.0,0.0,0.0]},{"r":8.943,"s":13.988,"w":[0.2917,0.0,0.0,0.2688,0.0,0.0,0.0,0.4395,0.0,0.0,0.0]},{"r":9.127,"s":14.329,"w":[0.3112,0.0,0.0,0.2679,0.0,0.0,0.0,0.4209,0.0,0.0,0.0]},{"r":9.31,"s":14.681,"w":[0.3308,0.0,0.0,0.267,0.0,0.0,0.0,0.4022,0.0,0.0,0.0]},{"r":9.494,"s":15.042,"w":[0.3504,0.0,0.0,0.266,0.0,0.0,0.0,0.3836,0.0,0.0,0.0]},{"r":9.677,"s":15.413,"w":[0.3699,0.0,0.0,0.2651,0.0,0.0,0.0,0.365,0.0,0.0,0.0]},{"r":9.861,"s":15.791,"w":[0.3895,0.0,0.0,0.2641,0.0,0.0,0.0,0.3463,0.0,0.0,0.0]},{"r":10.411,"s":16.973,"w":[0.4482,0.0,0.0,0.2613,0.0,0.0,0.0,0.2905,0.0,0.0,0.0]},{"r":10.595,"s":17.38,"w":[0.4678,0.0,0.0,0.2604,0.0,0.0,0.0,0.2718,0.0,0.0,0.0]},{"r":11.696,"s":19.933,"w":[0.5852,0.0,0.0,0.2548,0.0,0.0,0.0,0.1601,0.0,0.0,0.0]},{"r":12.43,"s":21.717,"w":[0.6635,0.0,0.0,0.251,0.0,0.0,0.0,0.0855,0.0,0.0,0.0]},{"r":12.981,"s":23.088,"w":[0.7222,0.0,0.0,0.2482,0.0,0.0,0.0,0.0297,0.0,0.0,0.0]},{"r":13.165,"s":23.55,"w":[0.7417,0.0,0.0,0.2472,0.0,0.0,0.0,0.011,0.0,0.0,0.0]},{"r":14.633,"s":27.434,"w":[0.9476,0.0,0.0,0.0524,0.0,0.0,0.0,0.0,0.0,0.0,0.0]}],"mvp":{"r":6.01,"s":10.739},"tangency":{"r":13.901,"s":25.452,"sr":0.377,"w":[0.843,0.0,0.0,0.157,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},"individual":[{"label":"XLK","r":15.0,"s":28.46},{"label":"XLF","r":9.0,"s":26.33},{"label":"XLE","r":8.0,"s":39.93},{"label":"XLV","r":8.0,"s":15.71},{"label":"XLI","r":9.0,"s":23.26},{"label":"XLC","r":10.0,"s":24.75},{"label":"XLY","r":9.0,"s":28.15},{"label":"XLP","r":5.5,"s":11.36},{"label":"XLB","r":9.0,"s":24.39},{"label":"XLRE","r":1.5,"s":23.44},{"label":"XLU","r":0.5,"s":17.98}],"mu":[15.0,9.0,8.0,8.0,9.0,10.0,9.0,5.5,9.0,1.5,0.5],"cov":[[809.7658804007092,580.8252014304305,584.8897697623291,250.40969138005065,508.48063945207565,592.0877076966075,603.6147294364556,107.13601800524053,385.3460003253416,285.9684486272658,155.0733569990886],[580.8252014304305,693.4313836246328,754.7988446624807,219.08066523918987,534.6042395710251,465.07155084592387,572.2133183103797,126.84440761621514,487.9700866781393,323.12276179127855,203.11514046546833],[584.8897697623291,754.7988446624807,1594.5440157733678,273.8190752761519,633.6452857614684,564.3612616061772,728.3143359918993,231.69538966374688,718.9297928413672,448.15310970121516,347.32723719281006],[250.40969138005065,219.08066523918987,273.8190752761519,246.89204852475936,220.07743192450639,228.56356975199998,215.03273839746828,73.11000807994934,206.40031819275964,133.22632816146827,103.33002466116457],[508.48063945207565,534.6042395710251,633.6452857614684,220.07743192450639,541.2240186637787,442.9112388617464,522.2365881994936,127.64335673257595,455.75266188753824,338.6424515058037,222.8935910192659],[592.0877076966075,465.07155084592387,564.3612616061772,228.56356975199998,442.9112388617464,612.7663792560002,519.3351778982279,117.82310202554432,389.10147640397486,310.0414581898482,181.66346822096193],[603.6147294364556,572.2133183103797,728.3143359918993,215.03273839746828,522.2365881994936,519.3351778982279,792.6899648870883,170.4951647635443,469.47188604607584,423.1497170141771,206.16120579037965],[107.13601800524053,126.84440761621514,231.69538966374688,73.11000807994934,127.64335673257595,117.82310202554432,170.4951647635443,128.99838562175313,149.2900285774747,127.62355160751268,114.20163177850634],[385.3460003253416,487.9700866781393,718.9297928413672,206.40031819275964,455.75266188753824,389.10147640397486,469.47188604607584,149.2900285774747,594.9395298940063,288.9970430080443,228.52060264564557],[285.9684486272658,323.12276179127855,448.15310970121516,133.22632816146827,338.6424515058037,310.0414581898482,423.1497170141771,127.62355160751268,288.9970430080443,549.6433477928925,276.2691785701519],[155.0733569990886,203.11514046546833,347.32723719281006,103.33002466116457,222.8935910192659,181.66346822096193,206.16120579037965,114.20163177850634,228.52060264564557,276.2691785701519,323.27912952334174]],"etfs":["XLK","XLF","XLE","XLV","XLI","XLC","XLY","XLP","XLB","XLRE","XLU"],"rf":4.3};
+const STU_DATA = {"sections":{"S01":["Addams, Ethan","Aiello, Matteo","Al-Mahmoud, Seham","Alharbash, Abdalmohsen","Arriaga, Augusto","Ashenafi, Solomon","Cheung, Ian","Chitayat, Cyrus","Davalos, Nicholas","Duvinage, Simon","Eldean, Trevor","Elias, Jacobo","Eshom, Nicolas","Freschi, Bruno","Galvan Robledo, Edwin","Garcia Gonzalez, Marco","Hernandez, Miranda","Krzywicki, Katie","Kubrakov, Volodymyr","Martinez, Dominic","Mayen, Antonio","Mercado, Gabriella","Mestas, Nathan","Mink, Owen","Mizrahi, Lance","Palomera, Ivanna","Pescatore, Eduardo","Pinedo, Sophia","Prida, Aurora","Ramirez, Steven","Reels, Jaevon","Rezendes, Carly","Rhoades, Oliver","Rostovsky, Rafael","Scholl, Nicolette","Serawit, Mekdelawit","Shaia, River","Smith, Emerson","Tran, Dylan","Trubovich, Riley","Winslow, Andre","Zelkind, Elijah"],"S02":["Antenore, Annalisa","Aznar Sanz, David","Bae, Kristy","Battenfield, Mattea","Bode, Zaiden","Cheng, Anthony","Ciarmoli, Dominic","Contreras, Demetrio","Daly, Matthew","Esparza-Martin, Alejandro","Fereday, Ellie","Filipek, Calem","Galamez, Tengis","Gurri Borrell, Carla","Harbour, Brian","Harman, Christopher","Heric, Ethan","Junge, Michael","Magsayo, Vincemmanuel","McGovern, Grant","McLychok, Ian","McNamara, Maxwell","Megahan, Lauren","O'Neil, Padraig","Park, Ethan","Penaflor, Adam","Porada, Angela","Ramani, Sahil","Rimland, Grady","Robertson, Devin","Sealy, Kate","Szalmas, Dominic","Tai-Ho, Timothy","Ward, Aiden"],"S03":["Attisha, Luke","Bade, Kyle","Baumgartner, Conrad","Beckman, Ashlyn","Bedi, Ravi","Benabdallah, Lina","Berrut-Marechaud, Adrien","Busschaert, Noah","Coscolluela, Paolo","Cougevan, Connor","Dadiotis, Panaviotis","Flores, Alissa","Flores, Anahi","Foo, Sienna","Gianulias, Charles","Gogna, Tyler","Gonzalez, Angel","Hill, Deacon","Jania, Rose","McCain, John","Murphy, Timothy","Rodgers, Abigail","Rodriguez, Luis Enrique","Sanchez, Noe","Singer, Noah","Steinbuch, Nevin","Yocam, Nathan-Connor","Zarkeshan, Diba","Zuniga, Jeremias"],"S04":["Acuna, Angelica","Bires, Joseph","Carlish, Madison","Chheng, Emma","Cortez, Matthew","Cruz, Isabella","Dohad, Joshua","Dulik, Luke","Feres, Mariana","Ferrara, Emanuele","Flores, John","Garcia Franco, Jesus","Garcia Jimenez, Alejandro","Gathungu, Jesse","Gutierrez, Frank","Hall, Brooklynne","Heymans, Beth","McCann, Meagan","McGlinchey, Ashley","Melesio, Cecilia","Neumann, Tyler","Nohra, Alessandra","Ortiz, Genesis","Reyes, Tyler","Rundle, Kallen","Sandoval, Franky","Sciarrino, Alfredo","Suarez Gonzalez, Ximena","Tran, Kevin","Wade, Peter","Wessler, Caden","Zarcone, Isabella"]},"students":{"Addams, Ethan":{"section":"S01","weights":[5,10,10,10,10,10,15,5,10,5,10],"sigma_p":20.1,"er_p":7.8,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Aiello, Matteo":{"section":"S01","weights":[20,10,5,5,10,5,10,15,5,10,5],"sigma_p":19.2,"er_p":8.45,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Al-Mahmoud, Seham":{"section":"S01","weights":[10,10,5,10,20,5,5,5,5,15,10],"sigma_p":18.98,"er_p":7.35,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Alharbash, Abdalmohsen":{"section":"S01","weights":[10,5,5,10,10,10,15,5,10,15,5],"sigma_p":19.63,"er_p":7.83,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Arriaga, Augusto":{"section":"S01","weights":[5,15,10,15,5,10,5,5,15,10,5],"sigma_p":19.59,"er_p":7.8,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Ashenafi, Solomon":{"section":"S01","weights":[10,5,5,10,5,10,15,10,10,10,10],"sigma_p":18.59,"er_p":7.6,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Cheung, Ian":{"section":"S01","weights":[15,10,10,5,20,5,5,15,5,5,5],"sigma_p":19.69,"er_p":8.47,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Chitayat, Cyrus":{"section":"S01","weights":[20,10,10,20,10,5,5,5,5,5,5],"sigma_p":19.67,"er_p":8.97,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Davalos, Nicholas":{"section":"S01","weights":[5,5,10,10,5,15,5,20,5,15,5],"sigma_p":17.64,"er_p":7.0,"ef_r_at_target":10.6,"ef_s_at_target":17.38},"Duvinage, Simon":{"section":"S01","weights":[10,20,10,10,5,15,10,5,5,5,5],"sigma_p":20.85,"er_p":8.57,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Eldean, Trevor":{"section":"S01","weights":[5,10,5,20,10,10,15,5,10,5,5],"sigma_p":19.03,"er_p":8.18,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Elias, Jacobo":{"section":"S01","weights":[20,5,10,5,5,5,20,5,10,10,5],"sigma_p":21.39,"er_p":8.75,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Eshom, Nicolas":{"section":"S01","weights":[5,15,5,5,15,10,10,5,5,10,15],"sigma_p":19.38,"er_p":7.1,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Freschi, Bruno":{"section":"S01","weights":[15,5,5,10,5,10,5,15,10,10,10],"sigma_p":17.64,"er_p":7.73,"ef_r_at_target":10.6,"ef_s_at_target":17.38},"Galvan Robledo, Edwin":{"section":"S01","weights":[15,5,10,5,5,10,10,10,10,5,15],"sigma_p":19.33,"er_p":7.85,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Garcia Gonzalez, Marco":{"section":"S01","weights":[15,15,5,5,10,5,10,10,5,15,5],"sigma_p":19.67,"er_p":7.95,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Hernandez, Miranda":{"section":"S01","weights":[5,10,10,15,15,10,10,5,5,10,5],"sigma_p":19.7,"er_p":7.8,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Krzywicki, Katie":{"section":"S01","weights":[10,15,5,10,20,5,5,5,10,10,5],"sigma_p":19.79,"er_p":8.15,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Kubrakov, Volodymyr":{"section":"S01","weights":[5,5,5,10,5,5,25,5,15,10,10],"sigma_p":19.65,"er_p":7.43,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Martinez, Dominic":{"section":"S01","weights":[5,5,15,10,20,5,5,10,5,15,5],"sigma_p":19.7,"er_p":7.2,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Mayen, Antonio":{"section":"S01","weights":[15,10,5,10,5,5,10,15,10,10,5],"sigma_p":18.42,"er_p":8.1,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Mercado, Gabriella":{"section":"S01","weights":[10,5,5,5,15,10,10,15,15,5,5],"sigma_p":19.0,"er_p":8.28,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Mestas, Nathan":{"section":"S01","weights":[5,5,10,15,10,10,10,5,10,15,5],"sigma_p":19.33,"er_p":7.43,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Mink, Owen":{"section":"S01","weights":[10,10,10,15,10,5,5,10,10,10,5],"sigma_p":18.87,"er_p":7.88,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Mizrahi, Lance":{"section":"S01","weights":[5,10,10,10,5,5,10,10,5,20,10],"sigma_p":18.69,"er_p":6.45,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Palomera, Ivanna":{"section":"S01","weights":[5,10,5,5,15,15,15,5,5,10,10],"sigma_p":19.94,"er_p":7.58,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Pescatore, Eduardo":{"section":"S01","weights":[10,15,5,5,10,10,5,10,5,10,15],"sigma_p":18.57,"er_p":7.23,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Pinedo, Sophia":{"section":"S01","weights":[15,5,10,10,5,15,5,10,10,10,5],"sigma_p":19.4,"er_p":8.33,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Prida, Aurora":{"section":"S01","weights":[10,5,10,10,15,5,5,5,15,5,15],"sigma_p":19.29,"er_p":7.62,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Ramirez, Steven":{"section":"S01","weights":[5,15,15,5,5,5,10,5,20,5,10],"sigma_p":21.31,"er_p":7.75,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Reels, Jaevon":{"section":"S01","weights":[10,10,10,5,5,15,10,5,5,10,15],"sigma_p":19.85,"er_p":7.4,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Rezendes, Carly":{"section":"S01","weights":[5,10,5,15,5,10,5,10,10,5,20],"sigma_p":17.03,"er_p":6.78,"ef_r_at_target":10.41,"ef_s_at_target":16.97},"Rhoades, Oliver":{"section":"S01","weights":[5,10,5,10,10,5,15,5,15,10,10],"sigma_p":19.33,"er_p":7.43,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Rostovsky, Rafael":{"section":"S01","weights":[10,5,5,5,10,20,5,10,10,10,10],"sigma_p":18.83,"er_p":7.75,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Scholl, Nicolette":{"section":"S01","weights":[15,10,5,15,5,10,5,10,5,5,15],"sigma_p":17.73,"er_p":7.8,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Serawit, Mekdelawit":{"section":"S01","weights":[20,10,10,5,10,15,5,5,5,5,10],"sigma_p":20.75,"er_p":8.8,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Shaia, River":{"section":"S01","weights":[10,5,5,10,10,5,15,10,15,5,10],"sigma_p":18.82,"er_p":7.92,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Smith, Emerson":{"section":"S01","weights":[5,10,5,20,10,5,5,10,20,5,5],"sigma_p":18.02,"er_p":7.95,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Tran, Dylan":{"section":"S01","weights":[5,5,10,5,10,10,5,10,5,20,15],"sigma_p":18.53,"er_p":6.12,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Trubovich, Riley":{"section":"S01","weights":[10,5,15,5,15,5,10,5,20,5,5],"sigma_p":21.64,"er_p":8.47,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Winslow, Andre":{"section":"S01","weights":[5,10,5,20,5,10,15,5,10,5,10],"sigma_p":18.48,"er_p":7.75,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Zelkind, Elijah":{"section":"S01","weights":[10,5,5,10,5,5,10,5,15,15,15],"sigma_p":18.44,"er_p":6.93,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Antenore, Annalisa":{"section":"S02","weights":[15,10,15,5,15,10,10,5,5,5,5],"sigma_p":21.87,"er_p":8.82,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Aznar Sanz, David":{"section":"S02","weights":[10,10,5,10,15,10,5,15,5,5,10],"sigma_p":17.93,"er_p":7.8,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Bae, Kristy":{"section":"S02","weights":[5,5,10,5,10,15,5,15,5,10,15],"sigma_p":18.12,"er_p":6.75,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Battenfield, Mattea":{"section":"S02","weights":[15,10,5,10,15,15,5,10,5,5,5],"sigma_p":19.36,"er_p":8.75,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Bode, Zaiden":{"section":"S02","weights":[10,20,5,5,5,5,5,10,10,15,10],"sigma_p":18.94,"er_p":7.23,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Cheng, Anthony":{"section":"S02","weights":[5,10,10,10,5,10,10,15,10,10,5],"sigma_p":18.76,"er_p":7.5,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Ciarmoli, Dominic":{"section":"S02","weights":[15,5,10,5,15,10,10,5,10,5,10],"sigma_p":20.58,"er_p":8.45,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Contreras, Demetrio":{"section":"S02","weights":[5,10,5,10,5,15,10,15,10,10,5],"sigma_p":18.2,"er_p":7.6,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Daly, Matthew":{"section":"S02","weights":[10,5,5,10,15,5,10,10,15,5,10],"sigma_p":18.66,"er_p":7.92,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Esparza-Martin, Alejandro":{"section":"S02","weights":[10,10,5,10,10,10,15,10,5,5,10],"sigma_p":18.99,"er_p":7.97,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Fereday, Ellie":{"section":"S02","weights":[5,10,10,5,10,5,5,5,15,20,10],"sigma_p":19.75,"er_p":6.67,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Filipek, Calem":{"section":"S02","weights":[10,10,10,5,5,5,15,5,5,10,20],"sigma_p":19.6,"er_p":6.88,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Galamez, Tengis":{"section":"S02","weights":[5,20,10,5,5,10,15,5,10,10,5],"sigma_p":21.19,"er_p":7.9,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Gurri Borrell, Carla":{"section":"S02","weights":[10,5,10,10,5,5,10,15,15,5,10],"sigma_p":18.49,"er_p":7.7,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Harbour, Brian":{"section":"S02","weights":[5,10,5,15,5,15,15,10,5,5,10],"sigma_p":18.33,"er_p":7.67,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Harman, Christopher":{"section":"S02","weights":[5,5,15,10,15,10,5,5,5,10,15],"sigma_p":19.61,"er_p":6.95,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Heric, Ethan":{"section":"S02","weights":[20,15,10,5,5,15,10,5,5,5,5],"sigma_p":21.6,"er_p":9.22,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Junge, Michael":{"section":"S02","weights":[15,10,10,5,15,10,10,5,5,10,5],"sigma_p":21.03,"er_p":8.5,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Magsayo, Vincemmanuel":{"section":"S02","weights":[5,10,10,10,15,10,5,10,15,5,5],"sigma_p":19.59,"er_p":8.05,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"McGovern, Grant":{"section":"S02","weights":[5,10,10,10,5,15,10,5,5,10,15],"sigma_p":19.21,"er_p":7.05,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"McLychok, Ian":{"section":"S02","weights":[15,10,10,5,5,5,15,5,5,15,10],"sigma_p":20.46,"er_p":7.65,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"McNamara, Maxwell":{"section":"S02","weights":[5,5,10,10,10,10,5,10,15,15,5],"sigma_p":18.99,"er_p":7.3,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Megahan, Lauren":{"section":"S02","weights":[15,20,5,5,10,5,5,10,10,10,5],"sigma_p":19.81,"er_p":8.33,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"O'Neil, Padraig":{"section":"S02","weights":[15,10,10,10,5,10,10,10,10,5,5],"sigma_p":19.93,"er_p":8.65,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Park, Ethan":{"section":"S02","weights":[10,5,20,10,5,20,10,5,5,5,5],"sigma_p":21.72,"er_p":8.53,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Penaflor, Adam":{"section":"S02","weights":[10,10,10,10,10,10,10,10,5,5,10],"sigma_p":19.32,"er_p":7.93,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Porada, Angela":{"section":"S02","weights":[15,5,10,5,10,15,10,5,5,5,15],"sigma_p":20.11,"er_p":8.07,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Ramani, Sahil":{"section":"S02","weights":[5,5,10,5,15,5,5,10,10,15,15],"sigma_p":18.7,"er_p":6.45,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Rimland, Grady":{"section":"S02","weights":[20,5,5,5,5,10,15,10,15,5,5],"sigma_p":20.17,"er_p":9.05,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Robertson, Devin":{"section":"S02","weights":[10,5,5,5,5,10,10,5,15,15,15],"sigma_p":18.96,"er_p":7.03,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Sealy, Kate":{"section":"S02","weights":[10,5,10,15,15,5,5,10,10,5,10],"sigma_p":18.53,"er_p":7.83,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Szalmas, Dominic":{"section":"S02","weights":[5,20,10,5,5,15,10,5,5,10,10],"sigma_p":20.49,"er_p":7.53,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Tai-Ho, Timothy":{"section":"S02","weights":[10,5,10,15,15,10,10,5,5,10,5],"sigma_p":19.69,"er_p":8.1,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Ward, Aiden":{"section":"S02","weights":[5,5,15,10,10,10,10,10,10,10,5],"sigma_p":19.99,"er_p":7.63,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Attisha, Luke":{"section":"S03","weights":[15,5,10,10,5,10,15,5,10,5,10],"sigma_p":20.19,"er_p":8.4,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Bade, Kyle":{"section":"S03","weights":[5,5,5,10,15,10,5,10,10,10,15],"sigma_p":17.73,"er_p":6.88,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Baumgartner, Conrad":{"section":"S03","weights":[10,15,10,20,5,5,5,5,10,10,5],"sigma_p":19.19,"er_p":8.0,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Beckman, Ashlyn":{"section":"S03","weights":[5,5,15,10,10,10,15,10,5,5,10],"sigma_p":19.92,"er_p":7.58,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Bedi, Ravi":{"section":"S03","weights":[15,5,10,5,5,5,20,15,5,10,5],"sigma_p":19.88,"er_p":8.1,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Benabdallah, Lina":{"section":"S03","weights":[10,10,10,15,10,10,5,10,5,5,10],"sigma_p":18.63,"er_p":7.88,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Berrut-Marechaud, Adrien":{"section":"S03","weights":[10,5,15,5,10,15,10,10,5,10,5],"sigma_p":20.63,"er_p":8.03,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Busschaert, Noah":{"section":"S03","weights":[5,15,15,5,5,10,10,5,15,5,10],"sigma_p":21.23,"er_p":7.8,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Coscolluela, Paolo":{"section":"S03","weights":[15,5,5,15,5,5,15,10,5,5,15],"sigma_p":17.97,"er_p":7.75,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Cougevan, Connor":{"section":"S03","weights":[5,10,10,10,5,15,10,5,5,15,10],"sigma_p":19.49,"er_p":7.1,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Dadiotis, Panaviotis":{"section":"S03","weights":[10,5,10,5,15,5,10,15,15,5,5],"sigma_p":19.57,"er_p":8.18,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Flores, Alissa":{"section":"S03","weights":[5,15,10,5,10,15,5,10,5,15,5],"sigma_p":19.78,"er_p":7.4,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Flores, Anahi":{"section":"S03","weights":[5,10,5,15,10,15,10,5,5,10,10],"sigma_p":18.64,"er_p":7.48,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Foo, Sienna":{"section":"S03","weights":[15,15,10,15,5,10,5,5,10,5,5],"sigma_p":20.1,"er_p":8.78,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Gianulias, Charles":{"section":"S03","weights":[5,5,15,10,10,15,5,15,5,5,10],"sigma_p":18.88,"er_p":7.45,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Gogna, Tyler":{"section":"S03","weights":[15,15,5,15,5,15,5,5,5,10,5],"sigma_p":19.39,"er_p":8.5,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Gonzalez, Angel":{"section":"S03","weights":[10,5,10,15,5,10,10,10,5,10,10],"sigma_p":18.44,"er_p":7.5,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Hill, Deacon":{"section":"S03","weights":[5,10,10,5,15,15,5,5,15,5,10],"sigma_p":20.33,"er_p":7.9,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Jania, Rose":{"section":"S03","weights":[5,10,20,10,15,10,5,5,10,5,5],"sigma_p":21.61,"er_p":8.12,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"McCain, John":{"section":"S03","weights":[10,5,5,5,10,10,20,5,10,5,15],"sigma_p":19.8,"er_p":7.78,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Murphy, Timothy":{"section":"S03","weights":[5,20,5,10,10,10,5,10,5,5,15],"sigma_p":18.28,"er_p":7.25,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Rodgers, Abigail":{"section":"S03","weights":[10,5,20,5,15,10,5,5,15,5,5],"sigma_p":22.11,"er_p":8.47,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Rodriguez, Luis Enrique":{"section":"S03","weights":[15,10,10,20,5,5,5,10,5,10,5],"sigma_p":18.49,"er_p":8.13,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Sanchez, Noe":{"section":"S03","weights":[15,15,10,5,5,5,10,10,10,10,5],"sigma_p":20.36,"er_p":8.28,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Singer, Noah":{"section":"S03","weights":[5,5,10,10,5,5,15,15,15,5,10],"sigma_p":18.63,"er_p":7.4,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Steinbuch, Nevin":{"section":"S03","weights":[5,10,5,15,5,10,20,5,5,15,5],"sigma_p":19.35,"er_p":7.48,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Yocam, Nathan-Connor":{"section":"S03","weights":[10,10,10,5,5,15,5,15,10,10,5],"sigma_p":19.21,"er_p":7.9,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Zarkeshan, Diba":{"section":"S03","weights":[5,10,10,5,10,20,5,10,5,5,15],"sigma_p":19.13,"er_p":7.35,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Zuniga, Jeremias":{"section":"S03","weights":[5,5,10,20,10,5,5,15,15,5,5],"sigma_p":17.76,"er_p":7.73,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Acuna, Angelica":{"section":"S04","weights":[5,15,5,5,10,5,10,20,5,5,15],"sigma_p":17.5,"er_p":6.9,"ef_r_at_target":10.6,"ef_s_at_target":17.38},"Bires, Joseph":{"section":"S04","weights":[5,5,5,15,15,5,10,5,10,10,15],"sigma_p":18.08,"er_p":6.95,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Carlish, Madison":{"section":"S04","weights":[15,5,20,5,5,10,5,10,10,10,5],"sigma_p":21.19,"er_p":8.23,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Chheng, Emma":{"section":"S04","weights":[10,10,10,10,10,15,5,5,10,5,10],"sigma_p":19.85,"er_p":8.15,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Cortez, Matthew":{"section":"S04","weights":[5,5,20,10,15,5,5,5,5,10,15],"sigma_p":20.35,"er_p":6.85,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Cruz, Isabella":{"section":"S04","weights":[5,5,10,20,5,10,10,5,15,5,10],"sigma_p":18.76,"er_p":7.7,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Dohad, Joshua":{"section":"S04","weights":[5,5,5,10,15,10,15,10,5,15,5],"sigma_p":18.89,"er_p":7.35,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Dulik, Luke":{"section":"S04","weights":[15,15,5,10,5,10,5,15,10,5,5],"sigma_p":18.64,"er_p":8.53,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Feres, Mariana":{"section":"S04","weights":[5,10,15,5,5,5,15,15,10,5,10],"sigma_p":19.93,"er_p":7.4,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Ferrara, Emanuele":{"section":"S04","weights":[10,5,10,10,5,15,10,10,5,10,10],"sigma_p":18.98,"er_p":7.6,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Flores, John":{"section":"S04","weights":[5,5,10,5,10,10,15,10,10,5,15],"sigma_p":19.35,"er_p":7.25,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Garcia Franco, Jesus":{"section":"S04","weights":[15,5,20,10,5,10,5,5,10,10,5],"sigma_p":21.35,"er_p":8.35,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Garcia Jimenez, Alejandro":{"section":"S04","weights":[5,5,10,5,10,10,15,10,5,10,15],"sigma_p":19.17,"er_p":6.88,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Gathungu, Jesse":{"section":"S04","weights":[5,5,5,10,10,5,15,15,10,10,10],"sigma_p":17.85,"er_p":7.08,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Gutierrez, Frank":{"section":"S04","weights":[10,15,10,5,10,15,5,5,10,10,5],"sigma_p":20.79,"er_p":8.25,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Hall, Brooklynne":{"section":"S04","weights":[5,20,10,5,5,5,10,5,10,5,20],"sigma_p":19.8,"er_p":6.95,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Heymans, Beth":{"section":"S04","weights":[15,5,10,5,5,5,10,10,15,5,15],"sigma_p":19.33,"er_p":7.8,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"McCann, Meagan":{"section":"S04","weights":[5,20,20,10,5,5,5,5,5,10,10],"sigma_p":21.16,"er_p":7.28,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"McGlinchey, Ashley":{"section":"S04","weights":[10,5,5,15,10,10,10,5,15,5,10],"sigma_p":18.81,"er_p":8.1,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Melesio, Cecilia":{"section":"S04","weights":[10,5,10,5,10,10,10,10,15,10,5],"sigma_p":19.98,"er_p":8.03,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Neumann, Tyler":{"section":"S04","weights":[5,5,5,5,20,5,5,10,20,10,10],"sigma_p":18.82,"er_p":7.3,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Nohra, Alessandra":{"section":"S04","weights":[5,5,5,10,5,15,15,10,15,5,10],"sigma_p":18.71,"er_p":7.72,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Ortiz, Genesis":{"section":"S04","weights":[20,15,5,5,10,10,15,5,5,5,5],"sigma_p":21.3,"er_p":9.22,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Reyes, Tyler":{"section":"S04","weights":[5,5,5,5,15,10,5,15,10,10,15],"sigma_p":17.58,"er_p":6.75,"ef_r_at_target":10.6,"ef_s_at_target":17.38},"Rundle, Kallen":{"section":"S04","weights":[5,5,5,10,10,10,25,10,5,5,10],"sigma_p":19.22,"er_p":7.68,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Sandoval, Franky":{"section":"S04","weights":[5,5,5,15,15,5,5,10,10,15,10],"sigma_p":17.5,"er_p":6.82,"ef_r_at_target":10.6,"ef_s_at_target":17.38},"Sciarrino, Alfredo":{"section":"S04","weights":[10,20,15,5,15,10,5,5,5,5,5],"sigma_p":21.88,"er_p":8.53,"ef_r_at_target":12.43,"ef_s_at_target":21.72},"Suarez Gonzalez, Ximena":{"section":"S04","weights":[5,10,5,20,10,10,5,5,10,10,10],"sigma_p":17.93,"er_p":7.38,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Tran, Kevin":{"section":"S04","weights":[20,5,10,10,5,5,5,15,5,10,10],"sigma_p":18.34,"er_p":7.93,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Wade, Peter":{"section":"S04","weights":[5,5,10,10,5,10,10,15,20,5,5],"sigma_p":18.93,"er_p":7.88,"ef_r_at_target":0.5,"ef_s_at_target":17.98},"Wessler, Caden":{"section":"S04","weights":[10,10,10,5,15,15,5,5,5,10,10],"sigma_p":20.2,"er_p":7.83,"ef_r_at_target":11.7,"ef_s_at_target":19.93},"Zarcone, Isabella":{"section":"S04","weights":[15,5,5,5,15,20,5,10,5,10,5],"sigma_p":19.58,"er_p":8.47,"ef_r_at_target":11.7,"ef_s_at_target":19.93}},"etfs":["XLK","XLF","XLE","XLV","XLI","XLC","XLY","XLP","XLB","XLRE","XLU"]};
+const MONTHLY_DATA = {"dates":["2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08","2020-09","2020-10","2020-11","2020-12","2021-01","2021-02","2021-03","2021-04","2021-05","2021-06","2021-07","2021-08","2021-09","2021-10","2021-11","2021-12","2022-01","2022-02","2022-03","2022-04","2022-05","2022-06","2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08"],"returns":[[4.161,2.57,8.067,7.781,3.702,3.811,10.432,5.742,4.394,7.595,2.456],[-3.745,-1.274,-15.893,-7.513,-5.321,-9.617,-4.395,-5.133,-11.897,1.363,-5.142],[-12.364,-20.138,-33.488,-7.927,-19.898,-11.558,-23.143,-7.572,-26.495,-22.788,-10.506],[-16.408,-10.374,-23.696,-6.006,-16.623,-19.57,-17.87,-2.982,-15.634,-23.299,-10.93],[-5.564,-4.861,-4.891,4.136,-1.062,-9.171,-2.225,0.156,-0.778,8.796,4.764],[11.631,5.964,5.522,5.987,9.806,7.646,8.737,-0.265,3.686,12.918,8.005],[-0.51,4.703,9.049,-0.962,3.989,5.964,4.292,5.995,-1.905,10.448,6.447],[-2.375,-1.013,-16.371,-1.71,-1.028,1.93,-4.457,-3.561,-4.141,2.226,-0.576],[-4.271,-0.349,1.367,3.329,-1.848,-3.585,-4.242,-3.196,1.319,-2.827,-2.22],[-1.846,-7.873,-12.237,-2.292,-7.679,-4.175,-4.369,3.346,-5.512,-3.357,-1.811],[-15.681,-11.125,-10.309,4.89,-7.927,-8.508,-11.393,-2.852,-0.094,-2.896,0.95],[-7.389,1.687,-7.687,0.868,6.131,-6.638,-3.69,0.496,2.158,-5.81,-0.616],[-8.645,-3.677,-10.145,3.6,-5.132,-7.339,-3.773,-2.939,-2.194,1.916,-7.218],[1.598,2.644,9.603,-2.791,-2.066,1.841,3.081,1.529,2.956,-4.129,-1.361],[2.489,-1.397,13.239,3.598,-1.947,4.733,-2.409,3.401,6.809,-6.489,3.395],[3.472,6.688,23.135,2.333,3.942,0.976,2.271,2.163,8.642,1.319,5.752],[0.188,7.365,7.167,11.6,8.822,0.717,-0.588,3.884,8.913,5.997,8.195],[-0.517,-4.189,-16.712,-2.387,-1.031,-1.087,-8.087,-1.948,-2.569,-8.679,-3.521],[0.559,-4.839,-2.696,2.316,1.43,5.139,-5.248,-2.243,2.287,0.43,2.323],[31.73,25.75,36.003,14.936,25.581,24.976,30.886,5.92,21.687,13.229,7.861],[19.095,4.978,9.104,-0.259,4.805,15.506,11.37,-1.386,0.18,5.57,-3.075],[1.859,1.802,-2.907,8.859,5.043,-3.932,1.401,-0.1,5.965,-4.608,-1.778],[4.229,7.441,-0.808,0.812,3.343,-0.269,10.669,2.659,-1.005,8.249,8.47],[8.562,-0.906,-5.832,6.724,0.073,6.77,5.25,-1.163,-1.018,-15.976,-12.642],[-4.494,-8.974,3.534,-8.041,-7.774,-3.993,1.626,-3.271,-1.343,-4.497,-8.937],[1.377,2.186,-1.647,-0.789,0.123,0.436,3.345,4.677,-2.976,11.386,-1.807],[-3.666,0.439,4.016,-4.205,-1.366,-4.678,-3.959,1.838,1.842,-6.44,1.654],[0.105,4.222,10.832,-3.477,0.677,2.417,5.417,1.601,4.148,7.205,0.377],[2.075,0.76,-0.42,3.103,4.026,5.358,8.311,2.655,6.306,2.267,1.714],[-3.488,-1.793,3.796,-5.055,4.154,-4.489,-4.587,2.851,5.559,2.133,6.437],[-2.519,-5.874,-5.437,-5.164,-1.694,-2.84,-6.159,-2.092,-1.792,-7.13,-6.255],[-0.417,1.12,-1.93,-3.251,0.588,-6.092,-6.99,-3.41,-2.163,-4.26,2.536],[4.626,2.793,3.256,-3.687,1.705,1.173,4.364,-1.695,2.449,5.946,-0.011],[0.881,4.189,2.442,0.053,2.686,1.022,-1.275,0.377,4.732,5.346,6.11],[17.769,9.309,16.031,6.754,16.646,12.639,11.681,1.953,4.073,5.889,1.458],[1.317,2.835,18.619,5.71,2.636,0.111,5.411,0.094,12.31,5.277,1.246],[-13.992,-3.284,-2.455,1.785,-8.037,-11.837,-9.384,-0.084,-3.755,-2.833,-4.881],[-1.088,0.046,4.714,3.298,-2.201,-5.952,3.555,2.546,-1.891,6.583,2.418],[9.769,7.581,24.604,11.173,8.864,13.736,13.697,9.301,9.867,12.597,12.681],[-14.366,-15.738,-32.862,-6.498,-11.321,-7.409,-13.476,0.555,-15.737,-13.002,-7.143],[3.236,2.414,-13.68,0.38,-2.739,1.657,0.377,-3.537,-5.129,-8.248,-7.805],[7.927,1.201,4.709,0.773,0.187,4.17,-1.047,-1.569,-4.144,6.633,1.719],[-5.667,-2.788,-3.055,-1.766,-0.789,-0.964,-4.399,-1.534,-0.778,-12.216,-10.506],[11.31,16.262,16.439,7.322,13.741,20.801,19.897,5.204,12.4,5.8,3.674],[-6.132,-10.98,-17.178,-6.436,-3.75,-2.219,-5.622,2.137,-4.613,-5.417,3.153],[4.508,-1.499,-3.608,-1.913,-4.573,3.812,8.056,-2.836,-1.43,-4.555,-8.726],[-4.785,-7.333,-7.404,-4.392,-4.815,-4.541,-5.907,-3.561,-6.913,-0.904,-1.076],[-7.949,-4.975,1.53,-7.452,-3.378,-8.091,-1.6,-2.004,-8.41,-8.779,-5.755],[2.215,-2.505,2.132,-5.021,-1.824,-3.925,-3.086,-0.93,-5.399,-5.556,0.31],[-4.658,0.922,-6.838,1.244,4.083,-10.686,-5.695,0.922,0.87,-0.098,-0.211],[0.792,0.07,9.687,2.323,2.547,0.706,0.2,0.524,5.122,-2.337,1.219],[17.13,16.72,15.526,10.845,13.433,6.39,8.587,-2.149,8.96,1.813,6.32],[2.767,1.182,8.041,-6.305,1.119,3.905,-2.608,2.392,3.562,-2.9,3.072],[18.734,14.56,17.263,5.053,10.141,15.939,10.845,2.624,8.302,6.764,4.834],[8.604,3.971,1.782,-0.7,2.2,5.944,8.165,-1.365,4.434,6.776,1.536],[15.498,7.65,-2.561,-2.14,10.245,11.989,10.659,1.28,0.824,17.439,6.367],[0.98,4.438,9.463,2.549,1.463,2.886,10.946,6.744,11.563,1.638,-1.324],[-0.952,-0.166,9.069,-5.241,4.006,-0.06,1.298,-1.633,-2.487,6.093,2.051],[-10.515,-13.513,-17.121,2.522,-9.505,-12.979,-13.383,-2.504,-18.327,-7.649,-5.925],[5.8,13.29,24.636,3.307,6.88,14.471,11.188,4.228,12.676,7.914,4.403],[-4.631,-5.699,-6.097,-3.111,-6.518,-4.389,-6.405,2.599,-13.137,2.547,4.926],[-16.951,-13.555,-16.514,-10.108,-14.747,-18.558,-7.777,0.049,-6.643,-4.737,-8.249],[-4.228,-0.433,-9.281,1.767,-1.562,-4.729,-0.608,1.299,-1.853,4.506,-2.616],[-0.359,2.785,2.581,1.747,-1.898,1.362,-3.057,-1.437,3.741,-8.71,-8.726],[-14.631,-7.354,-16.172,2.316,-12.533,-6.239,-12.185,-1.721,-8.654,-5.802,-4.58],[9.144,7.357,9.161,2.346,6.282,7.749,0.413,-2.82,7.733,-0.463,-0.605],[0.233,2.086,-1.432,-2.094,1.356,-3.834,2.072,-4.193,3.536,-0.164,-1.912],[8.154,14.097,24.373,-1.905,5.981,3.383,9.741,3.67,6.649,4.343,0.233],[-4.942,-10.052,-18.438,-7.178,-11.234,-3.591,-12.598,2.912,-7.309,-6.941,-5.125],[5.834,1.669,2.531,11.552,4.366,10.023,1.213,2.286,11.702,-2.521,7.449],[5.895,1.776,6.729,6.002,5.627,0.429,0.899,0.894,3.877,2.718,3.242],[-10.888,-5.734,-0.084,-0.066,-1.117,-2.705,-1.967,1.416,-3.988,4.383,2.683],[2.312,-4.224,-13.704,3.893,-1.706,3.086,-1.774,-0.256,0.627,-5.182,-2.761],[-3.716,-4.503,-6.991,-0.076,-4.484,0.938,-7.456,-1.418,-4.113,2.88,1.093],[8.557,-0.748,0.363,5.717,2.683,10.065,2.173,4.874,11.091,-1.599,0.759],[12.02,16.458,14.384,3.715,11.271,4.236,7.223,-0.882,6.718,2.225,1.747],[12.818,4.648,12.006,3.662,5.978,11.827,4.351,2.607,6.429,4.029,4.476],[20.251,11.712,7.365,3.994,8.926,10.761,17.238,6.073,4.778,2.181,2.396],[-4.455,0.094,2.776,-5.701,3.139,3.956,-0.505,-0.396,4.877,3.891,4.253],[16.594,11.302,5.269,0.282,6.697,9.529,18.064,0.829,5.474,4.542,2.503]]};
+
+// ── State ────────────────────────────────────────────────────────────────
+let ROLE=null, SECTION=null, STUDENT_NAME=null, STUDENT_WEIGHTS=null;
+let STUDENT_INFO=null;
+let GATE_MODE='student';
+let STUDENT_CODE='FINA402'; // default; overridden by Firebase
+let INSTR_PIN='FINA402';    // default; overridden by Firebase
+let ACTIVE_SECTION=null;    // set by prof
+let SESSION_ACTIVE=true;    // professor controls; default open
+let SUBMISSIONS_P1={}, SUBMISSIONS_P2={}, SUBMISSIONS_SR={};
+let EF_DRAWN_S10=false;
+let CAL_ANIM_STEP=-1;
+let DB=null;
+
+// ── Firebase Init ────────────────────────────────────────────────────────
+async function initFirebase() {
+  if(!FB_CONFIG) return;
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+    DB = firebase.firestore();
+    const cfg = await DB.collection('lec04').doc('config').get();
+    if(cfg.exists){
+      const d=cfg.data();
+      if(d.studentCode) STUDENT_CODE=d.studentCode;
+      if(d.instructorPin) INSTR_PIN=d.instructorPin;
+      if(typeof d.sessionActive==='boolean') SESSION_ACTIVE=d.sessionActive;
+    }
+  }catch(e){console.warn('Firebase init failed:',e);}
+}
+
+async function saveCode(code){
+  try{
+    if(localStorage) localStorage.setItem('lec04_code',code);
+    if(DB) await DB.collection('lec04').doc('config').set({studentCode:code},{merge:true});
+  }catch(e){}
+}
+
+async function saveToStore(col,key,data){
+  try{
+    if(DB) await DB.collection(col).doc(key).set(data,{merge:true});
+    const all=JSON.parse(localStorage.getItem(col)||'{}');
+    all[key]={...(all[key]||{}),...data};
+    localStorage.setItem(col,JSON.stringify(all));
+  }catch(e){}
+}
+
+async function loadStore(col){
+  try{
+    if(DB){
+      const snap=await DB.collection(col).get();
+      const out={};
+      snap.forEach(d=>out[d.id]=d.data());
+      return out;
+    }
+    return JSON.parse(localStorage.getItem(col)||'{}');
+  }catch(e){return JSON.parse(localStorage.getItem(col)||'{}');}
+}
+
+// ── Gate / Auth ──────────────────────────────────────────────────────────
+async function initApp(){
+  await initFirebase();
+  // Try restore local-only state if already logged in
+  try{
+    const s=JSON.parse(sessionStorage.getItem('lec04_state')||'null');
+    if(s && s.role){
+      ROLE=s.role; SECTION=s.section; STUDENT_NAME=s.name;
+      ACTIVE_SECTION=s.active_section||null;
+      if(ROLE==='student') STUDENT_INFO=STU_DATA.students[STUDENT_NAME];
+      if(STUDENT_INFO) STUDENT_WEIGHTS=STUDENT_INFO.weights;
+      finalizeLogin();
+      return;
+    }
+  }catch(e){}
+  document.getElementById('gate').style.display='flex';
+  // Show session-closed banner if applicable
+  const banner=document.getElementById('session-banner');
+  if(banner) banner.style.display=SESSION_ACTIVE?'none':'block';
+}
+
+function gateTab(mode){
+  GATE_MODE=mode;
+  document.getElementById('pane-student').style.display=mode==='student'?'':'none';
+  document.getElementById('pane-prof').style.display=mode==='prof'?'':'none';
+  document.querySelectorAll('.pill-tab').forEach((t,i)=>t.classList.toggle('on',(mode==='student'?i===0:i===1)));
+}
+
+function fillNames(){
+  const sec=document.getElementById('gate-sec').value;
+  const sel=document.getElementById('gate-name');
+  sel.innerHTML='<option value="">— Select name —</option>';
+  if(!sec) return;
+  const names=(STU_DATA.sections[sec]||[]).sort();
+  names.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+}
+
+async function submitGate(){
+  const code=document.getElementById('gate-code').value.trim().toUpperCase();
+  const errEl=document.getElementById('gate-err');
+  errEl.style.display='none';
+
+  if(code!==STUDENT_CODE.toUpperCase()){errEl.style.display='block';return;}
+
+  if(GATE_MODE==='student'){
+    if(!SESSION_ACTIVE){errEl.textContent='No active session. Please wait for the professor to open the session.';errEl.style.display='block';return;}
+    const sec=document.getElementById('gate-sec').value;
+    const name=document.getElementById('gate-name').value;
+    if(!sec||!name){errEl.textContent='Please select your section and name.';errEl.style.display='block';return;}
+    const info=STU_DATA.students[name];
+    if(!info||info.section!==sec){errEl.textContent='Name not found in selected section.';errEl.style.display='block';return;}
+    ROLE='student'; SECTION=sec; STUDENT_NAME=name; STUDENT_INFO=info; STUDENT_WEIGHTS=info.weights;
+  } else {
+    const pin=document.getElementById('gate-pin').value.trim().toUpperCase();
+    if(pin!==INSTR_PIN.toUpperCase()){errEl.textContent='Incorrect PIN.';errEl.style.display='block';return;}
+    ROLE='professor'; SECTION='ALL'; STUDENT_NAME='Instructor';
+    ACTIVE_SECTION=document.getElementById('gate-prof-sec').value||null;
+  }
+
+  sessionStorage.setItem('lec04_state',JSON.stringify({role:ROLE,section:SECTION,name:STUDENT_NAME,active_section:ACTIVE_SECTION}));
+  finalizeLogin();
+}
+
+function finalizeLogin(){
+  document.getElementById('gate').style.display='none';
+  document.getElementById('user-bar').style.display='flex';
+  const lblEl=document.getElementById('user-label');
+  if(ROLE==='professor'){
+    lblEl.innerHTML='<strong>Instructor</strong>'+(ACTIVE_SECTION?' · '+ACTIVE_SECTION:'');
+    document.getElementById('settings-btn').style.display='inline-block';
+    // Show professor-only UI
+    ['s8-log-card','s10-log-card'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='block';});
+    const efBtn=document.getElementById('btn-draw-ef-s14');
+    if(efBtn) efBtn.style.display='inline-block';
+  } else {
+    lblEl.innerHTML='<strong>'+STUDENT_NAME+'</strong> · '+SECTION;
+  }
+  renderStudentWidgets();
+  loadAllSubmissions();
+  buildProgressDots();
+  goSlide(0);
+}
+
+function resetGate(){
+  sessionStorage.removeItem('lec04_state');
+  ROLE=null; SECTION=null; STUDENT_NAME=null; STUDENT_INFO=null; STUDENT_WEIGHTS=null;
+  document.getElementById('gate').style.display='flex';
+}
+
+// ── Slide navigation ──────────────────────────────────────────────────────
+const SLIDES=document.querySelectorAll('.slide');
+const N=SLIDES.length;
+let CUR=0;
+const INIT_CALLED=new Set();
+
+function buildProgressDots(){
+  const c=document.getElementById('progress-dots');
+  c.innerHTML='';
+  for(let i=0;i<N;i++){
+    const d=document.createElement('div');
+    d.className='pdot'+(i===0?' on':'');
+    d.onclick=()=>goSlide(i);
+    c.appendChild(d);
+  }
+}
+
+function goSlide(i){
+  i=Math.max(0,Math.min(N-1,i));
+  SLIDES[CUR].classList.remove('active');
+  document.querySelectorAll('.pdot')[CUR]?.classList.remove('on');
+  CUR=i;
+  SLIDES[CUR].classList.add('active');
+  document.querySelectorAll('.pdot')[CUR]?.classList.add('on');
+  document.getElementById('slide-ctr').textContent=(CUR+1)+' / '+N;
+  if(!INIT_CALLED.has(CUR)){INIT_CALLED.add(CUR);initSlide(CUR);}
+}
+
+function goNext(){goSlide(CUR+1);}
+function goPrev(){goSlide(CUR-1);}
+document.addEventListener('keydown',e=>{
+  if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') goNext();
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp') goPrev();
+});
+
+// ── Theme ────────────────────────────────────────────────────────────────
+function toggleTheme(){
+  const r=document.documentElement;
+  const t=r.getAttribute('data-theme');
+  r.setAttribute('data-theme',t==='dark'?'light':'dark');
+  document.getElementById('theme-btn').textContent=t==='dark'?'☾':'☀';
+}
+
+// ── Canvas helpers ────────────────────────────────────────────────────────
+function isDark(){return document.documentElement.getAttribute('data-theme')==='dark'||
+  (!document.documentElement.getAttribute('data-theme')&&window.matchMedia('(prefers-color-scheme:dark)').matches);}
+function surfaceColor(){return isDark()?'#1F1B18':'#FFFFFF';}
+function textColor(){return isDark()?'#EDE8E3':'#1A1614';}
+function mutedColor(){return isDark()?'#9A948F':'#6B6461';}
+function borderColor(){return isDark()?'#2E2926':'#E2DDD8';}
+
+// ── Two-asset frontier ────────────────────────────────────────────────────
+const RA=12,SA=20,RB=4,SB=10;
+function twoAssetPt(w,rho){
+  const r=w*RA+(1-w)*RB;
+  const s2=w*w*SA*SA+(1-w)*(1-w)*SB*SB+2*w*(1-w)*SA*SB*rho;
+  return {r,s:Math.sqrt(Math.max(0,s2))};
+}
+
+function drawTwoAsset(id,rho,showDot,dotW){
+  const c=document.getElementById(id); if(!c) return;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=36;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=surfaceColor(); ctx.fillRect(0,0,W,H);
+  const rMin=2,rMax=14,sMax=22;
+  const px=s=>pad+(s/sMax)*(W-2*pad);
+  const py=r=>(H-pad)-(r-rMin)/(rMax-rMin)*(H-2*pad);
+
+  // Grid
+  ctx.strokeStyle=borderColor(); ctx.lineWidth=1;
+  [0,5,10,15,20,25].forEach(sv=>{ctx.beginPath();ctx.moveTo(px(sv),pad);ctx.lineTo(px(sv),H-pad);ctx.stroke();});
+  [4,6,8,10,12].forEach(rv=>{ctx.beginPath();ctx.moveTo(pad,py(rv));ctx.lineTo(W-pad,py(rv));ctx.stroke();});
+
+  // Axes labels
+  ctx.fillStyle=mutedColor(); ctx.font='10px Inter';
+  ctx.textAlign='center';
+  [0,5,10,15,20,25].forEach(sv=>ctx.fillText(sv+'%',px(sv),H-pad+14));
+  ctx.textAlign='right';
+  [4,6,8,10,12].forEach(rv=>ctx.fillText(rv+'%',pad-6,py(rv)+4));
+  ctx.fillStyle=mutedColor(); ctx.font='10px Inter';
+  ctx.textAlign='center'; ctx.fillText('σ (Risk)',W/2,H-4);
+  ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('E[r]',0,0); ctx.restore();
+
+  // Frontier
+  ctx.beginPath(); ctx.strokeStyle='#B8962E'; ctx.lineWidth=2.5;
+  for(let w=0;w<=1.001;w+=0.005){
+    const p=twoAssetPt(w,rho);
+    if(w===0) ctx.moveTo(px(p.s),py(p.r));
+    else ctx.lineTo(px(p.s),py(p.r));
+  }
+  ctx.stroke();
+
+  // Individual asset dots
+  [[SA,RA,'Stock (A)'],[SB,RB,'Bond (B)']].forEach(([s,r,lbl])=>{
+    ctx.beginPath();ctx.arc(px(s),py(r),6,0,2*Math.PI);
+    ctx.fillStyle='#6B1A2B';ctx.fill();
+    ctx.fillStyle=textColor();ctx.font='bold 10px Inter';
+    ctx.textAlign=s>12?'left':'right';
+    ctx.fillText(lbl,px(s)+(s>12?10:-10),py(r)-6);
+  });
+
+  // dot at current weight
+  if(showDot){
+    const w=dotW!==undefined?dotW:0.5;
+    const p=twoAssetPt(w,rho);
+    ctx.beginPath();ctx.arc(px(p.s),py(p.r),7,0,2*Math.PI);
+    ctx.fillStyle='#B8962E';ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle=textColor();ctx.font='bold 9.5px Inter';
+    ctx.textAlign='left';
+    const wLbl=Math.round(w*100);
+    ctx.fillText(wLbl+'/'+( 100-wLbl)+': σ='+p.s.toFixed(1)+'%, r='+p.r.toFixed(1)+'%',px(p.s)+10,py(p.r)+4);
+  }
+}
+
+// ── ETF scatter (shared for s7, s8, s10) ──────────────────────────────────
+const ETF_COLORS=['#E74C3C','#E67E22','#F1C40F','#2ECC71','#1ABC9C','#3498DB','#9B59B6','#E91E63','#FF5722','#795548','#607D8B'];
+function getChartBounds(){
+  return {rMin:0,rMax:17,sMin:0,sMax:45};
+}
+
+function drawETFScatter(id, subs_p1, subs_p2, showEF){
+  const c=document.getElementById(id); if(!c) return;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=40;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle=surfaceColor(); ctx.fillRect(0,0,W,H);
+  const {rMin,rMax,sMin,sMax}=getChartBounds();
+  const px=s=>pad+(s-sMin)/(sMax-sMin)*(W-2*pad);
+  const py=r=>(H-pad)-(r-rMin)/(rMax-rMin)*(H-2*pad);
+
+  // Grid
+  ctx.strokeStyle=borderColor(); ctx.lineWidth=1;
+  [0,10,20,30,40].forEach(sv=>{ctx.beginPath();ctx.moveTo(px(sv),pad);ctx.lineTo(px(sv),H-pad);ctx.stroke();});
+  [0,4,8,12,16].forEach(rv=>{ctx.beginPath();ctx.moveTo(pad,py(rv));ctx.lineTo(W-pad,py(rv));ctx.stroke();});
+
+  ctx.fillStyle=mutedColor(); ctx.font='10px Inter';
+  ctx.textAlign='center';
+  [0,10,20,30,40].forEach(sv=>ctx.fillText(sv+'%',px(sv),H-pad+14));
+  ctx.textAlign='right';
+  [0,4,8,12,16].forEach(rv=>ctx.fillText(rv+'%',pad-4,py(rv)+4));
+  ctx.fillText('σ — Standard Deviation',W/2,H-2);
+  ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('E[r] — Expected Return',0,0); ctx.restore();
+
+  // EF overlay
+  if(showEF){
+    ctx.beginPath(); ctx.strokeStyle='#B8962E'; ctx.lineWidth=2.5;
+    ctx.shadowColor='#B8962E'; ctx.shadowBlur=8;
+    const ef=EF_DATA.ef;
+    ef.forEach((p,i)=>{if(i===0)ctx.moveTo(px(p.s),py(p.r));else ctx.lineTo(px(p.s),py(p.r));});
+    ctx.stroke(); ctx.shadowBlur=0;
+  }
+
+  // Part 2 submissions (gold star)
+  Object.values(subs_p2||{}).forEach(s=>{
+    if(!s.er||!s.sigma) return;
+    ctx.beginPath();
+    drawStar(ctx,px(s.sigma),py(s.er),8);
+    ctx.fillStyle='#B8962E'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+  });
+
+  // Part 1 submissions
+  Object.values(subs_p1||{}).forEach((s,i)=>{
+    if(!s.er||!s.sigma) return;
+    ctx.beginPath();ctx.arc(px(s.sigma),py(s.er),6,0,2*Math.PI);
+    ctx.fillStyle='#6B1A2B'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+  });
+
+  // 11 ETF dots
+  EF_DATA.individual.forEach((pt,i)=>{
+    ctx.beginPath();ctx.arc(px(pt.s),py(pt.r),7,0,2*Math.PI);
+    ctx.fillStyle=ETF_COLORS[i]; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.fillStyle=textColor(); ctx.font='bold 9.5px Inter';
+    ctx.textAlign='center';
+    ctx.fillText(pt.label,px(pt.s),py(pt.r)-10);
+  });
+}
+
+function drawStar(ctx,cx,cy,r){
+  ctx.beginPath();
+  for(let i=0;i<10;i++){
+    const angle=i*Math.PI/5-Math.PI/2;
+    const rad=i%2===0?r:r*0.45;
+    const x=cx+rad*Math.cos(angle);
+    const y=cy+rad*Math.sin(angle);
+    if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+}
+
+// ── Hover tooltip ──────────────────────────────────────────────────────────
+function canvasHover(e,id,type){
+  const c=document.getElementById(id); if(!c) return;
+  const rect=c.getBoundingClientRect();
+  const scaleX=c.width/rect.width, scaleY=c.height/rect.height;
+  const mx=(e.clientX-rect.left)*scaleX;
+  const my=(e.clientY-rect.top)*scaleY;
+  const pad=40;
+  const W=c.width,H=c.height;
+  const {rMin,rMax,sMin,sMax}=getChartBounds();
+  const px=s=>pad+(s-sMin)/(sMax-sMin)*(W-2*pad);
+  const py=r=>(H-pad)-(r-rMin)/(rMax-rMin)*(H-2*pad);
+  const dist=(x1,y1,x2,y2)=>Math.sqrt((x1-x2)**2+(y1-y2)**2);
+
+  let closest=null, minD=20;
+  const subs=type==='p1'?SUBMISSIONS_P1:SUBMISSIONS_P2;
+  Object.entries(subs).forEach(([name,s])=>{
+    const d=dist(mx,my,px(s.sigma||0),py(s.er||0));
+    if(d<minD){minD=d;closest={name,er:s.er,sigma:s.sigma};}
+  });
+
+  const tip=document.getElementById('canvas-tooltip');
+  if(closest){
+    tip.innerHTML='<b>'+closest.name+'</b><br>E[r]='+closest.er+'%  σ='+closest.sigma+'%';
+    tip.style.display='block';
+    tip.style.left=(e.clientX+12)+'px';
+    tip.style.top=(e.clientY-28)+'px';
+  } else {
+    tip.style.display='none';
+  }
+}
+
+function hideTooltip(){document.getElementById('canvas-tooltip').style.display='none';}
+
+// ── Render student widgets ────────────────────────────────────────────────
+function renderStudentWidgets(){
+  if(ROLE==='student' && STUDENT_INFO){
+    // s8 weights card
+    document.getElementById('my-weights-card').style.display='block';
+    document.getElementById('s8-login-hint').style.display='none';
+    const tbl=document.getElementById('my-weights-table');
+    tbl.innerHTML='<tr><th>ETF</th><th>Weight</th><th></th></tr>';
+    EF_DATA.etfs.forEach((etf,i)=>{
+      const w=STUDENT_INFO.weights[i];
+      tbl.innerHTML+=`<tr><td><b>${etf}</b></td><td>${w}%</td><td><span class="w-bar" style="width:${Math.round(w*1.5)}px"></span></td></tr>`;
+    });
+
+    // s10 target
+    document.getElementById('p2-target-card').style.display='block';
+    document.getElementById('s10-login-hint').style.display='none';
+    document.getElementById('p2-target-display').textContent='σ target = '+STUDENT_INFO.sigma_p+'%';
+
+    // s14 my SR
+    const myER=STUDENT_INFO.er_p, mySig=STUDENT_INFO.sigma_p, rf=EF_DATA.rf;
+    const mySR=((myER-rf)/mySig).toFixed(3);
+    document.getElementById('sr-my-stats').style.display='block';
+    document.getElementById('sr-my-er').textContent=myER+'%';
+    document.getElementById('sr-my-sig').textContent=mySig+'%';
+    document.getElementById('sr-my-val').textContent=mySR;
+    document.getElementById('sr-submit-val').value=mySR;
+
+    // Build Part 2 weights grid
+    const grid=document.getElementById('p2-weights-grid');
+    grid.innerHTML='';
+    EF_DATA.etfs.forEach((etf,i)=>{
+      grid.innerHTML+=`<div class="wg-item"><label>${etf}</label><input type="number" id="wg-${i}" step="1" min="0" max="100" placeholder="0" oninput="updateWgSum()"></div>`;
+    });
+  }
+}
+
+function updateWgSum(){
+  let sum=0;
+  EF_DATA.etfs.forEach((_,i)=>{sum+=parseFloat(document.getElementById('wg-'+i)?.value||0);});
+  const el=document.getElementById('wg-sum-display');
+  el.textContent=sum.toFixed(0)+'%';
+  el.className=Math.abs(sum-100)<0.5?'ok':'bad';
+}
+
+// ── Load all submissions ───────────────────────────────────────────────────
+async function loadAllSubmissions(){
+  const p1=await loadStore('lec04_p1');
+  const p2=await loadStore('lec04_p2');
+  const sr=await loadStore('lec04_sr');
+  SUBMISSIONS_P1=p1; SUBMISSIONS_P2=p2; SUBMISSIONS_SR=sr;
+  refreshCharts();
+  refreshSRBars();
+}
+
+function refreshCharts(){
+  if(INIT_CALLED.has(7)) drawETFScatter('cvs7',{},{},false);
+  if(INIT_CALLED.has(8)) drawETFScatter('cvs8',SUBMISSIONS_P1,{},false);
+  if(INIT_CALLED.has(10)) drawETFScatter('cvs10',SUBMISSIONS_P1,SUBMISSIONS_P2,EF_DRAWN_S10);
+}
+
+// ── Part I Submit ──────────────────────────────────────────────────────────
+async function submitP1(){
+  if(ROLE!=='student'){showMsg('p1-msg','Log in as a student first.','err');return;}
+  const er=parseFloat(document.getElementById('p1-er').value);
+  const sig=parseFloat(document.getElementById('p1-sig').value);
+  if(isNaN(er)||isNaN(sig)){showMsg('p1-msg','Please enter both values.','err');return;}
+
+  const tol=0.5;
+  const expER=STUDENT_INFO.er_p, expSig=STUDENT_INFO.sigma_p;
+  if(Math.abs(er-expER)>tol||Math.abs(sig-expSig)>tol){
+    showMsg('p1-msg','Incorrect — check your formulas (tolerance ±0.5%).','err');
+    return;
+  }
+
+  const entry={name:STUDENT_NAME,section:SECTION,er,sigma:sig,ts:Date.now()};
+  SUBMISSIONS_P1[STUDENT_NAME]=entry;
+  await saveToStore('lec04_p1',STUDENT_NAME,entry);
+  showMsg('p1-msg','✓ Correct! Your dot has been added to the chart.','ok');
+  refreshCharts();
+  addLogEntry('s8-log',STUDENT_NAME+': E[r]='+er+'%, σ='+sig+'%');
+}
+
+// ── Part II Submit ─────────────────────────────────────────────────────────
+async function submitP2(){
+  if(ROLE!=='student'){showMsg('p2-msg','Log in as a student first.','err');return;}
+  const er=parseFloat(document.getElementById('p2-er').value);
+  if(isNaN(er)){showMsg('p2-msg','Please enter your max E[r].','err');return;}
+
+  // Collect weights
+  const weights=[];
+  let wsum=0;
+  for(let i=0;i<11;i++){
+    const v=parseFloat(document.getElementById('wg-'+i)?.value||0);
+    weights.push(isNaN(v)?0:v); wsum+=weights[i];
+  }
+  if(Math.abs(wsum-100)>1){showMsg('p2-msg','Weights must sum to 100%.','err');return;}
+
+  // Compute σ from weights
+  const w=weights.map(x=>x/100);
+  const mu=EF_DATA.mu, cov=EF_DATA.cov;
+  let var_p=0;
+  for(let i=0;i<11;i++) for(let j=0;j<11;j++) var_p+=w[i]*w[j]*cov[i][j];
+  const sigma_computed=Math.sqrt(Math.max(0,var_p));
+  const er_computed=w.reduce((s,wi,i)=>s+wi*mu[i],0);
+
+  const target=STUDENT_INFO.sigma_p;
+  const target_r=STUDENT_INFO.ef_r_at_target;
+
+  if(Math.abs(sigma_computed-target)>2){
+    showMsg('p2-msg','σ from your weights ('+sigma_computed.toFixed(1)+'%) is too far from target ('+target+'%). Adjust allocations.','err');
+    return;
+  }
+  if(Math.abs(er-er_computed)>0.5){
+    showMsg('p2-msg','Your E[r] entry doesn\'t match your weights. Expected '+er_computed.toFixed(2)+'%.','err');
+    return;
+  }
+  if(er_computed < target_r-2){
+    showMsg('p2-msg','E[r]='+er_computed.toFixed(2)+'% — you can do better! EF gives ~'+target_r+'% at this σ.','err');
+    return;
+  }
+
+  const entry={name:STUDENT_NAME,section:SECTION,er,sigma:sigma_computed,weights,ts:Date.now()};
+  SUBMISSIONS_P2[STUDENT_NAME]=entry;
+  await saveToStore('lec04_p2',STUDENT_NAME,entry);
+  showMsg('p2-msg','✓ Correct! Optimal portfolio plotted (★).','ok');
+  refreshCharts();
+  addLogEntry('s10-log',STUDENT_NAME+': E[r]='+er.toFixed(2)+'% σ='+sigma_computed.toFixed(1)+'%');
+}
+
+// ── Optimal Portfolio Calculator (s10) ────────────────────────────────────
+function computeOptimal(){
+  if(ROLE!=='student'||!STUDENT_INFO){
+    document.getElementById('opt-msg').textContent='Log in first to see your σ target.';return;
+  }
+  const target=STUDENT_INFO.sigma_p; // % value
+  const ef=EF_DATA.ef; // array of {r,s,w[11]}
+  const rf=EF_DATA.rf;
+  const etfs=EF_DATA.etfs;
+
+  // Find the two EF points bracketing the target σ (upper half only: r >= mvp.r)
+  const mvpR=EF_DATA.mvp.r;
+  const upper=ef.filter(p=>p.r>=mvpR-0.05).sort((a,b)=>a.s-b.s);
+  let bestIdx=-1;
+  for(let i=0;i<upper.length-1;i++){
+    if(upper[i].s<=target && upper[i+1].s>=target){bestIdx=i;break;}
+  }
+
+  let result=null;
+  if(bestIdx>=0){
+    // Linear interpolate between bracket points
+    const lo=upper[bestIdx], hi=upper[bestIdx+1];
+    const t=(target-lo.s)/(hi.s-lo.s);
+    const r=lo.r+t*(hi.r-lo.r);
+    const w=lo.w.map((wi,i)=>wi+t*(hi.w[i]-wi));
+    result={r:r.toFixed(2),s:target.toFixed(2),w,sr:((r-rf)/target).toFixed(3)};
+  } else if(upper.length>0){
+    // Clamp to closest endpoint
+    const closest=upper.reduce((a,b)=>Math.abs(a.s-target)<Math.abs(b.s-target)?a:b);
+    result={r:closest.r.toFixed(2),s:target.toFixed(2),w:closest.w,sr:((closest.r-rf)/target).toFixed(3)};
+  }
+
+  if(!result){document.getElementById('opt-msg').textContent='Could not interpolate — data issue.';return;}
+
+  document.getElementById('opt-result').style.display='block';
+  document.getElementById('opt-er').textContent=result.r+'%';
+  document.getElementById('opt-sig').textContent=result.s+'%';
+  document.getElementById('opt-sr').textContent=result.sr;
+  document.getElementById('opt-msg').textContent='';
+
+  // Weights table
+  const tbl=document.getElementById('opt-weights-table');
+  tbl.innerHTML='<tr><th>ETF</th><th>Weight (%)</th><th></th></tr>';
+  result.w.forEach((wi,i)=>{
+    const pct=(wi*100).toFixed(1);
+    if(parseFloat(pct)>0.05) tbl.innerHTML+=`<tr><td><b>${etfs[i]}</b></td><td>${pct}</td><td><span class="w-bar" style="width:${Math.round(parseFloat(pct)*1.2)}px"></span></td></tr>`;
+  });
+  const zeros=result.w.filter(wi=>wi*100<0.05).length;
+  if(zeros>0) tbl.innerHTML+=`<tr><td colspan="3" style="color:var(--muted);font-style:italic">${zeros} ETF(s) with 0% weight omitted</td></tr>`;
+}
+
+function drawEFOverlay(){
+  EF_DRAWN_S10=true;
+  drawETFScatter('cvs10',SUBMISSIONS_P1,SUBMISSIONS_P2,true);
+  document.getElementById('btn-draw-ef').textContent='EF Drawn ✓';
+  document.getElementById('btn-draw-ef').disabled=true;
+}
+
+// ── Sharpe submit ──────────────────────────────────────────────────────────
+async function submitSR(){
+  if(ROLE!=='student'){showMsg('sr-msg','Log in as a student first.','err');return;}
+  const raw=document.getElementById('sr-submit-val').value.trim();
+  const val=parseFloat(raw);
+  if(isNaN(val)){showMsg('sr-msg','Please enter a value.','err');return;}
+
+  // Must be exactly 3 decimal places
+  if(!/^-?\d+\.\d{3}$/.test(raw)){
+    showMsg('sr-msg','Please enter exactly 3 decimal places (e.g. 0.245).','err');
+    return;
+  }
+
+  // Validate correct value: SR = (er_p - rf) / sigma_p
+  if(STUDENT_INFO){
+    const rf=EF_DATA.rf;
+    const correct=Math.round(((STUDENT_INFO.er_p-rf)/STUDENT_INFO.sigma_p)*1000)/1000;
+    if(Math.round(val*1000)!==Math.round(correct*1000)){
+      showMsg('sr-msg','Incorrect — check your calculation. SR = (E[r] − rf) / σ','err');
+      return;
+    }
+  }
+
+  const entry={name:STUDENT_NAME,section:SECTION,sr:val,ts:Date.now()};
+  SUBMISSIONS_SR[STUDENT_NAME]=entry;
+  await saveToStore('lec04_sr',STUDENT_NAME,entry);
+  showMsg('sr-msg','✓ Submitted!','ok');
+  refreshSRBars();
+  drawS14Scatter();
+}
+
+// ── s14 scatter: student portfolios on σ-E[r] space ──────────────────────
+let S14_EF_DRAWN=false;
+function drawS14Scatter(drawEF){
+  const c=document.getElementById('cvs14'); if(!c) return;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=40;
+  const rMin=0,rMax=17,sMax=40;
+  const px=s=>pad+(s/sMax)*(W-2*pad);
+  const py=r=>(H-pad)-(r-rMin)/(rMax-rMin)*(H-2*pad);
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=surfaceColor(); ctx.fillRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle=borderColor(); ctx.lineWidth=1;
+  [0,10,20,30].forEach(sv=>{ctx.beginPath();ctx.moveTo(px(sv),pad);ctx.lineTo(px(sv),H-pad);ctx.stroke();});
+  [0,4,8,12,16].forEach(rv=>{ctx.beginPath();ctx.moveTo(pad,py(rv));ctx.lineTo(W-pad,py(rv));ctx.stroke();});
+  ctx.fillStyle=mutedColor(); ctx.font='10px Inter';
+  ctx.textAlign='center'; [0,10,20,30].forEach(sv=>ctx.fillText(sv+'%',px(sv),H-pad+14));
+  ctx.textAlign='right'; [0,4,8,12,16].forEach(rv=>ctx.fillText(rv+'%',pad-4,py(rv)+4));
+  ctx.fillStyle=mutedColor(); ctx.font='10px Inter';
+  ctx.textAlign='center'; ctx.fillText('σ (Risk %)',W/2,H-4);
+  ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2); ctx.fillText('E[r] %',0,0); ctx.restore();
+
+  // EF (if drawn)
+  if(drawEF||S14_EF_DRAWN){
+    S14_EF_DRAWN=true;
+    ctx.beginPath(); ctx.strokeStyle='rgba(184,150,46,.8)'; ctx.lineWidth=2.5;
+    EF_DATA.ef.forEach((p,i)=>{if(i===0)ctx.moveTo(px(p.s),py(p.r));else ctx.lineTo(px(p.s),py(p.r));});
+    ctx.stroke();
+    // Tangency star
+    const t=EF_DATA.tangency;
+    drawStar(ctx,px(t.s),py(t.r),8);
+    ctx.fillStyle='#B8962E'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.fillStyle='#B8962E'; ctx.font='bold 9px Inter'; ctx.textAlign='left';
+    ctx.fillText('T* SR='+t.sr.toFixed(3),px(t.s)+10,py(t.r)+4);
+  }
+
+  // Student submission dots
+  const subs=Object.values(SUBMISSIONS_SR);
+  subs.forEach(s=>{
+    const info=STU_DATA.students[s.name];
+    if(!info) return;
+    const sx=px(info.sigma_p), sy=py(info.er_p);
+    ctx.beginPath(); ctx.arc(sx,sy,5,0,2*Math.PI);
+    const isMe=s.name===STUDENT_NAME;
+    ctx.fillStyle=isMe?'#6B1A2B':'rgba(91,143,185,.75)';
+    ctx.fill();
+    if(isMe){
+      ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.fillStyle='#6B1A2B'; ctx.font='bold 8.5px Inter'; ctx.textAlign='left';
+      ctx.fillText('You',sx+7,sy+4);
+    }
+  });
+
+  // Legend
+  ctx.fillStyle=mutedColor(); ctx.font='9px Inter'; ctx.textAlign='left';
+  ctx.fillStyle='rgba(91,143,185,.75)';
+  ctx.beginPath(); ctx.arc(pad+8,H-pad+28,4,0,2*Math.PI); ctx.fill();
+  ctx.fillStyle=mutedColor(); ctx.fillText('Classmates',pad+16,H-pad+32);
+  ctx.fillStyle='#6B1A2B';
+  ctx.beginPath(); ctx.arc(pad+90,H-pad+28,4,0,2*Math.PI); ctx.fill();
+  ctx.fillStyle=mutedColor(); ctx.fillText('You',pad+98,H-pad+32);
+}
+
+function drawEFS14(){
+  S14_EF_DRAWN=true;
+  drawS14Scatter(true);
+  const btn=document.getElementById('btn-draw-ef-s14');
+  if(btn){btn.textContent='EF Drawn ✓'; btn.disabled=true;}
+}
+
+function refreshSRBars(){
+  const cont=document.getElementById('sr-bars'); if(!cont) return;
+  cont.innerHTML='';
+  const tangSR=EF_DATA.tangency.sr;
+  // Tangency benchmark
+  const tRow=document.createElement('div'); tRow.className='sr-bar-row';
+  const fillPct=Math.min(100,Math.max(0,(tangSR/0.6)*100));
+  tRow.innerHTML=`<div class="name" style="color:var(--accent);font-weight:700">Tangency T*</div>
+   <div class="sr-bar-bg"><div class="sr-bar-fill accent" style="width:${fillPct}%"></div></div>
+   <div class="sr-val" style="color:var(--accent)">${tangSR.toFixed(3)}</div>`;
+  cont.appendChild(tRow);
+  // Student submissions
+  Object.values(SUBMISSIONS_SR).sort((a,b)=>b.sr-a.sr).forEach(s=>{
+    const p=Math.min(100,Math.max(0,(s.sr/0.6)*100));
+    const row=document.createElement('div'); row.className='sr-bar-row';
+    row.innerHTML=`<div class="name">${s.name.split(',')[0]}</div>
+     <div class="sr-bar-bg"><div class="sr-bar-fill" style="width:${p}%"></div></div>
+     <div class="sr-val">${s.sr.toFixed(3)}</div>`;
+    cont.appendChild(row);
+  });
+}
+
+// ── Sharpe calculator ──────────────────────────────────────────────────────
+function calcSR(){
+  const er=parseFloat(document.getElementById('sr-er').value);
+  const rf=parseFloat(document.getElementById('sr-rf').value);
+  const sig=parseFloat(document.getElementById('sr-sig').value);
+  const el=document.getElementById('sr-result');
+  if(isNaN(er)||isNaN(rf)||isNaN(sig)||sig<=0){el.textContent='—';return;}
+  el.textContent='SR = '+((er-rf)/sig).toFixed(3);
+}
+
+// ── Interactive sliders (s6) ──────────────────────────────────────────────
+function updateRho(){
+  const rho=parseInt(document.getElementById('rho-slider').value)/100;
+  const wSlider=document.getElementById('w-slider');
+  const wA=wSlider?parseInt(wSlider.value)/100:0.5;
+  const wB=1-wA;
+  const sA=0.20, sB=0.10;
+  document.getElementById('rho-disp').textContent='ρ = '+(rho>=0?'+':'')+rho.toFixed(2);
+  const wEl=document.getElementById('w-disp');
+  if(wEl) wEl.innerHTML='w<sub>A</sub> = '+wA.toFixed(2)+'  w<sub>B</sub> = '+wB.toFixed(2);
+  const er=wA*0.12+wB*0.04;
+  const s2=wA*wA*sA*sA + wB*wB*sB*sB + 2*wA*wB*sA*sB*rho;
+  const s=Math.sqrt(Math.max(0,s2));
+  document.getElementById('disp-er').textContent=(er*100).toFixed(2)+'%';
+  document.getElementById('disp-sig').textContent=(s*100).toFixed(2)+'%';
+  const tA=(wA*wA*sA*sA).toFixed(4), tB=(wB*wB*sB*sB).toFixed(4), tC=(2*wA*wB*sA*sB).toFixed(4);
+  const fEl=document.getElementById('rho-formula-val');
+  if(fEl) fEl.textContent=tA+'+'+tB+'+'+tC+'·('+(rho>=0?'+':'')+rho.toFixed(2)+')';
+  document.getElementById('rho-result-line').textContent='= '+s2.toFixed(4)+' → σ = '+(s*100).toFixed(2)+'%';
+  drawTwoAsset('cvs6',rho,true,wA);
+}
+
+// ── Markowitz frontier diagram (s9) ──────────────────────────────────────
+function drawMarkowitz(id){
+  const c=document.getElementById(id); if(!c) return;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=46;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle=surfaceColor(); ctx.fillRect(0,0,W,H);
+
+  // Bounds — show full parabola
+  const rMin=0, rMax=16, sMin=0, sMax=38;
+  const px=s=>pad+(s-sMin)/(sMax-sMin)*(W-2*pad);
+  const py=r=>(H-pad)-(r-rMin)/(rMax-rMin)*(H-2*pad);
+
+  // Grid
+  ctx.strokeStyle=borderColor(); ctx.lineWidth=1;
+  [0,10,20,30].forEach(sv=>{ctx.beginPath();ctx.moveTo(px(sv),pad);ctx.lineTo(px(sv),H-pad);ctx.stroke();});
+  [0,4,8,12,16].forEach(rv=>{ctx.beginPath();ctx.moveTo(pad,py(rv));ctx.lineTo(W-pad,py(rv));ctx.stroke();});
+  ctx.fillStyle=mutedColor(); ctx.font='9px Inter'; ctx.textAlign='center';
+  [0,10,20,30].forEach(sv=>ctx.fillText(sv+'%',px(sv),H-pad+12));
+  ctx.textAlign='right';
+  [0,4,8,12,16].forEach(rv=>ctx.fillText(rv+'%',pad-4,py(rv)+3));
+  ctx.fillStyle=textColor(); ctx.font='9.5px Inter'; ctx.textAlign='center';
+  ctx.fillText('σ (Risk)',W/2,H-4);
+  ctx.save(); ctx.translate(12,H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('E[r]',0,0); ctx.restore();
+
+  // Full parabola (inefficient lower half — muted)
+  const ef=EF_DATA.ef;
+  const mvpIdx=ef.findIndex((p,i)=>i>0 && p.s>ef[i-1].s && ef[i-1].s<=EF_DATA.mvp.s+0.1);
+  // Draw full frontier (both halves)
+  ctx.beginPath(); ctx.strokeStyle='rgba(150,150,150,.35)'; ctx.lineWidth=1.5; ctx.setLineDash([4,4]);
+  ef.forEach((p,i)=>{if(i===0)ctx.moveTo(px(p.s),py(p.r));else ctx.lineTo(px(p.s),py(p.r));});
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // Efficient frontier (upper portion — from MVP upward in r)
+  const mvp=EF_DATA.mvp;
+  const efUpper=ef.filter(p=>p.r>=mvp.r-0.05);
+  ctx.beginPath(); ctx.strokeStyle='#B8962E'; ctx.lineWidth=2.5;
+  efUpper.forEach((p,i)=>{if(i===0)ctx.moveTo(px(p.s),py(p.r));else ctx.lineTo(px(p.s),py(p.r));});
+  ctx.stroke();
+
+  // Individual ETF dots
+  const ETF_C=ETF_COLORS||['#E07B54','#5B8FB9','#8FBC8F','#9B59B6','#E67E22','#1ABC9C','#E74C3C','#3498DB','#F39C12','#2ECC71','#95A5A6'];
+  EF_DATA.individual.forEach((pt,i)=>{
+    ctx.beginPath();ctx.arc(px(pt.s),py(pt.r),4,0,2*Math.PI);
+    ctx.fillStyle=ETF_C[i]||'#888'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle=mutedColor(); ctx.font='8px Inter'; ctx.textAlign='center';
+    ctx.fillText(pt.label,px(pt.s),py(pt.r)-7);
+  });
+
+  // MVP dot
+  ctx.beginPath();ctx.arc(px(mvp.s),py(mvp.r),7,0,2*Math.PI);
+  ctx.fillStyle='#1A7A4A'; ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle=textColor(); ctx.font='bold 9px Inter'; ctx.textAlign='left';
+  ctx.fillText('MVP',px(mvp.s)+9,py(mvp.r)+3);
+
+  // Dashed lines to MVP
+  ctx.beginPath(); ctx.strokeStyle='rgba(26,122,74,.5)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.moveTo(px(mvp.s),py(mvp.r)); ctx.lineTo(px(mvp.s),H-pad);
+  ctx.moveTo(px(mvp.s),py(mvp.r)); ctx.lineTo(pad,py(mvp.r));
+  ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='rgba(26,122,74,.7)'; ctx.font='8px Inter'; ctx.textAlign='center';
+  ctx.fillText('σ*',px(mvp.s),H-pad+10);
+  ctx.textAlign='right';
+  ctx.fillText('r*',pad-4,py(mvp.r)+3);
+
+  // Tangency dot (star)
+  const tang=EF_DATA.tangency;
+  drawStar(ctx,px(tang.s),py(tang.r),7);
+  ctx.fillStyle='#B8962E'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle=textColor(); ctx.font='bold 9.5px Inter'; ctx.textAlign='left';
+  ctx.fillText('T* (Tangency)',px(tang.s)+10,py(tang.r)+3);
+  ctx.fillStyle=mutedColor(); ctx.font='8px Inter';
+  ctx.fillText('SR='+tang.sr.toFixed(3),px(tang.s)+10,py(tang.r)+14);
+
+  // "Opportunity set" label
+  ctx.fillStyle=mutedColor(); ctx.font='italic 9px Inter'; ctx.textAlign='center';
+  ctx.fillText('Opportunity Set',px(28),py(6));
+  ctx.fillStyle='#B8962E'; ctx.font='bold 9.5px Inter';
+  ctx.fillText('Efficient Frontier',px(28),py(14));
+}
+
+// ── T-bill history chart ──────────────────────────────────────────────────
+const TBILL_DATA=[
+  [2020,0.9],[2021,0.05],[2022,1.5],[2023,5.1],[2024,5.3],[2025,4.8],[2026,4.3]
+];
+function drawTBillChart(id){
+  const c=document.getElementById(id); if(!c) return;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=40;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle=surfaceColor(); ctx.fillRect(0,0,W,H);
+  const n=TBILL_DATA.length;
+  const barW=(W-2*pad)/n*0.6, gap=(W-2*pad)/n;
+  ctx.fillStyle=mutedColor(); ctx.font='10px Inter';
+  [0,2,4,6].forEach(rv=>{
+    const y=(H-pad)-(rv/6)*(H-2*pad);
+    ctx.beginPath();ctx.strokeStyle=borderColor();ctx.lineWidth=1;
+    ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();
+    ctx.textAlign='right'; ctx.fillText(rv+'%',pad-4,y+4);
+  });
+  TBILL_DATA.forEach(([yr,v],i)=>{
+    const x=pad+i*gap+(gap-barW)/2;
+    const bH=(v/6)*(H-2*pad);
+    const y=H-pad-bH;
+    const isLast=i===n-1;
+    ctx.fillStyle=isLast?'#B8962E':'rgba(184,150,46,.4)';
+    ctx.beginPath();ctx.roundRect(x,y,barW,bH,4);ctx.fill();
+    ctx.fillStyle=textColor(); ctx.textAlign='center'; ctx.font='9px Inter';
+    ctx.fillText(yr,x+barW/2,H-pad+12);
+    ctx.fillStyle=isLast?textColor():mutedColor();
+    ctx.font=isLast?'bold 9px Inter':'9px Inter';
+    ctx.fillText(v+'%',x+barW/2,y-4);
+  });
+  ctx.fillStyle=textColor(); ctx.font='bold 11px Inter'; ctx.textAlign='center';
+  ctx.fillText('3-Month T-Bill Rate (Annual Average)',W/2,16);
+}
+
+// ── Tangency CAL animation ────────────────────────────────────────────────
+// P1-P4: real EF points ascending toward tangency; P5: above EF → infeasible
+const CAL_PORTFOLIOS=[
+  {s:14.2,r:10.5,color:'#888888',label:'P1',sr:null,feasible:true},
+  {s:18.9,r:12.1,color:'#5B8FB9',label:'P2',sr:null,feasible:true},
+  {s:25.452,r:13.901,color:'#B8962E',label:'T*',sr:null,feasible:true},
+  {s:31.5,r:14.3,color:'#6B8E5E',label:'P4',sr:null,feasible:true},
+  {s:20.0,r:16.5,color:'#C0392B',label:'P5 ✗',sr:null,feasible:false},
+];
+// Pre-compute SR
+CAL_PORTFOLIOS.forEach(p=>{p.sr=((p.r-EF_DATA.rf)/p.s).toFixed(3);});
+
+function drawCALBase(ctx,W,H,pad){
+  const rf=EF_DATA.rf;
+  const rMin=0,rMax=17,sMax=45;
+  const px=s=>pad+(s/sMax)*(W-2*pad);
+  const py=r=>(H-pad)-(r-rMin)/(rMax-rMin)*(H-2*pad);
+  // Grid
+  ctx.strokeStyle=borderColor(); ctx.lineWidth=1;
+  [0,10,20,30,40].forEach(sv=>{ctx.beginPath();ctx.moveTo(px(sv),pad);ctx.lineTo(px(sv),H-pad);ctx.stroke();});
+  [0,4,8,12,16].forEach(rv=>{ctx.beginPath();ctx.moveTo(pad,py(rv));ctx.lineTo(W-pad,py(rv));ctx.stroke();});
+  ctx.fillStyle=mutedColor(); ctx.font='10px Inter'; ctx.textAlign='center';
+  [0,10,20,30,40].forEach(sv=>ctx.fillText(sv+'%',px(sv),H-pad+14));
+  ctx.textAlign='right';
+  [0,4,8,12,16].forEach(rv=>ctx.fillText(rv+'%',pad-4,py(rv)+4));
+  // EF
+  ctx.beginPath(); ctx.strokeStyle='rgba(184,150,46,.5)'; ctx.lineWidth=2;
+  EF_DATA.ef.forEach((p,i)=>{if(i===0)ctx.moveTo(px(p.s),py(p.r));else ctx.lineTo(px(p.s),py(p.r));});
+  ctx.stroke();
+  // rf dot
+  ctx.beginPath();ctx.arc(px(0),py(rf),5,0,2*Math.PI);
+  ctx.fillStyle='#1A7A4A';ctx.fill();
+  ctx.fillStyle=textColor();ctx.font='bold 10px Inter';ctx.textAlign='left';
+  ctx.fillText('rf='+rf+'%',px(0)+8,py(rf)+4);
+  return {px,py,rf};
+}
+
+function animateCAL(){
+  const c=document.getElementById('cvs13'); if(!c) return;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=40;
+  CAL_ANIM_STEP=-1;
+  const {px,py,rf}=drawCALBase(ctx,W,H,pad);
+
+  function drawStep(i){
+    if(i>=CAL_PORTFOLIOS.length) return;
+    CAL_ANIM_STEP=i;
+    const p=CAL_PORTFOLIOS[i];
+    const isT=p.label==='T*';
+    const isFeasible=p.feasible!==false;
+
+    if(!isFeasible){
+      // Infeasible P5: red dashed CAL line, ✗ marker
+      ctx.beginPath();
+      ctx.strokeStyle='rgba(192,57,43,.7)'; ctx.lineWidth=2;
+      ctx.setLineDash([5,4]);
+      ctx.moveTo(px(0),py(rf));
+      // Extend beyond portfolio point
+      const extMult=1.3;
+      ctx.lineTo(px(p.s*extMult),py(rf+(p.r-rf)*extMult));
+      ctx.stroke(); ctx.setLineDash([]);
+
+      // X marker (red circle with X)
+      ctx.beginPath();ctx.arc(px(p.s),py(p.r),10,0,2*Math.PI);
+      ctx.fillStyle='rgba(192,57,43,.15)'; ctx.fill();
+      ctx.strokeStyle='#C0392B'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle='#C0392B'; ctx.font='bold 13px Inter'; ctx.textAlign='center';
+      ctx.fillText('✕',px(p.s),py(p.r)+5);
+
+      // Labels
+      ctx.fillStyle='#C0392B'; ctx.font='bold 10px Inter'; ctx.textAlign='center';
+      ctx.fillText('SR='+p.sr+' — IMPOSSIBLE',px(p.s),py(p.r)-16);
+      ctx.font='9px Inter'; ctx.fillStyle=mutedColor();
+      ctx.fillText('This point is above the EF!',px(p.s),py(p.r)-5);
+    } else {
+      // Feasible CAL line — starts at rf, ends exactly at the EF point
+      ctx.beginPath();
+      ctx.strokeStyle=isT?p.color+'DD':'rgba(120,120,120,.45)';
+      ctx.lineWidth=isT?2.8:1.6;
+      ctx.setLineDash(isT?[]:[5,4]);
+      ctx.moveTo(px(0),py(rf));
+      ctx.lineTo(px(p.s),py(p.r));   // stop AT the EF point
+      ctx.stroke(); ctx.setLineDash([]);
+
+      // Slope = Sharpe Ratio annotation along the line (midpoint)
+      const mx=px(p.s*0.48), my=py(rf+(p.r-rf)*0.48);
+      ctx.save();
+      const angle=Math.atan2(py(p.r)-py(rf), px(p.s)-px(0));
+      ctx.translate(mx,my); ctx.rotate(angle);
+      ctx.fillStyle=isT?p.color:mutedColor();
+      ctx.font=isT?'bold 9px Inter':'8.5px Inter';
+      ctx.textAlign='center';
+      ctx.fillText('Slope = SR = '+p.sr, 0, -5);
+      ctx.restore();
+
+      // Portfolio dot
+      if(isT){
+        drawStar(ctx,px(p.s),py(p.r),8);
+        ctx.fillStyle=p.color; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+      } else {
+        ctx.beginPath();ctx.arc(px(p.s),py(p.r),6,0,2*Math.PI);
+        ctx.fillStyle=p.color;ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+      }
+
+      // Portfolio label (name + SR at the dot)
+      ctx.fillStyle=isT?p.color:mutedColor();
+      ctx.font=isT?'bold 10px Inter':'9.5px Inter';
+      ctx.textAlign='center';
+      const lbl=isT?p.label+' ← MAX SR='+p.sr:p.label+' SR='+p.sr;
+      ctx.fillText(lbl,px(p.s),py(p.r)-12);
+    }
+
+    // Legend
+    const el=document.getElementById('cal'+i);
+    if(el) el.style.opacity='1';
+    setTimeout(()=>drawStep(i+1),800);
+  }
+  // Reset legend
+  for(let i=0;i<5;i++){const el=document.getElementById('cal'+i);if(el)el.style.opacity='.3';}
+  ctx.clearRect(0,0,W,H); ctx.fillStyle=surfaceColor(); ctx.fillRect(0,0,W,H);
+  drawCALBase(ctx,W,H,pad);
+  setTimeout(()=>drawStep(0),400);
+}
+
+function resetCAL(){
+  const c=document.getElementById('cvs13'); if(!c) return;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=40;
+  ctx.clearRect(0,0,W,H); ctx.fillStyle=surfaceColor(); ctx.fillRect(0,0,W,H);
+  drawCALBase(ctx,W,H,pad);
+  for(let i=0;i<5;i++){const el=document.getElementById('cal'+i);if(el)el.style.opacity='.3';}
+  CAL_ANIM_STEP=-1;
+  document.getElementById('btn-cal-anim').textContent='▶ Animate CAL Lines';
+}
+
+// ── Slide init callbacks ───────────────────────────────────────────────────
+const RHO_VALS=[1,0,-0.5,-1];
+function initSlide(i){
+  if(i===2) drawTwoAsset('cvs2',1,true);
+  else if(i===3) drawTwoAsset('cvs3',0,true);
+  else if(i===4) drawTwoAsset('cvs4',-0.5,true);
+  else if(i===5) drawTwoAsset('cvs5',-1,true);
+  else if(i===6){drawTwoAsset('cvs6',0,true);updateRho();}
+  else if(i===7) drawETFScatter('cvs7',{},{},false);
+  else if(i===8) drawETFScatter('cvs8',SUBMISSIONS_P1,{},false);
+  else if(i===9) drawMarkowitz('cvs9');
+  else if(i===10) drawETFScatter('cvs10',SUBMISSIONS_P1,SUBMISSIONS_P2,EF_DRAWN_S10);
+  else if(i===12) drawTBillChart('cvs12');
+  else if(i===14) drawS14Scatter(false);
+  else if(i===13){
+    const c=document.getElementById('cvs13');
+    if(c){
+      const ctx=c.getContext('2d');
+      ctx.clearRect(0,0,c.width,c.height);
+      ctx.fillStyle=surfaceColor(); ctx.fillRect(0,0,c.width,c.height);
+      drawCALBase(ctx,c.width,c.height,40);
+    }
+  }
+}
+
+// ── Utility ───────────────────────────────────────────────────────────────
+function showMsg(id,msg,type){
+  const el=document.getElementById(id); if(!el) return;
+  el.className=type==='ok'?'msg-ok':'msg-err';
+  el.textContent=msg;
+}
+
+function addLogEntry(id,txt){
+  const el=document.getElementById(id); if(!el) return;
+  const d=document.createElement('div'); d.className='sub-entry';
+  d.textContent=txt; el.prepend(d);
+}
+
+// ── Excel Download ────────────────────────────────────────────────────────
+function downloadExcel(){
+  if(typeof XLSX==='undefined'){alert('SheetJS not loaded. Check internet connection.');return;}
+  const etfs=EF_DATA.etfs;
+  const dates=MONTHLY_DATA.dates;
+  const returns=MONTHLY_DATA.returns;
+  const weights=STUDENT_WEIGHTS||new Array(11).fill(null);
+  // Build rows
+  const hdr=['Date',...etfs,'Portfolio Return (%)  ← compute here'];
+  // Weight reference row
+  const wHdr=['Your Weights (%)',...weights.map(w=>w!==null?w+'%':'—'),'← SUMPRODUCT of col B:L × row 2'];
+  const rows=[hdr,wHdr];
+  returns.forEach((row,i)=>{
+    rows.push([dates[i],...row,'']);  // students compute portfolio return themselves
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  // Highlight the portfolio column header and weight row in yellow
+  const col='M'; // Date + 11 ETFs = col M
+  ['M1','M2'].forEach(cell=>{
+    if(ws[cell]) ws[cell].s={fill:{fgColor:{rgb:'FFF3CD'}},font:{bold:true}};
+  });
+  // Highlight weight row (row 2) for all ETF columns
+  'BCDEFGHIJKL'.split('').forEach(c=>{
+    const cell=c+'2';
+    if(ws[cell]) ws[cell].s={fill:{fgColor:{rgb:'DAEEFB'}}};
+  });
+  // Column widths
+  ws['!cols']=[{wch:10},...etfs.map(()=>({wch:8})),{wch:28}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'ETF Returns');
+  const fname='FINA402_ETF_Returns'+(STUDENT_NAME?'_'+STUDENT_NAME.split(',')[0]:'')+'.xlsx';
+  XLSX.writeFile(wb,fname);
+}
+
+// ── Settings Panel ────────────────────────────────────────────────────────
+function updateSessionBtn(){
+  const btn=document.getElementById('session-toggle-btn');
+  const txt=document.getElementById('session-status-text');
+  if(!btn) return;
+  if(SESSION_ACTIVE){
+    btn.textContent='● Session Open'; btn.style.background='var(--green)';
+    if(txt) txt.textContent='Students can log in';
+  } else {
+    btn.textContent='○ Session Closed'; btn.style.background='var(--red)';
+    if(txt) txt.textContent='Students are blocked';
+  }
+}
+
+async function toggleSession(){
+  SESSION_ACTIVE=!SESSION_ACTIVE;
+  updateSessionBtn();
+  try{
+    if(DB) await DB.collection('lec04').doc('config').set({sessionActive:SESSION_ACTIVE},{merge:true});
+    const msg=document.getElementById('settings-msg');
+    msg.style.color=SESSION_ACTIVE?'var(--green)':'var(--red)';
+    msg.textContent=SESSION_ACTIVE?'✓ Session opened — students can log in.':'Session closed — students are blocked.';
+    setTimeout(()=>{msg.textContent='';},3000);
+  }catch(e){console.warn('Session toggle error:',e);}
+}
+
+function toggleSettings(){
+  const p=document.getElementById('settings-panel');
+  p.style.display=p.style.display==='none'?'block':'none';
+  if(p.style.display==='block'){
+    document.getElementById('current-code-display').textContent=STUDENT_CODE||'—';
+    updateSessionBtn();
+    loadParticipation();
+  }
+}
+
+function loadParticipation(){
+  const sec=document.getElementById('settings-section')?.value||'all';
+  const ml=document.getElementById('missing-list');
+  const dl=document.getElementById('done-list');
+  ml.innerHTML='<div style="color:var(--muted);font-style:italic">Loading…</div>';
+  dl.innerHTML='';
+
+  // Build set of students who completed P1 (submitted with valid er and sigma)
+  const completed=new Set();
+  Object.entries(SUBMISSIONS_P1).forEach(([name,s])=>{
+    if(s.er&&s.sigma) completed.add(name);
+  });
+
+  // Get student names for the selected section(s)
+  let studentsInfo=[];  // array of {name, section}
+  if(sec==='all'){
+    Object.entries(STU_DATA.students).forEach(([name,info])=>{
+      studentsInfo.push({name,section:info.section});
+    });
+  } else {
+    (STU_DATA.sections[sec]||[]).forEach(name=>{
+      studentsInfo.push({name,section:sec});
+    });
+  }
+  studentsInfo.sort((a,b)=>a.name.localeCompare(b.name));
+
+  const missing=studentsInfo.filter(s=>!completed.has(s.name));
+  const done=studentsInfo.filter(s=>completed.has(s.name));
+
+  // Stats
+  const stats=document.getElementById('participation-stats');
+  stats.innerHTML=`
+   <div class="stat-tile" style="font-size:.8rem;flex:1">
+    <div class="val" style="font-size:1.3rem;color:var(--green)">${done.length}</div>
+    <div class="lbl">Submitted</div></div>
+   <div class="stat-tile" style="font-size:.8rem;flex:1">
+    <div class="val" style="font-size:1.3rem;color:var(--red)">${missing.length}</div>
+    <div class="lbl">Missing</div></div>
+   <div class="stat-tile" style="font-size:.8rem;flex:1">
+    <div class="val" style="font-size:1.3rem">${studentsInfo.length}</div>
+    <div class="lbl">Total</div></div>
+  `;
+
+  if(missing.length===0){
+    ml.innerHTML='<div style="color:var(--green);font-weight:600">🎉 All students completed!</div>';
+  } else {
+    // Group by section for display
+    const bySec={};
+    missing.forEach(s=>{
+      if(!bySec[s.section]) bySec[s.section]=[];
+      bySec[s.section].push(s.name);
+    });
+    ml.innerHTML='';
+    Object.entries(bySec).sort().forEach(([section,names])=>{
+      const el=document.createElement('div');
+      el.style.cssText='margin-bottom:8px';
+      el.innerHTML=`<div style="font-size:.7rem;font-weight:700;color:var(--muted);margin-bottom:3px">${section} (${names.length})</div>`+
+        names.map(n=>`<div style="padding-left:10px">• ${n.split(',')[0].trim()}</div>`).join('');
+      ml.appendChild(el);
+    });
+  }
+
+  dl.innerHTML=done.length===0
+    ?'<div style="color:var(--muted);font-style:italic">None yet</div>'
+    :done.map(s=>`<div>✓ ${s.name.split(',')[0].trim()} <span style="color:var(--muted);font-size:.7em">(${s.section})</span></div>`).join('');
+}
+
+async function saveParticipationToFirebase(){
+  const msg=document.getElementById('settings-msg');
+  const sec=document.getElementById('settings-section')?.value||'all';
+  const completed=new Set(Object.keys(SUBMISSIONS_P1).filter(n=>SUBMISSIONS_P1[n].er&&SUBMISSIONS_P1[n].sigma));
+
+  let studentsInfo=[];
+  if(sec==='all'){
+    Object.entries(STU_DATA.students).forEach(([name,info])=>studentsInfo.push({name,section:info.section}));
+  } else {
+    (STU_DATA.sections[sec]||[]).forEach(name=>studentsInfo.push({name,section:sec}));
+  }
+
+  const record={
+    ts:Date.now(),
+    section:sec,
+    total:studentsInfo.length,
+    submitted:studentsInfo.filter(s=>completed.has(s.name)).map(s=>s.name),
+    missing:studentsInfo.filter(s=>!completed.has(s.name)).map(s=>s.name),
+  };
+  try{
+    const db=firebase.firestore();
+    await db.collection('lec04_participation').doc('snapshot_'+Date.now()).set(record);
+    msg.style.color='var(--green)'; msg.textContent='✓ Participation saved to Firebase.';
+    setTimeout(()=>{msg.textContent='';},3000);
+  } catch(e){
+    msg.style.color='var(--red)'; msg.textContent='Firebase error: '+e.message;
+  }
+}
+
+async function updateCode(){
+  const inp=document.getElementById('new-code-input');
+  const code=(inp?.value||'').toUpperCase().trim();
+  if(!code){return;}
+  STUDENT_CODE=code;
+  await saveCode(code);
+  document.getElementById('current-code-display').textContent=code;
+  inp.value='';
+  const msg=document.getElementById('settings-msg');
+  msg.style.color='var(--green)'; msg.textContent='✓ Code updated to '+code;
+  setTimeout(()=>{msg.textContent='';},3000);
+}
+
+// ── Professor controls ────────────────────────────────────────────────────
+// Professor can change student code via console: changeCode('NEWCODE')
+window.changeCode=async function(code){
+  STUDENT_CODE=code.toUpperCase();
+  await saveCode(STUDENT_CODE);
+  console.log('Student code updated to:',STUDENT_CODE);
+};
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  buildProgressDots();
+  initApp();
+});
+</script>
+</body>
+</html>
