@@ -183,17 +183,17 @@ input:focus,select:focus{outline:none;border-color:var(--gold)}
  <div id="gate-box">
   <div class="logo">FINA 402 · Lecture 4</div>
   <div class="sub">Asset Allocation &amp; Portfolio Optimization</div>
-  <div class="gate-field">
-   <label>Class Access Code</label>
-   <input type="text" id="gate-code" placeholder="Enter today's code" autocomplete="off">
-  </div>
-  <div id="gate-code-note">Your professor will announce the code at the start of class.</div>
   <div class="pill-tabs">
    <div class="pill-tab on" onclick="gateTab('student')">Student</div>
    <div class="pill-tab" onclick="gateTab('prof')">Instructor</div>
   </div>
   <!-- Student pane -->
   <div id="pane-student">
+   <div class="gate-field">
+    <label>Class Access Code</label>
+    <input type="text" id="gate-code" placeholder="Enter today's code" autocomplete="off">
+   </div>
+   <div id="gate-code-note" style="font-size:.72rem;color:var(--muted);margin-bottom:10px;background:var(--gold-lt);border-radius:6px;padding:7px 10px">Your professor will announce the code at the start of class.</div>
    <div class="gate-field">
     <label>Section</label>
     <select id="gate-sec" onchange="fillNames()">
@@ -209,31 +209,34 @@ input:focus,select:focus{outline:none;border-color:var(--gold)}
     <select id="gate-name"><option value="">— Select name —</option></select>
    </div>
   </div>
-  <!-- Prof pane -->
+  <!-- Prof pane — only PIN, no class code -->
   <div id="pane-prof" style="display:none">
    <div class="gate-field">
     <label>Instructor PIN</label>
-    <input type="password" id="gate-pin" placeholder="••••••••">
-   </div>
-   <div class="gate-field">
-    <label>Active Section (lock for students)</label>
-    <select id="gate-prof-sec">
-     <option value="">All sections</option>
-     <option value="S01">Section 01</option>
-     <option value="S02">Section 02</option>
-     <option value="S03">Section 03</option>
-     <option value="S04">Section 04</option>
-    </select>
+    <input type="password" id="gate-pin" placeholder="••••••••" autocomplete="off">
    </div>
   </div>
   <div id="session-banner" style="display:none;margin-bottom:10px;padding:8px 12px;border-radius:8px;background:#FEE2E2;color:#991B1B;font-size:.78rem;font-weight:600;text-align:center">
-   🔒 No active session. Please wait for the professor to open the session.
+   🔒 No section is open yet. Wait for your professor to open your section.
   </div>
-  <div id="gate-err">Incorrect code or credentials. Try again.</div>
+  <div id="gate-err" style="color:var(--red);font-size:.78rem;margin-top:8px;display:none">Incorrect code or credentials. Try again.</div>
   <button class="btn btn-accent" onclick="submitGate()" style="width:100%;margin-top:14px">Enter Lecture</button>
  </div>
 </div>
 <div id="canvas-tooltip"></div>
+
+<!-- Name Confirmation Modal -->
+<div id="confirm-modal" style="display:none;position:fixed;inset:0;background:rgba(15,12,10,.8);z-index:300;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+ <div style="background:var(--surface);border-radius:14px;padding:28px;width:340px;box-shadow:0 24px 70px rgba(0,0,0,.4)">
+  <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent);margin-bottom:8px">Confirm Identity</div>
+  <div style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Please verify your information — <strong style="color:var(--text)">you cannot change this after entering</strong>.</div>
+  <div id="confirm-info" style="background:var(--gold-lt);border:1px solid rgba(184,150,46,.3);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:.88rem;line-height:1.7"></div>
+  <div style="display:flex;gap:8px">
+   <button class="btn btn-ghost" onclick="cancelConfirm()" style="flex:1">← Go Back</button>
+   <button class="btn btn-accent" onclick="confirmLogin()" style="flex:1">Yes, Enter</button>
+  </div>
+ </div>
+</div>
 
 <div id="topbar">
  <span class="course">FINA 402</span>
@@ -250,14 +253,20 @@ input:focus,select:focus{outline:none;border-color:var(--gold)}
 </div>
 
 <!-- Settings Panel (instructor only) -->
-<div id="settings-panel" style="display:none;position:fixed;top:50px;right:0;width:420px;height:calc(100vh - 50px);background:var(--surface);border-left:1px solid var(--border);z-index:200;overflow-y:auto;padding:20px;box-shadow:-4px 0 20px rgba(0,0,0,.12)">
+<div id="settings-panel" style="display:none;position:fixed;top:50px;right:0;width:440px;height:calc(100vh - 50px);background:var(--surface);border-left:1px solid var(--border);z-index:200;overflow-y:auto;padding:20px;box-shadow:-4px 0 20px rgba(0,0,0,.12)">
  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
   <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent)">Instructor Settings</div>
   <button onclick="toggleSettings()" style="border:none;background:none;color:var(--muted);font-size:1.1rem;cursor:pointer">✕</button>
  </div>
 
- <!-- Participation section -->
- <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px">📋 Participation Tracker</div>
+ <!-- Live Roster -->
+ <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px">👥 Participants (<span id="roster-count">0</span> logged in)</div>
+ <div id="roster-list" style="font-size:.74rem;color:var(--text);line-height:1.7;min-height:30px;max-height:180px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;margin-bottom:12px">
+  <div style="color:var(--muted);font-style:italic">Waiting for students to log in…</div>
+ </div>
+
+ <!-- Submission stats -->
+ <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px">📊 Submissions</div>
  <div style="display:flex;gap:8px;margin-bottom:10px">
   <select id="settings-section" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.8rem">
    <option value="all">All Sections</option>
@@ -269,39 +278,57 @@ input:focus,select:focus{outline:none;border-color:var(--gold)}
   <button class="btn btn-gold" onclick="loadParticipation()" style="padding:6px 12px;font-size:.78rem">Refresh</button>
   <button class="btn btn-ghost" onclick="saveParticipationToFirebase()" style="padding:6px 10px;font-size:.78rem" title="Save to Firebase">💾</button>
  </div>
-
- <!-- Stats row -->
  <div id="participation-stats" style="display:flex;gap:8px;margin-bottom:12px"></div>
-
- <!-- Non-participants -->
- <div style="font-size:.72rem;font-weight:700;color:var(--red);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">❌ Did Not Complete / Incorrect</div>
+ <div style="font-size:.72rem;font-weight:700;color:var(--red);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">❌ Did Not Submit</div>
  <div id="missing-list" style="font-size:.75rem;color:var(--text);line-height:1.8;min-height:40px">
   <div style="color:var(--muted);font-style:italic">Press Refresh to load</div>
  </div>
-
- <!-- All submitted -->
  <div style="font-size:.72rem;font-weight:700;color:var(--green);margin-bottom:6px;margin-top:14px;text-transform:uppercase;letter-spacing:.06em">✓ Completed</div>
  <div id="done-list" style="font-size:.75rem;color:var(--text);line-height:1.8;min-height:40px"></div>
 
- <div id="settings-msg" style="margin-top:12px;font-size:.74rem"></div>
+ <!-- Reset All -->
+ <div style="margin-top:12px">
+  <button class="btn" onclick="resetAll()" style="background:var(--red);color:#fff;width:100%;padding:8px;font-size:.8rem">🗑 Reset All Submissions &amp; Participants</button>
+ </div>
+
+ <div id="settings-msg" style="margin-top:10px;font-size:.74rem"></div>
 
  <!-- Session control -->
- <hr style="border:none;border-top:1px solid var(--border);margin:18px 0">
+ <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
  <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px">🔒 Session Control</div>
  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-  <button id="session-toggle-btn" onclick="toggleSession()" style="padding:8px 16px;border-radius:6px;border:none;font-size:.82rem;font-weight:600;cursor:pointer;background:var(--green);color:#fff;min-width:120px">● Session Open</button>
+  <button id="session-toggle-btn" onclick="toggleSession()" style="padding:8px 16px;border-radius:6px;border:none;font-size:.82rem;font-weight:600;cursor:pointer;background:var(--green);color:#fff;min-width:130px">● Session Open</button>
   <span style="font-size:.73rem;color:var(--muted)" id="session-status-text">Students can log in</span>
  </div>
- <div style="font-size:.7rem;color:var(--muted);margin-bottom:4px">Toggle to close the session — students will see a waiting message and cannot log in.</div>
+ <div style="font-size:.7rem;color:var(--muted);margin-bottom:10px">Toggle to close the session — students cannot log in when closed.</div>
+
+ <!-- Per-section activation -->
+ <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px">📋 Active Sections</div>
+ <div style="font-size:.7rem;color:var(--muted);margin-bottom:8px">Students in inactive sections cannot log in.</div>
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px" id="section-toggles">
+  <button id="sec-btn-S01" onclick="toggleSectionActive('S01')" style="padding:7px 10px;border-radius:6px;border:none;font-size:.78rem;font-weight:600;cursor:pointer;background:var(--muted);color:#fff">S01 ○ Inactive</button>
+  <button id="sec-btn-S02" onclick="toggleSectionActive('S02')" style="padding:7px 10px;border-radius:6px;border:none;font-size:.78rem;font-weight:600;cursor:pointer;background:var(--muted);color:#fff">S02 ○ Inactive</button>
+  <button id="sec-btn-S03" onclick="toggleSectionActive('S03')" style="padding:7px 10px;border-radius:6px;border:none;font-size:.78rem;font-weight:600;cursor:pointer;background:var(--muted);color:#fff">S03 ○ Inactive</button>
+  <button id="sec-btn-S04" onclick="toggleSectionActive('S04')" style="padding:7px 10px;border-radius:6px;border:none;font-size:.78rem;font-weight:600;cursor:pointer;background:var(--muted);color:#fff">S04 ○ Inactive</button>
+ </div>
 
  <!-- Class code section -->
- <hr style="border:none;border-top:1px solid var(--border);margin:18px 0">
+ <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
  <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px">🔑 Class Access Code</div>
  <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
   <input type="text" id="new-code-input" placeholder="New code (e.g. FINA402)" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.8rem;text-transform:uppercase">
   <button class="btn btn-accent" onclick="updateCode()" style="padding:6px 10px;font-size:.78rem">Update</button>
  </div>
  <div style="font-size:.7rem;color:var(--muted)">Current: <span id="current-code-display" style="font-family:'JetBrains Mono',monospace;color:var(--gold)">—</span></div>
+
+ <!-- Instructor PIN section -->
+ <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+ <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px">🔐 Instructor PIN</div>
+ <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+  <input type="password" id="new-pin-input" placeholder="New PIN" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.8rem">
+  <button class="btn btn-accent" onclick="updatePin()" style="padding:6px 10px;font-size:.78rem">Update</button>
+ </div>
+ <div style="font-size:.7rem;color:var(--muted)">Current PIN is hidden for security. Update above to change it.</div>
 </div>
 <div id="deck">
 <div class="slide active" id="s0">
@@ -888,10 +915,16 @@ let STUDENT_CODE='FINA402'; // default; overridden by Firebase
 let INSTR_PIN='FINA402';    // default; overridden by Firebase
 let ACTIVE_SECTION=null;    // set by prof
 let SESSION_ACTIVE=true;    // professor controls; default open
+let ACTIVE_SECTIONS={S01:false,S02:false,S03:false,S04:false}; // all OFF by default; prof activates
 let SUBMISSIONS_P1={}, SUBMISSIONS_P2={}, SUBMISSIONS_SR={};
+let PARTICIPANTS={};        // live roster: name → {section,ts}
 let EF_DRAWN_S10=false;
 let CAL_ANIM_STEP=-1;
 let DB=null;
+let _unsub_participants=null; // onSnapshot unsubscribe handle
+
+// Pending confirmation: set before showing modal
+let _pendingLogin={};
 
 // ── Firebase Init ────────────────────────────────────────────────────────
 async function initFirebase() {
@@ -905,14 +938,87 @@ async function initFirebase() {
       if(d.studentCode) STUDENT_CODE=d.studentCode;
       if(d.instructorPin) INSTR_PIN=d.instructorPin;
       if(typeof d.sessionActive==='boolean') SESSION_ACTIVE=d.sessionActive;
+      if(d.activeSections && typeof d.activeSections==='object'){
+        Object.assign(ACTIVE_SECTIONS, d.activeSections);
+      }
     }
+    startListeners();
   }catch(e){console.warn('Firebase init failed:',e);}
+}
+
+// ── Live listeners ────────────────────────────────────────────────────────────
+let _unsub_config=null;
+function startListeners(){
+  if(!DB) return;
+
+  // Config doc — live sync for SESSION_ACTIVE and ACTIVE_SECTIONS (students get updates instantly)
+  if(_unsub_config) _unsub_config();
+  _unsub_config=DB.collection('lec04').doc('config').onSnapshot(snap=>{
+    if(!snap.exists) return;
+    const d=snap.data();
+    if(typeof d.sessionActive==='boolean') SESSION_ACTIVE=d.sessionActive;
+    if(d.activeSections && typeof d.activeSections==='object'){
+      Object.assign(ACTIVE_SECTIONS, d.activeSections);
+    }
+    // If settings panel is open, refresh section buttons
+    if(ROLE==='professor') updateSectionBtns();
+    // Update session banner on gate if student hasn't logged in yet
+    const banner=document.getElementById('session-banner');
+    if(banner && document.getElementById('gate').style.display!=='none'){
+      banner.style.display=SESSION_ACTIVE?'none':'block';
+    }
+  },e=>console.warn('config listener:',e));
+
+  // Participants roster
+  if(_unsub_participants) _unsub_participants();
+  _unsub_participants=DB.collection('lec04_participants').onSnapshot(snap=>{
+    snap.docChanges().forEach(ch=>{
+      if(ch.type==='removed') delete PARTICIPANTS[ch.doc.id];
+      else PARTICIPANTS[ch.doc.id]=ch.doc.data();
+    });
+    updateRosterUI();
+  },e=>console.warn('participants listener:',e));
+}
+
+function updateRosterUI(){
+  if(ROLE!=='professor') return;
+  const countEl=document.getElementById('roster-count');
+  const listEl=document.getElementById('roster-list');
+  if(!listEl) return;
+  const entries=Object.entries(PARTICIPANTS).sort((a,b)=>a[0].localeCompare(b[0]));
+  if(countEl) countEl.textContent=entries.length;
+  // Group by section
+  const bySec={};
+  entries.forEach(([name,d])=>{
+    const sec=d.section||'?';
+    if(!bySec[sec]) bySec[sec]=[];
+    bySec[sec].push(name);
+  });
+  let html='';
+  if(entries.length===0){
+    html='<div style="color:var(--muted);font-style:italic;font-size:.74rem">No students logged in yet</div>';
+  } else {
+    Object.entries(bySec).sort().forEach(([sec,names])=>{
+      html+=`<div style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:8px;margin-bottom:2px">${sec} (${names.length})</div>`;
+      names.forEach(n=>{
+        const short=n.split(',')[0].trim();
+        html+=`<div style="font-size:.74rem;padding:2px 0 2px 8px;border-left:2px solid var(--gold)">${short}</div>`;
+      });
+    });
+  }
+  listEl.innerHTML=html;
 }
 
 async function saveCode(code){
   try{
     if(localStorage) localStorage.setItem('lec04_code',code);
     if(DB) await DB.collection('lec04').doc('config').set({studentCode:code},{merge:true});
+  }catch(e){}
+}
+
+async function savePin(pin){
+  try{
+    if(DB) await DB.collection('lec04').doc('config').set({instructorPin:pin},{merge:true});
   }catch(e){}
 }
 
@@ -946,6 +1052,7 @@ async function initApp(){
     if(s && s.role){
       ROLE=s.role; SECTION=s.section; STUDENT_NAME=s.name;
       ACTIVE_SECTION=s.active_section||null;
+      if(s.activeSections) Object.assign(ACTIVE_SECTIONS,s.activeSections);
       if(ROLE==='student') STUDENT_INFO=STU_DATA.students[STUDENT_NAME];
       if(STUDENT_INFO) STUDENT_WEIGHTS=STUDENT_INFO.weights;
       finalizeLogin();
@@ -975,28 +1082,58 @@ function fillNames(){
 }
 
 async function submitGate(){
-  const code=document.getElementById('gate-code').value.trim().toUpperCase();
   const errEl=document.getElementById('gate-err');
   errEl.style.display='none';
 
-  if(code!==STUDENT_CODE.toUpperCase()){errEl.style.display='block';return;}
-
   if(GATE_MODE==='student'){
+    const code=(document.getElementById('gate-code').value||'').trim().toUpperCase();
+    if(!code||code!==STUDENT_CODE.toUpperCase()){errEl.textContent='Incorrect class code. Try again.';errEl.style.display='block';return;}
     if(!SESSION_ACTIVE){errEl.textContent='No active session. Please wait for the professor to open the session.';errEl.style.display='block';return;}
     const sec=document.getElementById('gate-sec').value;
     const name=document.getElementById('gate-name').value;
     if(!sec||!name){errEl.textContent='Please select your section and name.';errEl.style.display='block';return;}
     const info=STU_DATA.students[name];
     if(!info||info.section!==sec){errEl.textContent='Name not found in selected section.';errEl.style.display='block';return;}
-    ROLE='student'; SECTION=sec; STUDENT_NAME=name; STUDENT_INFO=info; STUDENT_WEIGHTS=info.weights;
+    // Per-section gate — always enforced, professor must explicitly activate each section
+    if(!ACTIVE_SECTIONS[sec]){
+      errEl.textContent='Section '+sec+' is not open yet. Wait for your professor to open your section.';
+      errEl.style.display='block';return;
+    }
+    // Show confirmation modal before finalizing
+    _pendingLogin={role:'student',section:sec,name,info};
+    const short=name.split(',')[0].trim();
+    document.getElementById('confirm-info').innerHTML=
+      `<strong>${short}</strong><br>Section: ${sec}<br><span style="font-size:.78rem;color:var(--muted)">(Last name, First name)</span>`;
+    document.getElementById('confirm-modal').style.display='flex';
+    return;
   } else {
-    const pin=document.getElementById('gate-pin').value.trim().toUpperCase();
-    if(pin!==INSTR_PIN.toUpperCase()){errEl.textContent='Incorrect PIN.';errEl.style.display='block';return;}
-    ROLE='professor'; SECTION='ALL'; STUDENT_NAME='Instructor';
-    ACTIVE_SECTION=document.getElementById('gate-prof-sec').value||null;
+    // Instructor — PIN only, no class code needed
+    const pin=(document.getElementById('gate-pin').value||'').trim().toUpperCase();
+    if(!pin||pin!==INSTR_PIN.toUpperCase()){errEl.textContent='Incorrect PIN.';errEl.style.display='block';return;}
+    ROLE='professor'; SECTION='ALL'; STUDENT_NAME='Instructor'; ACTIVE_SECTION=null;
   }
 
+  sessionStorage.setItem('lec04_state',JSON.stringify({role:ROLE,section:SECTION,name:STUDENT_NAME,active_section:ACTIVE_SECTION,activeSections:ACTIVE_SECTIONS}));
+  finalizeLogin();
+}
+
+function cancelConfirm(){
+  document.getElementById('confirm-modal').style.display='none';
+  _pendingLogin={};
+}
+
+async function confirmLogin(){
+  document.getElementById('confirm-modal').style.display='none';
+  const {role,section,name,info}=_pendingLogin;
+  _pendingLogin={};
+  ROLE=role; SECTION=section; STUDENT_NAME=name; STUDENT_INFO=info; STUDENT_WEIGHTS=info.weights;
   sessionStorage.setItem('lec04_state',JSON.stringify({role:ROLE,section:SECTION,name:STUDENT_NAME,active_section:ACTIVE_SECTION}));
+  // Register participant in Firebase
+  try{
+    if(DB) await DB.collection('lec04_participants').doc(STUDENT_NAME).set({
+      name:STUDENT_NAME, section:SECTION, ts:Date.now()
+    },{merge:true});
+  }catch(e){console.warn('Participant registration error:',e);}
   finalizeLogin();
 }
 
@@ -1957,7 +2094,59 @@ function toggleSettings(){
   if(p.style.display==='block'){
     document.getElementById('current-code-display').textContent=STUDENT_CODE||'—';
     updateSessionBtn();
+    updateSectionBtns();
+    updateRosterUI();
     loadParticipation();
+  }
+}
+
+function updateSectionBtns(){
+  ['S01','S02','S03','S04'].forEach(sec=>{
+    const btn=document.getElementById('sec-btn-'+sec);
+    if(!btn) return;
+    const on=ACTIVE_SECTIONS[sec]!==false;
+    btn.style.background=on?'var(--green)':'var(--muted)';
+    btn.textContent=sec+(on?' ● Active':' ○ Inactive');
+  });
+}
+
+async function toggleSectionActive(sec){
+  ACTIVE_SECTIONS[sec]=!ACTIVE_SECTIONS[sec];
+  updateSectionBtns();
+  try{
+    if(DB) await DB.collection('lec04').doc('config').set({activeSections:ACTIVE_SECTIONS},{merge:true});
+    const msg=document.getElementById('settings-msg');
+    const on=ACTIVE_SECTIONS[sec];
+    msg.style.color=on?'var(--green)':'var(--red)';
+    msg.textContent=sec+(on?' is now active — students can log in.':' deactivated — students are blocked.');
+    setTimeout(()=>{msg.textContent='';},3000);
+  }catch(e){console.warn('Section toggle error:',e);}
+}
+
+async function resetAll(){
+  if(!confirm('Reset ALL submissions and participants? This cannot be undone.')) return;
+  const msg=document.getElementById('settings-msg');
+  msg.style.color='var(--muted)'; msg.textContent='Resetting…';
+  try{
+    if(DB){
+      const batch=DB.batch();
+      const cols=['lec04_p1','lec04_p2','lec04_sr','lec04_participants'];
+      for(const col of cols){
+        const snap=await DB.collection(col).get();
+        snap.docs.forEach(d=>batch.delete(d.ref));
+      }
+      await batch.commit();
+    }
+    // Also clear localStorage
+    ['lec04_p1','lec04_p2','lec04_sr','lec04_participants'].forEach(c=>localStorage.removeItem(c));
+    SUBMISSIONS_P1={}; SUBMISSIONS_P2={}; SUBMISSIONS_SR={};
+    PARTICIPANTS={};
+    updateRosterUI();
+    loadParticipation();
+    msg.style.color='var(--green)'; msg.textContent='✓ All submissions and participants reset.';
+    setTimeout(()=>{msg.textContent='';},4000);
+  }catch(e){
+    msg.style.color='var(--red)'; msg.textContent='Error: '+e.message;
   }
 }
 
@@ -2067,6 +2256,18 @@ async function updateCode(){
   inp.value='';
   const msg=document.getElementById('settings-msg');
   msg.style.color='var(--green)'; msg.textContent='✓ Code updated to '+code;
+  setTimeout(()=>{msg.textContent='';},3000);
+}
+
+async function updatePin(){
+  const inp=document.getElementById('new-pin-input');
+  const pin=(inp?.value||'').trim();
+  if(!pin){return;}
+  INSTR_PIN=pin;
+  await savePin(pin);
+  inp.value='';
+  const msg=document.getElementById('settings-msg');
+  msg.style.color='var(--green)'; msg.textContent='✓ Instructor PIN updated.';
   setTimeout(()=>{msg.textContent='';},3000);
 }
 
