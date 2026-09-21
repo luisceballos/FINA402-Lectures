@@ -254,10 +254,11 @@ input:focus,select:focus{outline:none;border-color:var(--gold)}
 
 <!-- Settings Panel (instructor only) -->
 <div id="settings-panel" style="display:none;position:fixed;top:50px;right:0;width:440px;height:calc(100vh - 50px);background:var(--surface);border-left:1px solid var(--border);z-index:200;overflow-y:auto;padding:20px;box-shadow:-4px 0 20px rgba(0,0,0,.12)">
- <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
   <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent)">Instructor Settings</div>
   <button onclick="toggleSettings()" style="border:none;background:none;color:var(--muted);font-size:1.1rem;cursor:pointer">✕</button>
  </div>
+ <div id="firebase-status" style="font-size:.7rem;margin-bottom:12px;color:var(--muted)">Verificando Firebase…</div>
 
  <!-- Live Roster -->
  <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px">👥 Participants (<span id="roster-count">0</span> logged in)</div>
@@ -890,16 +891,15 @@ input:focus,select:focus{outline:none;border-color:var(--gold)}
 </div>
 <script>
 // ── Firebase Configuration ──────────────────────────────────────────────
-// ⚠️  FILL IN YOUR FIREBASE CONFIG HERE to enable cloud features
-// If left as null, the app works in local-only mode (codes are hardcoded).
-const FB_CONFIG = null;
-// const FB_CONFIG = {
-//   apiKey: "AIza...",
-//   authDomain: "yourproject.firebaseapp.com",
-//   projectId: "yourproject",
-//   storageBucket: "yourproject.appspot.com",
-//   messagingSenderId: "...",
-//   appId: "..."
+const FB_CONFIG = {
+  apiKey:"AIzaSyAjHL3MztreUN7J7QKW3q_nRbiNoxLwA0E",
+  authDomain:"fina402-60e86.firebaseapp.com",
+  projectId:"fina402-60e86",
+  storageBucket:"fina402-60e86.firebasestorage.app",
+  messagingSenderId:"1058911893067",
+  appId:"1:1058911893067:web:0ab85f8a600d4fb8d2ffce"
+};
+// (Firebase config loaded — cloud sync active)
 // };
 
 // ── Embedded data ───────────────────────────────────────────────────────
@@ -912,7 +912,7 @@ let ROLE=null, SECTION=null, STUDENT_NAME=null, STUDENT_WEIGHTS=null;
 let STUDENT_INFO=null;
 let GATE_MODE='student';
 let STUDENT_CODE='FINA402'; // default; overridden by Firebase
-let INSTR_PIN='FINA402';    // default; overridden by Firebase
+let INSTR_PIN='MIKEPATTON'; // instructor PIN
 let ACTIVE_SECTION=null;    // set by prof
 let SESSION_ACTIVE=true;    // professor controls; default open
 let ACTIVE_SECTIONS={S01:false,S02:false,S03:false,S04:false}; // all OFF by default; prof activates
@@ -928,6 +928,13 @@ let _pendingLogin={};
 
 // ── Firebase Init ────────────────────────────────────────────────────────
 async function initFirebase() {
+  // Load localStorage fallback first (fast, overridden by Firebase below)
+  try{
+    const lsCode=localStorage.getItem('lec04_code');
+    if(lsCode) STUDENT_CODE=lsCode;
+    const lsPin=localStorage.getItem('lec04_pin');
+    if(lsPin) INSTR_PIN=lsPin;
+  }catch(e){}
   if(!FB_CONFIG) return;
   try{
     if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
@@ -1018,8 +1025,9 @@ async function saveCode(code){
 
 async function savePin(pin){
   try{
+    if(localStorage) localStorage.setItem('lec04_pin',pin);
     if(DB) await DB.collection('lec04').doc('config').set({instructorPin:pin},{merge:true});
-  }catch(e){}
+  }catch(e){console.warn('savePin error:',e);}
 }
 
 async function saveToStore(col,key,data){
@@ -2093,6 +2101,8 @@ function toggleSettings(){
   p.style.display=p.style.display==='none'?'block':'none';
   if(p.style.display==='block'){
     document.getElementById('current-code-display').textContent=STUDENT_CODE||'—';
+    const fbEl=document.getElementById('firebase-status');
+    if(fbEl) fbEl.textContent=DB?'🟢 Firebase conectado':'🔴 Firebase NO conectado — cambios solo locales';
     updateSessionBtn();
     updateSectionBtns();
     updateRosterUI();
@@ -2261,14 +2271,29 @@ async function updateCode(){
 
 async function updatePin(){
   const inp=document.getElementById('new-pin-input');
-  const pin=(inp?.value||'').trim();
+  const pin=(inp?.value||'').trim().toUpperCase();
   if(!pin){return;}
   INSTR_PIN=pin;
-  await savePin(pin);
   inp.value='';
   const msg=document.getElementById('settings-msg');
-  msg.style.color='var(--green)'; msg.textContent='✓ Instructor PIN updated.';
-  setTimeout(()=>{msg.textContent='';},3000);
+  // 1. localStorage (always works, same PC)
+  try{ localStorage.setItem('lec04_pin',pin); }catch(e){}
+  // 2. Firebase (cross-PC persistence)
+  if(!DB){
+    msg.style.color='#B8962E';
+    msg.textContent='⚠ PIN guardado localmente. Firebase no conectado.';
+    setTimeout(()=>{msg.textContent='';},5000);
+    return;
+  }
+  try{
+    await DB.collection('lec04').doc('config').set({instructorPin:pin},{merge:true});
+    msg.style.color='var(--green)';
+    msg.textContent='✓ PIN guardado en Firebase. Funciona desde cualquier PC.';
+  }catch(e){
+    msg.style.color='var(--red)';
+    msg.textContent='✗ Error Firebase: '+e.message+' — PIN guardado solo localmente.';
+  }
+  setTimeout(()=>{msg.textContent='';},6000);
 }
 
 // ── Professor controls ────────────────────────────────────────────────────
