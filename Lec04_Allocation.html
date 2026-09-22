@@ -280,12 +280,15 @@ input:focus,select:focus{outline:none;border-color:var(--gold)}
   <button class="btn btn-ghost" onclick="saveParticipationToFirebase()" style="padding:6px 10px;font-size:.78rem" title="Save to Firebase">💾</button>
  </div>
  <div id="participation-stats" style="display:flex;gap:8px;margin-bottom:12px"></div>
- <div style="font-size:.72rem;font-weight:700;color:var(--red);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">❌ Did Not Submit</div>
- <div id="missing-list" style="font-size:.75rem;color:var(--text);line-height:1.8;min-height:40px">
-  <div style="color:var(--muted);font-style:italic">Press Refresh to load</div>
+ <div style="font-size:.72rem;font-weight:700;color:#8B1A1A;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">🔴 No Conectados</div>
+ <div id="absent-list" style="font-size:.75rem;color:var(--text);line-height:1.8;min-height:20px">
+  <div style="color:var(--muted);font-style:italic">Presiona Refresh</div>
  </div>
- <div style="font-size:.72rem;font-weight:700;color:var(--green);margin-bottom:6px;margin-top:14px;text-transform:uppercase;letter-spacing:.06em">✓ Completed</div>
- <div id="done-list" style="font-size:.75rem;color:var(--text);line-height:1.8;min-height:40px"></div>
+ <div style="font-size:.72rem;font-weight:700;color:var(--gold);margin-bottom:6px;margin-top:12px;text-transform:uppercase;letter-spacing:.06em">🟡 Conectados — Sin Respuestas</div>
+ <div id="missing-list" style="font-size:.75rem;color:var(--text);line-height:1.8;min-height:20px"></div>
+ <div style="font-size:.72rem;font-weight:700;color:var(--green);margin-bottom:4px;margin-top:12px;text-transform:uppercase;letter-spacing:.06em">✅ Respondieron</div>
+ <div style="font-size:.68rem;color:var(--muted);margin-bottom:6px">Badges: <span style="background:#1A7A4A;color:#fff;border-radius:3px;padding:1px 5px;font-size:.65rem">P1</span> E[r]/σ &nbsp;<span style="background:#1a5a8a;color:#fff;border-radius:3px;padding:1px 5px;font-size:.65rem">P2</span> Allocation &nbsp;<span style="background:#7a4a1a;color:#fff;border-radius:3px;padding:1px 5px;font-size:.65rem">SR</span> Sharpe</div>
+ <div id="done-list" style="font-size:.75rem;color:var(--text);line-height:1.9;min-height:20px"></div>
 
  <!-- Reset All -->
  <div style="margin-top:12px">
@@ -985,6 +988,38 @@ function startListeners(){
     });
     updateRosterUI();
   },e=>console.warn('participants listener:',e));
+
+  // Live student submissions — instructor charts update instantly as students submit
+  if(window._unsub_p1) window._unsub_p1();
+  window._unsub_p1=DB.collection('lec04_p1').onSnapshot(snap=>{
+    snap.docChanges().forEach(ch=>{
+      if(ch.type==='removed') delete SUBMISSIONS_P1[ch.doc.id];
+      else SUBMISSIONS_P1[ch.doc.id]=ch.doc.data();
+    });
+    refreshCharts();
+    refreshSRBars();
+    if(document.getElementById('settings-panel')?.style.display!=='none') loadParticipation();
+  },e=>console.warn('p1 listener:',e));
+
+  if(window._unsub_p2) window._unsub_p2();
+  window._unsub_p2=DB.collection('lec04_p2').onSnapshot(snap=>{
+    snap.docChanges().forEach(ch=>{
+      if(ch.type==='removed') delete SUBMISSIONS_P2[ch.doc.id];
+      else SUBMISSIONS_P2[ch.doc.id]=ch.doc.data();
+    });
+    refreshCharts();
+    if(document.getElementById('settings-panel')?.style.display!=='none') loadParticipation();
+  },e=>console.warn('p2 listener:',e));
+
+  if(window._unsub_sr) window._unsub_sr();
+  window._unsub_sr=DB.collection('lec04_sr').onSnapshot(snap=>{
+    snap.docChanges().forEach(ch=>{
+      if(ch.type==='removed') delete SUBMISSIONS_SR[ch.doc.id];
+      else SUBMISSIONS_SR[ch.doc.id]=ch.doc.data();
+    });
+    refreshSRBars();
+    if(document.getElementById('settings-panel')?.style.display!=='none') loadParticipation();
+  },e=>console.warn('sr listener:',e));
 }
 
 function updateRosterUI(){
@@ -1468,9 +1503,19 @@ async function submitP1(){
   const sig=parseFloat(document.getElementById('p1-sig').value);
   if(isNaN(er)||isNaN(sig)){showMsg('p1-msg','Please enter both values.','err');return;}
 
-  const tol=0.5;
-  const expER=STUDENT_INFO.er_p, expSig=STUDENT_INFO.sigma_p;
-  if(Math.abs(er-expER)>tol||Math.abs(sig-expSig)>tol){
+  // Compute expected values using the SAME method students use:
+  // monthly portfolio return = weighted sum of ETF returns each month
+  // E[r] = mean(monthly_port) × 12
+  // σ    = stdev(monthly_port, ddof=1) × sqrt(12)
+  const w = STUDENT_INFO.weights.map(x => x / 100);
+  const portMonthly = MONTHLY_DATA.returns.map(row => row.reduce((s, r, i) => s + r * w[i], 0));
+  const n = portMonthly.length;
+  const meanM = portMonthly.reduce((s, r) => s + r, 0) / n;
+  const varM  = portMonthly.reduce((s, r) => s + (r - meanM) ** 2, 0) / (n - 1);
+  const expER   = Math.round(meanM * 12 * 100) / 100;
+  const expSig  = Math.round(Math.sqrt(varM) * Math.sqrt(12) * 100) / 100;
+  const tolER = 0.5, tolSig = 0.5;
+  if(Math.abs(er - expER) > tolER || Math.abs(sig - expSig) > tolSig){
     showMsg('p1-msg','Incorrect — check your formulas (tolerance ±0.5%).','err');
     return;
   }
@@ -2046,7 +2091,7 @@ function downloadExcel(){
   // Build rows
   const hdr=['Date',...etfs,'Portfolio Return (%)  ← compute here'];
   // Weight reference row
-  const wHdr=['Your Weights (%)',...weights.map(w=>w!==null?w+'%':'—'),'← SUMPRODUCT of col B:L × row 2'];
+  const wHdr=['Your Weights (decimal)',...weights.map(w=>w!==null?w/100:0),'← =SUMPRODUCT(B2:L2,B3:L3) then copy down'];
   const rows=[hdr,wHdr];
   returns.forEach((row,i)=>{
     rows.push([dates[i],...row,'']);  // students compute portfolio return themselves
@@ -2162,69 +2207,91 @@ async function resetAll(){
 
 function loadParticipation(){
   const sec=document.getElementById('settings-section')?.value||'all';
+  const al=document.getElementById('absent-list');
   const ml=document.getElementById('missing-list');
   const dl=document.getElementById('done-list');
-  ml.innerHTML='<div style="color:var(--muted);font-style:italic">Loading…</div>';
-  dl.innerHTML='';
+  al.innerHTML=''; ml.innerHTML=''; dl.innerHTML='';
 
-  // Build set of students who completed P1 (submitted with valid er and sigma)
-  const completed=new Set();
-  Object.entries(SUBMISSIONS_P1).forEach(([name,s])=>{
-    if(s.er&&s.sigma) completed.add(name);
-  });
-
-  // Get student names for the selected section(s)
-  let studentsInfo=[];  // array of {name, section}
+  // Which students are in scope?
+  let studentsInfo=[];
   if(sec==='all'){
-    Object.entries(STU_DATA.students).forEach(([name,info])=>{
-      studentsInfo.push({name,section:info.section});
-    });
+    Object.entries(STU_DATA.students).forEach(([name,info])=>studentsInfo.push({name,section:info.section}));
   } else {
-    (STU_DATA.sections[sec]||[]).forEach(name=>{
-      studentsInfo.push({name,section:sec});
-    });
+    (STU_DATA.sections[sec]||[]).forEach(name=>studentsInfo.push({name,section:STU_DATA.students[name]?.section||sec}));
   }
   studentsInfo.sort((a,b)=>a.name.localeCompare(b.name));
 
-  const missing=studentsInfo.filter(s=>!completed.has(s.name));
-  const done=studentsInfo.filter(s=>completed.has(s.name));
+  // Connected = in PARTICIPANTS
+  const connected=new Set(Object.keys(PARTICIPANTS));
+
+  // Answered flags
+  const doneP1=new Set(Object.entries(SUBMISSIONS_P1).filter(([,s])=>s.er&&s.sigma).map(([n])=>n));
+  const doneP2=new Set(Object.keys(SUBMISSIONS_P2));
+  const doneSR=new Set(Object.keys(SUBMISSIONS_SR));
+
+  // Categorise
+  const absent=[], presentNoAns=[], answered=[];
+  studentsInfo.forEach(s=>{
+    const p1=doneP1.has(s.name), p2=doneP2.has(s.name), sr=doneSR.has(s.name);
+    if(!connected.has(s.name)) absent.push(s);
+    else if(!p1&&!p2&&!sr) presentNoAns.push(s);
+    else answered.push({...s,p1,p2,sr});
+  });
 
   // Stats
   const stats=document.getElementById('participation-stats');
   stats.innerHTML=`
    <div class="stat-tile" style="font-size:.8rem;flex:1">
-    <div class="val" style="font-size:1.3rem;color:var(--green)">${done.length}</div>
-    <div class="lbl">Submitted</div></div>
+    <div class="val" style="font-size:1.2rem;color:var(--red)">${absent.length}</div>
+    <div class="lbl">Ausentes</div></div>
    <div class="stat-tile" style="font-size:.8rem;flex:1">
-    <div class="val" style="font-size:1.3rem;color:var(--red)">${missing.length}</div>
-    <div class="lbl">Missing</div></div>
+    <div class="val" style="font-size:1.2rem;color:var(--green)">${answered.length}</div>
+    <div class="lbl">Respondieron</div></div>
    <div class="stat-tile" style="font-size:.8rem;flex:1">
-    <div class="val" style="font-size:1.3rem">${studentsInfo.length}</div>
-    <div class="lbl">Total</div></div>
+    <div class="val" style="font-size:1.2rem;color:var(--muted)">${doneP1.size}</div>
+    <div class="lbl">P1 ✓</div></div>
+   <div class="stat-tile" style="font-size:.8rem;flex:1">
+    <div class="val" style="font-size:1.2rem;color:var(--muted)">${doneP2.size}</div>
+    <div class="lbl">P2 ✓</div></div>
   `;
 
-  if(missing.length===0){
-    ml.innerHTML='<div style="color:var(--green);font-weight:600">🎉 All students completed!</div>';
-  } else {
-    // Group by section for display
+  // Helper: render a section group
+  function renderGroup(container, list, rowFn){
+    if(list.length===0){ container.innerHTML='<div style="color:var(--muted);font-style:italic;font-size:.73rem">—</div>'; return; }
     const bySec={};
-    missing.forEach(s=>{
-      if(!bySec[s.section]) bySec[s.section]=[];
-      bySec[s.section].push(s.name);
-    });
-    ml.innerHTML='';
+    list.forEach(s=>{ if(!bySec[s.section]) bySec[s.section]=[]; bySec[s.section].push(s); });
+    let html='';
     Object.entries(bySec).sort().forEach(([section,names])=>{
-      const el=document.createElement('div');
-      el.style.cssText='margin-bottom:8px';
-      el.innerHTML=`<div style="font-size:.7rem;font-weight:700;color:var(--muted);margin-bottom:3px">${section} (${names.length})</div>`+
-        names.map(n=>`<div style="padding-left:10px">• ${n.split(',')[0].trim()}</div>`).join('');
-      ml.appendChild(el);
+      html+=`<div style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;margin-top:4px">${section} (${names.length})</div>`;
+      names.forEach(s=>{ html+=rowFn(s); });
     });
+    container.innerHTML=html;
   }
 
-  dl.innerHTML=done.length===0
-    ?'<div style="color:var(--muted);font-style:italic">None yet</div>'
-    :done.map(s=>`<div>✓ ${s.name.split(',')[0].trim()} <span style="color:var(--muted);font-size:.7em">(${s.section})</span></div>`).join('');
+  const badge=(label,color)=>`<span style="background:${color};color:#fff;border-radius:3px;padding:1px 4px;font-size:.62rem;margin-left:3px">${label}</span>`;
+
+  renderGroup(al, absent, s=>`<div style="padding-left:10px">• ${s.name.split(',')[0].trim()}</div>`);
+
+  renderGroup(ml, presentNoAns, s=>`<div style="padding-left:10px">• ${s.name.split(',')[0].trim()}</div>`);
+
+  if(answered.length===0){
+    dl.innerHTML='<div style="color:var(--muted);font-style:italic;font-size:.73rem">—</div>';
+  } else {
+    const bySec={};
+    answered.forEach(s=>{ if(!bySec[s.section]) bySec[s.section]=[]; bySec[s.section].push(s); });
+    let html='';
+    Object.entries(bySec).sort().forEach(([section,list])=>{
+      html+=`<div style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;margin-top:4px">${section} (${list.length})</div>`;
+      list.forEach(s=>{
+        html+=`<div style="padding-left:10px">✓ ${s.name.split(',')[0].trim()}`;
+        if(s.p1) html+=badge('P1','#1A7A4A');
+        if(s.p2) html+=badge('P2','#1a5a8a');
+        if(s.sr) html+=badge('SR','#7a4a1a');
+        html+='</div>';
+      });
+    });
+    dl.innerHTML=html;
+  }
 }
 
 async function saveParticipationToFirebase(){
