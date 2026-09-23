@@ -443,7 +443,8 @@ function setupFirebase(){if(!window.firebase)throw Error('Sign-in is unavailable
 async function codeHash(value){const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value.trim()));return Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');}
 function stopLive(){stopListeners.forEach(f=>f());stopListeners=[];teacherCache=null;studentCache=null;}
 async function loadTeacher(){
- const [cfg,students,enrollments]=await Promise.all([LECTURE.get(),COURSE.collection('students').get(),COURSE.collection('enrollments').get()]);
+ const [cfg,students]=await Promise.all([LECTURE.get(),COURSE.collection('students').get()]);
+ let enrollments={docs:[]};try{enrollments=await COURSE.collection('enrollments').get();}catch(e){}
  if(!cfg.exists){
    const defaults={sessionId:'session-'+Date.now(),sessionActive:false,activeSections:{S01:false,S02:false,S03:false,S04:false}};
    await LECTURE.set(defaults);
