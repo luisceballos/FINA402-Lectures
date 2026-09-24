@@ -1,0 +1,986 @@
+<title>Asset Management Universe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+:root {
+  --bg: #F7F4EE;
+  --surface: #FFFFFF;
+  --surface-2: #EDEAE2;
+  --text: #1A1815;
+  --text-2: #6A655E;
+  --accent: #B91C1C;
+  --navy: #1E3A8A;
+  --amber: #92400E;
+  --border: #E0DAD0;
+  --chart-grid: rgba(0,0,0,0.05);
+  --chart-text: #6A655E;
+  --badge-etf-bg: rgba(30,58,138,0.10);
+  --badge-mf-bg: rgba(185,28,28,0.09);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F0F12;
+    --surface: #18181D;
+    --surface-2: #20202A;
+    --text: #F4F1EC;
+    --text-2: #928E86;
+    --accent: #F87171;
+    --navy: #60A5FA;
+    --amber: #FBBF24;
+    --border: #28282F;
+    --chart-grid: rgba(255,255,255,0.05);
+    --chart-text: #928E86;
+    --badge-etf-bg: rgba(96,165,250,0.14);
+    --badge-mf-bg: rgba(248,113,113,0.12);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F0F12;
+  --surface: #18181D;
+  --surface-2: #20202A;
+  --text: #F4F1EC;
+  --text-2: #928E86;
+  --accent: #F87171;
+  --navy: #60A5FA;
+  --amber: #FBBF24;
+  --border: #28282F;
+  --chart-grid: rgba(255,255,255,0.05);
+  --chart-text: #928E86;
+  --badge-etf-bg: rgba(96,165,250,0.14);
+  --badge-mf-bg: rgba(248,113,113,0.12);
+}
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+/* ── Masthead ── */
+.masthead {
+  padding: 3rem max(1.5rem, calc(50vw - 680px)) 2.5rem;
+  background: var(--surface);
+  border-bottom: 3px solid var(--accent);
+}
+.mast-eyebrow {
+  font-size: 0.67rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 0.8rem;
+}
+h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(2.6rem, 6vw, 4.6rem);
+  font-weight: 300;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+h1 em { font-style: italic; color: var(--accent); }
+
+.mast-sub {
+  margin-top: 1rem;
+  font-size: 0.92rem;
+  color: var(--text-2);
+  max-width: 62ch;
+  line-height: 1.75;
+}
+.mast-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 3rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.kpi { display: flex; flex-direction: column; gap: 0.15rem; }
+.kpi-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.kpi-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--text);
+}
+.kpi-value small {
+  font-size: 0.55em;
+  color: var(--text-2);
+  font-weight: 300;
+}
+
+/* ── Section wrapper ── */
+.section {
+  padding: 4rem max(1.5rem, calc(50vw - 680px));
+  border-bottom: 1px solid var(--border);
+}
+.sec-header {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: 0 0.5rem;
+  align-items: start;
+  margin-bottom: 2.5rem;
+}
+.sec-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 4.5rem;
+  font-weight: 300;
+  line-height: 0.9;
+  color: var(--border);
+  user-select: none;
+  padding-top: 0.1rem;
+}
+.sec-eyebrow {
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.85rem, 4vw, 2.9rem);
+  font-weight: 400;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+.sec-desc {
+  font-size: 0.87rem;
+  color: var(--text-2);
+  line-height: 1.75;
+  margin-top: 0.35rem;
+  max-width: 72ch;
+}
+
+/* ── Chart panel ── */
+.chart-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.chart-legend {
+  padding: 1.1rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.leg-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.2s;
+}
+.leg-item.muted { opacity: 0.28; }
+.leg-swatch { width: 22px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+.leg-name { font-size: 0.78rem; font-weight: 500; color: var(--text); }
+.leg-val { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-2); }
+
+.chart-wrap {
+  padding: 1.5rem;
+  position: relative;
+  height: 400px;
+}
+@media (max-width: 600px) { .chart-wrap { height: 260px; } }
+.chart-note {
+  padding: 0.65rem 1.5rem;
+  font-size: 0.7rem;
+  color: var(--text-2);
+  border-top: 1px solid var(--border);
+  font-style: italic;
+}
+
+/* ── Funds grid ── */
+.funds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1.25rem;
+}
+.fund-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s;
+}
+.fund-card:hover { border-color: var(--text-2); }
+.fund-top {
+  padding: 1.25rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+  flex: 1;
+}
+.fund-badge {
+  display: inline-block;
+  font-size: 0.58rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  padding: 0.2em 0.55em;
+  border-radius: 2px;
+  font-weight: 500;
+  margin-bottom: 0.65rem;
+}
+.badge-etf { background: var(--badge-etf-bg); color: var(--navy); }
+.badge-mf  { background: var(--badge-mf-bg);  color: var(--accent); }
+.fund-ticker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.4rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.fund-fullname {
+  font-size: 0.76rem;
+  color: var(--text-2);
+  margin-top: 0.3rem;
+  line-height: 1.4;
+}
+.fund-bottom { padding: 1rem 1.4rem; }
+.fund-rows { display: flex; flex-direction: column; gap: 0.5rem; }
+.fund-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.78rem;
+}
+.fr-l { color: var(--text-2); }
+.fr-v { font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; font-variant-numeric: tabular-nums; }
+.fund-bar { height: 2px; background: var(--border); border-radius: 1px; margin-top: 0.85rem; overflow: hidden; }
+.fund-bar-fill { height: 100%; background: var(--navy); border-radius: 1px; }
+.fund-note { font-size: 0.69rem; color: var(--text-2); margin-top: 0.5rem; font-style: italic; line-height: 1.4; }
+
+/* ── Strategy cards ── */
+.strat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+@media (max-width: 720px) { .strat-grid { grid-template-columns: 1fr; } }
+
+.strat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.strat-head {
+  padding: 1.75rem 1.75rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+}
+.strat-tag {
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 0.45rem;
+}
+.strat-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 400;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+.strat-who { font-size: 0.77rem; color: var(--text-2); margin-top: 0.35rem; }
+.strat-rule { width: 2rem; height: 2px; background: var(--accent); margin-top: 1.25rem; }
+
+.strat-body {
+  padding: 1.5rem 1.75rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.strat-quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem;
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1.6;
+  border-left: 2px solid var(--accent);
+  padding-left: 1rem;
+  text-wrap: balance;
+}
+.strat-text {
+  font-size: 0.84rem;
+  color: var(--text-2);
+  line-height: 1.78;
+}
+.strat-nums {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  background: var(--surface-2);
+  border-radius: 2px;
+  padding: 1rem 1.25rem;
+  margin-top: 0.25rem;
+}
+.snum { display: flex; flex-direction: column; gap: 0.15rem; }
+.snum-label {
+  font-size: 0.59rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  line-height: 1.3;
+}
+.snum-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.65rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text);
+}
+.snum-value.hot { color: var(--accent); }
+
+/* ── Strategy canvas ── */
+.strat-canvas {
+  width: 100%;
+  height: 155px;
+  display: block;
+  border-radius: 2px;
+  background: #05050D;
+}
+
+/* ── Footer ── */
+footer {
+  padding: 1.5rem max(1.5rem, calc(50vw - 680px));
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.71rem;
+  color: var(--text-2);
+}
+</style>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <p class="mast-eyebrow">FINA 402 · Investment Companies</p>
+  <h1>The <em>Asset Management</em> Universe</h1>
+  <p class="mast-sub">
+    A handful of firms now steward more capital than most national economies. This overview traces
+    how they grew, which funds dominate global equity markets, and the audacious strategies that
+    made hedge funds both legendary and notorious.
+  </p>
+  <div class="mast-kpis">
+    <div class="kpi">
+      <span class="kpi-label">Global AUM (2024)</span>
+      <span class="kpi-value">$128<small>T</small></span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Largest Manager</span>
+      <span class="kpi-value">$10.5<small>T — BlackRock</small></span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Largest Single ETF</span>
+      <span class="kpi-value">$1.1<small>T — VOO</small></span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Medallion Gross Return</span>
+      <span class="kpi-value">+66<small>% / yr avg.</small></span>
+    </div>
+  </div>
+</header>
+
+<!-- SECTION I: AUM RACE -->
+<section class="section">
+  <div class="sec-header">
+    <div class="sec-num">I</div>
+    <div>
+      <p class="sec-eyebrow">Assets Under Management · 2008–2024</p>
+      <h2>The AUM Race</h2>
+      <p class="sec-desc">From roughly $6T combined in 2008 to over $31T in 2024, the five largest managers grew faster than global GDP — reshaping who controls capital markets and corporate governance. Click any firm to isolate it.</p>
+    </div>
+  </div>
+
+  <div class="chart-panel">
+    <div class="chart-legend" id="legend"></div>
+    <div class="chart-wrap">
+      <canvas id="aumChart"></canvas>
+    </div>
+    <p class="chart-note">USD trillions · Approximate year-end AUM · <b>2025* estimado</b> (línea punteada) basado en reportes Q1–Q2 2025 · Fuentes: reportes anuales, Bloomberg, Morningstar</p>
+  </div>
+</section>
+
+<!-- SECTION II: HALL OF FAME -->
+<section class="section">
+  <div class="sec-header">
+    <div class="sec-num">II</div>
+    <div>
+      <p class="sec-eyebrow">Funds by Assets</p>
+      <h2>Hall of Fame</h2>
+      <p class="sec-desc">A small group of index funds captures a disproportionate share of global equity investment. Ultra-low costs and passive mandates redefined how both retail and institutional investors access markets.</p>
+    </div>
+  </div>
+  <div class="funds-grid" id="fundsGrid"></div>
+</section>
+
+<!-- SECTION III: PLAYBOOK -->
+<section class="section">
+  <div class="sec-header">
+    <div class="sec-num">III</div>
+    <div>
+      <p class="sec-eyebrow">Hedge Fund Strategies</p>
+      <h2>The Playbook</h2>
+      <p class="sec-desc">Two strategies that rewrote what markets can yield — one a sustained mathematical miracle, the other a single audacious macro trade that humbled a central bank.</p>
+    </div>
+  </div>
+  <div class="strat-grid" id="stratGrid"></div>
+</section>
+
+<footer>
+  <span>FINA 402 · University of San Diego · Knauss School of Business</span>
+  <span>AUM data approximate · For educational use only</span>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ─── DATA ────────────────────────────────────────────────
+const YEARS = ['2008','2010','2012','2014','2016','2018','2020','2022','2024','2025*'];
+const EST_IDX = 9; // index of the estimated year
+
+const COMPANIES = [
+  { label:'BlackRock',    data:[1.3,3.5,3.8,4.7,5.1,6.3,7.8,8.0,10.5,11.6], color:'#2563EB' },
+  { label:'Vanguard',     data:[1.0,1.5,2.0,3.0,3.9,5.1,6.2,7.2,8.1, 9.3],  color:'#DC2626' },
+  { label:'Fidelity',     data:[1.2,1.5,1.7,2.0,2.1,2.5,3.5,4.0,5.0, 5.8],  color:'#16A34A' },
+  { label:'State Street', data:[1.4,2.0,2.1,2.4,2.5,2.8,3.1,3.5,4.1, 4.5],  color:'#EA580C' },
+  { label:'JPMorgan AM',  data:[1.1,1.3,1.5,1.7,1.9,2.0,2.3,2.7,3.4, 3.9],  color:'#7C3AED' },
+];
+
+const FUNDS = [
+  { ticker:'VOO',   name:'Vanguard S&P 500 ETF',                   type:'etf', manager:'Vanguard',     aum:'$1.1T',   aumN:1.10, exp:'0.03%',   idx:'S&P 500',              note:'World\'s largest ETF as of 2024' },
+  { ticker:'VTSAX', name:'Vanguard Total Stock Market Index Admiral',type:'mf',  manager:'Vanguard',     aum:'~$1.4T',  aumN:1.40, exp:'0.04%',   idx:'CRSP US Total Market', note:'Largest mutual fund in the world (all share classes)' },
+  { ticker:'IVV',   name:'iShares Core S&P 500 ETF',               type:'etf', manager:'BlackRock',    aum:'$560B',   aumN:0.56, exp:'0.03%',   idx:'S&P 500',              note:'Tied with VOO for lowest ETF expense ratio' },
+  { ticker:'SPY',   name:'SPDR S&P 500 ETF Trust',                 type:'etf', manager:'State Street', aum:'$525B',   aumN:0.525,exp:'0.0945%', idx:'S&P 500',              note:'First US-listed ETF (January 1993); highest daily trading volume' },
+  { ticker:'FXAIX', name:'Fidelity 500 Index Fund',                type:'mf',  manager:'Fidelity',     aum:'$350B',   aumN:0.35, exp:'0.015%',  idx:'S&P 500',              note:'Among the lowest expense ratios of any fund globally' },
+];
+
+const STRATEGIES = [
+  {
+    tag:'Quantitative · Closed to Outsiders',
+    name:'The Black Box',
+    who:'Renaissance Technologies · Medallion Fund · Est. 1988',
+    quote:'"The greatest money-making machine in financial history — and almost no one knows exactly how it works."',
+    paras:[
+      'Jim Simons, a Cold War codebreaker and mathematics professor, built a team of physicists, linguists, and cryptographers — not bankers. The Medallion Fund avoids conventional Wall Street thinking almost entirely, hiring instead from academia and intelligence.',
+      'The fund uses thousands of short-horizon signals drawn from weather, earnings drift, intermarket correlations, and patterns invisible to the human eye. No single signal is a big idea. It\'s millions of small statistical edges, exploited continuously and relentlessly at machine speed.',
+    ],
+    nums:[
+      { label:'Avg. Gross Return (1988–2018)', val:'+66%', hot:true },
+      { label:'Avg. Net Return (after fees)',  val:'+39%', hot:false },
+      { label:'Fee structure (mgmt + perf)',   val:'5+44', hot:false },
+      { label:'Calendar years with losses',    val:'Zero', hot:true },
+    ],
+  },
+  {
+    tag:'Global Macro · September 16, 1992',
+    name:'Breaking the Bank of England',
+    who:'Quantum Fund · George Soros · "Black Wednesday"',
+    quote:'"He didn\'t bet against the pound. He bet against a government\'s ability to defy economic reality — and he was right."',
+    paras:[
+      'Britain had pegged the pound to the Deutsche Mark inside the European Exchange Rate Mechanism (ERM). The contradiction: the UK economy was in recession and needed lower rates, but defending the peg required higher rates to protect sterling from selling pressure.',
+      'Soros identified the structural impossibility and assembled a £10 billion short position in sterling. The Bank of England spent roughly £27B in reserves and raised rates twice in a single day — to 12%, then 15%. By evening, Britain withdrew from the ERM. The pound fell 15%. Soros cleared approximately $1 billion before markets closed.',
+    ],
+    nums:[
+      { label:'Sterling sold short',       val:'£10B',  hot:false },
+      { label:'Single-day profit',         val:'~$1B',  hot:true  },
+      { label:'UK overnight rate (peak)',  val:'15%',   hot:true  },
+      { label:'Pound decline post-exit',   val:'−15%',  hot:false },
+    ],
+  },
+];
+
+// ─── CHART ───────────────────────────────────────────────
+function cssVar(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function chartColors() {
+  return {
+    grid:    cssVar('--chart-grid'),
+    text:    cssVar('--chart-text'),
+    surface: cssVar('--surface'),
+    border:  cssVar('--border'),
+  };
+}
+
+let chart;
+
+// Custom plugin: dashed annotation at 2010 (BGI acquisition)
+const bgiPlugin = {
+  id:'bgi',
+  afterDraw(c) {
+    const { ctx, chartArea, scales } = c;
+    const x = scales.x.getPixelForValue(1); // index 1 = '2010'
+    ctx.save();
+    ctx.strokeStyle = 'rgba(146,64,14,0.32)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,4]);
+    ctx.beginPath();
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(146,64,14,0.7)';
+    ctx.font = '500 9px "DM Sans",sans-serif';
+    ctx.fillText('BGI Acquisition ▲', x + 5, chartArea.top + 12);
+    ctx.restore();
+  }
+};
+
+function initChart() {
+  const cl = chartColors();
+  const ctx = document.getElementById('aumChart').getContext('2d');
+
+  // Each company is split into two overlapping datasets:
+  // one solid line (historical) and one dashed segment (2024→2025 estimated)
+  const datasets = [];
+  COMPANIES.forEach(c => {
+    // Main solid line — all points, last one hidden
+    datasets.push({
+      label: c.label,
+      data: c.data.map((v,i) => i < EST_IDX ? v : null),
+      borderColor: c.color,
+      backgroundColor: 'transparent',
+      borderWidth: 2.2,
+      pointRadius: c.data.map((_,i) => i < EST_IDX ? 3.5 : 0),
+      pointBackgroundColor: c.color,
+      pointHoverRadius: 6,
+      tension: 0.32,
+      spanGaps: false,
+    });
+    // Dashed estimated segment: last confirmed → 2025
+    datasets.push({
+      label: c.label + '_est',
+      data: c.data.map((v,i) => i === EST_IDX-1 || i === EST_IDX ? v : null),
+      borderColor: c.color,
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderDash: [5, 4],
+      pointRadius: c.data.map((_,i) => i === EST_IDX ? 5 : 0),
+      pointBackgroundColor: 'transparent',
+      pointBorderColor: c.color,
+      pointBorderWidth: 2,
+      pointStyle: 'circle',
+      pointHoverRadius: 6,
+      tension: 0.32,
+      spanGaps: false,
+    });
+  });
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    plugins: [bgiPlugin],
+    data: {
+      labels: YEARS,
+      datasets,
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: cl.surface,
+          titleColor: cl.text,
+          bodyColor: cl.text,
+          borderColor: cl.border,
+          borderWidth: 1,
+          padding: 10,
+          filter: item => !item.dataset.label.endsWith('_est'),
+          callbacks: {
+            label: ctx => {
+              const isEst = ctx.dataIndex === EST_IDX;
+              return ` ${ctx.dataset.label}:  $${ctx.parsed.y}T${isEst ? ' (est.)' : ''}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: cl.grid },
+          ticks: { color: cl.text, font:{ family:"'DM Sans',sans-serif", size:12 } },
+        },
+        y: {
+          grid: { color: cl.grid },
+          ticks: {
+            color: cl.text,
+            font: { family:"'JetBrains Mono',monospace", size:11 },
+            callback: v => '$' + v + 'T',
+          },
+          title: {
+            display: true,
+            text: 'AUM — USD Trillions',
+            color: cl.text,
+            font: { family:"'DM Sans',sans-serif", size:11 },
+          }
+        }
+      }
+    }
+  });
+}
+
+function buildLegend() {
+  const el = document.getElementById('legend');
+  COMPANIES.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'leg-item';
+    div.innerHTML = `<div class="leg-swatch" style="background:${c.color}"></div>
+      <span class="leg-name">${c.label}</span>
+      <span class="leg-val">$${c.data[c.data.length-1]}T*</span>`;
+    div.addEventListener('click', () => {
+      // each company occupies dataset slots i*2 (solid) and i*2+1 (dashed)
+      const solid = chart.getDatasetMeta(i * 2);
+      const dashed = chart.getDatasetMeta(i * 2 + 1);
+      const hide = !solid.hidden;
+      solid.hidden = hide;
+      dashed.hidden = hide;
+      div.classList.toggle('muted');
+      chart.update();
+    });
+    el.appendChild(div);
+  });
+}
+
+function refreshChartTheme() {
+  if (!chart) return;
+  const cl = chartColors();
+  chart.options.scales.x.grid.color = cl.grid;
+  chart.options.scales.x.ticks.color = cl.text;
+  chart.options.scales.y.grid.color = cl.grid;
+  chart.options.scales.y.ticks.color = cl.text;
+  chart.options.scales.y.title.color = cl.text;
+  chart.options.plugins.tooltip.backgroundColor = cl.surface;
+  chart.options.plugins.tooltip.titleColor = cl.text;
+  chart.options.plugins.tooltip.bodyColor = cl.text;
+  chart.options.plugins.tooltip.borderColor = cl.border;
+  chart.update('none');
+}
+
+// ─── FUNDS ───────────────────────────────────────────────
+function buildFunds() {
+  const maxN = Math.max(...FUNDS.map(f => f.aumN));
+  document.getElementById('fundsGrid').innerHTML = FUNDS.map(f => {
+    const pct = Math.round(f.aumN / maxN * 100);
+    return `<div class="fund-card">
+      <div class="fund-top">
+        <span class="fund-badge badge-${f.type}">${f.type === 'etf' ? 'ETF' : 'Mutual Fund'}</span>
+        <div class="fund-ticker">${f.ticker}</div>
+        <div class="fund-fullname">${f.name}</div>
+      </div>
+      <div class="fund-bottom">
+        <div class="fund-rows">
+          <div class="fund-row"><span class="fr-l">Manager</span><span class="fr-v">${f.manager}</span></div>
+          <div class="fund-row"><span class="fr-l">AUM</span><span class="fr-v">${f.aum}</span></div>
+          <div class="fund-row"><span class="fr-l">Expense Ratio</span><span class="fr-v">${f.exp}</span></div>
+          <div class="fund-row"><span class="fr-l">Tracks</span><span class="fr-v">${f.idx}</span></div>
+        </div>
+        <div class="fund-bar"><div class="fund-bar-fill" style="width:${pct}%"></div></div>
+        <p class="fund-note">${f.note}</p>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── STRATEGIES ──────────────────────────────────────────
+function buildStrategies() {
+  document.getElementById('stratGrid').innerHTML = STRATEGIES.map((s, i) => `
+    <div class="strat-card">
+      <div class="strat-head">
+        <div class="strat-tag">${s.tag}</div>
+        <div class="strat-name">${s.name}</div>
+        <div class="strat-who">${s.who}</div>
+        <div class="strat-rule"></div>
+      </div>
+      <div class="strat-body">
+        <canvas class="strat-canvas" id="strat-canvas-${i}"></canvas>
+        <p class="strat-quote">${s.quote}</p>
+        ${s.paras.map(p => `<p class="strat-text">${p}</p>`).join('')}
+        <div class="strat-nums">
+          ${s.nums.map(n => `
+            <div class="snum">
+              <span class="snum-label">${n.label}</span>
+              <span class="snum-value${n.hot ? ' hot' : ''}">${n.val}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── ANIMATION: BLACK BOX ────────────────────────────────
+function animateBlackBox(id) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const dpr = devicePixelRatio || 1;
+  const r = canvas.getBoundingClientRect();
+  canvas.width = r.width * dpr;
+  canvas.height = r.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = r.width, H = r.height;
+
+  const DATA  = ['σ=0.012','α+0.03','β:0.94','p<0.001','Δt=14ms','N=7820','μ+1.2%','r²=0.91','λ=0.04','ΔV+0.8','AR(2)','GARCH'];
+  const RETS  = ['+66%','+73%','+39%','+84%','+55%','+41%','+71%'];
+  const particles = [];
+  let tick = 0, phase = 0, raf;
+
+  const BX = () => W * 0.47;
+  const BW = () => Math.max(56, W * 0.14);
+  const BH = () => H * 0.54;
+
+  function spawn(type) {
+    const bx = BX(), bw = BW();
+    particles.push({
+      type,
+      x: type === 'in' ? 0 : bx + bw/2 + bw/2,
+      y: H * 0.12 + Math.random() * H * 0.76,
+      vx: type === 'in' ? (1.5 + Math.random()) : (1.1 + Math.random() * 0.9),
+      label: type === 'in' ? DATA[Math.floor(Math.random()*DATA.length)] : RETS[Math.floor(Math.random()*RETS.length)],
+      dead: false,
+    });
+  }
+
+  function frame() {
+    tick++; phase += 0.022;
+    const bx = BX() - BW()/2, by = H/2 - BH()/2, bw = BW(), bh = BH();
+
+    ctx.fillStyle = '#05050D';
+    ctx.fillRect(0, 0, W, H);
+
+    // subtle grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+    ctx.lineWidth = 0.5;
+    for (let x = 30; x < W; x += 38) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for (let y = 20; y < H; y += 32) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+    // spawn
+    if (tick % 22 === 0) spawn('in');
+    if (tick % 46 === 0) spawn('out');
+
+    // particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      if ((p.type === 'in' && p.x >= bx - 2) || (p.type === 'out' && p.x > W + 10)) {
+        particles.splice(i, 1); continue;
+      }
+      const maxX  = p.type === 'in' ? bx : W;
+      const startX = p.type === 'in' ? 0 : bx + bw;
+      const prog = Math.max(0, Math.min(1, (p.x - startX) / (maxX - startX)));
+      const alpha = Math.min(1, prog * 5) * Math.min(1, (1 - prog) * 3.5);
+      ctx.globalAlpha = alpha * 0.9;
+      ctx.fillStyle = p.type === 'in' ? '#93C5FD' : '#86EFAC';
+      ctx.font = `${Math.min(10, W*0.019)}px "JetBrains Mono",monospace`;
+      ctx.textAlign = 'left';
+      ctx.fillText(p.label, p.x, p.y);
+    }
+    ctx.globalAlpha = 1;
+
+    // box glow
+    const g = 0.22 + 0.14 * Math.sin(phase);
+    ctx.save();
+    ctx.shadowColor = `rgba(37,99,235,${g+0.18})`; ctx.shadowBlur = 22;
+    ctx.fillStyle = '#090914';
+    ctx.strokeStyle = `rgba(37,99,235,${0.55+0.28*Math.sin(phase)})`;
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeRect(bx, by, bw, bh);
+    // inner gradient
+    const ig = ctx.createLinearGradient(bx, by, bx, by+bh);
+    ig.addColorStop(0, `rgba(37,99,235,${0.04+0.04*Math.sin(phase)})`);
+    ig.addColorStop(0.5, `rgba(37,99,235,${0.13+0.07*Math.sin(phase)})`);
+    ig.addColorStop(1, `rgba(37,99,235,0.02)`);
+    ctx.fillStyle = ig; ctx.fillRect(bx+2, by+2, bw-4, bh-4);
+    ctx.restore();
+
+    // box labels
+    ctx.textAlign = 'center';
+    ctx.fillStyle = `rgba(147,197,253,${0.72+0.2*Math.sin(phase)})`;
+    ctx.font = `500 ${Math.min(8,W*0.013)}px "JetBrains Mono",monospace`;
+    ctx.fillText('MEDALLION', bx+bw/2, H*0.45);
+    ctx.fillText('FUND', bx+bw/2, H*0.57);
+
+    // corner labels
+    ctx.globalAlpha = 0.3;
+    ctx.font = '8px "DM Sans",sans-serif';
+    ctx.fillStyle = '#93C5FD'; ctx.textAlign = 'left';  ctx.fillText('DATA IN',    6,  12);
+    ctx.fillStyle = '#86EFAC'; ctx.textAlign = 'right'; ctx.fillText('RETURNS OUT', W-6, 12);
+    ctx.globalAlpha = 1;
+
+    raf = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+// ─── ANIMATION: SOROS / BLACK WEDNESDAY ──────────────────
+function animateSoros(id) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const dpr = devicePixelRatio || 1;
+  const r = canvas.getBoundingClientRect();
+  canvas.width = r.width * dpr;
+  canvas.height = r.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = r.width, H = r.height;
+
+  const PAD = { l: 42, r: 14, t: 14, b: 26 };
+  const cW = W - PAD.l - PAD.r, cH = H - PAD.t - PAD.b;
+
+  // GBP/DEM narrative path [t, rate] — t normalised 0..1.25
+  const pts = [
+    [0,    2.845],[0.08, 2.838],[0.18, 2.831],[0.30, 2.824],[0.42, 2.817],
+    [0.52, 2.811],[0.62, 2.804],[0.70, 2.798],[0.76, 2.793],[0.82, 2.787],
+    [0.88, 2.783],[0.92, 2.780],[0.94, 2.778],  // ERM floor touched
+    [0.97, 2.752],[1.00, 2.715],[1.06, 2.674],[1.15, 2.651],[1.25, 2.638],
+  ];
+  const BREAK_IDX = 13; // index where floor breaks
+  const minR = 2.62, maxR = 2.86;
+
+  const toX = t => PAD.l + (t / 1.25) * cW;
+  const toY = v => PAD.t + (1 - (v - minR) / (maxR - minR)) * cH;
+
+  let progress = 0, pauseFrames = 0, done = false, raf;
+  const FRAMES = 200, PAUSE = 90;
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#05050D';
+    ctx.fillRect(0,0,W,H);
+
+    // horizontal grid + y-labels
+    [2.65,2.70,2.75,2.80,2.85].forEach(v => {
+      const y = toY(v);
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 0.5;
+      ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(W-PAD.r,y); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.28)';
+      ctx.font = '8.5px "JetBrains Mono",monospace'; ctx.textAlign = 'right';
+      ctx.fillText(v.toFixed(2), PAD.l-4, y+3);
+    });
+
+    // ERM floor line
+    const fy = toY(2.778);
+    ctx.setLineDash([4,4]); ctx.strokeStyle = 'rgba(239,68,68,0.5)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(PAD.l,fy); ctx.lineTo(W-PAD.r,fy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(239,68,68,0.65)';
+    ctx.font = '7.5px "DM Sans",sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('ERM Floor 2.778', W-PAD.r-2, fy-3);
+
+    // draw GBP/DEM line up to progress
+    const total = pts.length;
+    const curIdx = Math.min(total-1, Math.floor(progress*(total-1)));
+    const frac   = progress*(total-1) - curIdx;
+
+    if (curIdx >= 1) {
+      const solidEnd = Math.min(curIdx, BREAK_IDX);
+      // pre-break: light cream
+      ctx.strokeStyle = '#D6D1C9'; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(toX(pts[0][0]), toY(pts[0][1]));
+      for (let i=1; i<=solidEnd; i++) ctx.lineTo(toX(pts[i][0]), toY(pts[i][1]));
+      if (curIdx < BREAK_IDX && frac > 0) {
+        const [t0,v0]=pts[curIdx],[t1,v1]=pts[Math.min(curIdx+1,total-1)];
+        ctx.lineTo(toX(t0+(t1-t0)*frac), toY(v0+(v1-v0)*frac));
+      }
+      ctx.stroke();
+
+      // post-break: red
+      if (curIdx >= BREAK_IDX) {
+        ctx.strokeStyle = '#F87171'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(toX(pts[BREAK_IDX][0]), toY(pts[BREAK_IDX][1]));
+        for (let i=BREAK_IDX+1; i<=curIdx; i++) ctx.lineTo(toX(pts[i][0]), toY(pts[i][1]));
+        if (curIdx < total-1 && frac > 0) {
+          const [t0,v0]=pts[curIdx],[t1,v1]=pts[curIdx+1];
+          ctx.lineTo(toX(t0+(t1-t0)*frac), toY(v0+(v1-v0)*frac));
+        }
+        ctx.stroke();
+
+        // Black Wednesday label
+        if (curIdx >= BREAK_IDX+2) {
+          const lx = toX(1.0), ly = toY(2.69);
+          ctx.fillStyle = 'rgba(248,113,113,0.85)';
+          ctx.font = '500 8px "DM Sans",sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText('Black Wednesday', lx, ly);
+          ctx.fillText('Sep. 16, 1992',   lx, ly+11);
+        }
+
+        // Profit label at end
+        if (done) {
+          ctx.fillStyle = '#86EFAC';
+          ctx.font = '500 9px "JetBrains Mono",monospace'; ctx.textAlign = 'left';
+          ctx.fillText('Soros profit: ~+$1B', toX(1.05), toY(2.635)-10);
+        }
+      }
+    }
+
+    // cursor dot
+    if (curIdx < total) {
+      const [t0,v0]=pts[curIdx],[t1,v1]=pts[Math.min(curIdx+1,total-1)];
+      const cx = toX(t0+(t1-t0)*(curIdx<total-1?frac:0));
+      const cy = toY(v0+(v1-v0)*(curIdx<total-1?frac:0));
+      ctx.beginPath(); ctx.arc(cx,cy,3,0,Math.PI*2);
+      ctx.fillStyle = pts[curIdx][0]>=0.94 ? '#F87171' : '#D6D1C9';
+      ctx.fill();
+    }
+
+    // x-axis labels
+    ctx.fillStyle = 'rgba(255,255,255,0.27)';
+    ctx.font = '8px "DM Sans",sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Aug 1992', toX(0),    H-6);
+    ctx.fillText('Sep 16',   toX(1.0),  H-6);
+    ctx.fillText('Oct 1992', toX(1.25), H-6);
+
+    // title
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = '8px "DM Sans",sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText('GBP / DEM', PAD.l, 11);
+
+    if (!done) {
+      progress = Math.min(1, progress + 1/FRAMES);
+      if (progress >= 1) done = true;
+    } else {
+      if (++pauseFrames >= PAUSE) { progress=0; pauseFrames=0; done=false; }
+    }
+
+    raf = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ─── THEME WATCH ─────────────────────────────────────────
+new MutationObserver(refreshChartTheme)
+  .observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+window.matchMedia('(prefers-color-scheme: dark)')
+  .addEventListener('change', refreshChartTheme);
+
+// ─── INIT ────────────────────────────────────────────────
+buildFunds();
+buildStrategies();
+initChart();
+buildLegend();
+// defer canvas init so layout is settled
+setTimeout(() => {
+  animateBlackBox('strat-canvas-0');
+  animateSoros('strat-canvas-1');
+}, 60);
+</script>
