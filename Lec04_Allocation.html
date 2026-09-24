@@ -9,6 +9,7 @@
 <!-- Firebase (fill in your config below) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <!-- SheetJS for Excel download -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -914,8 +915,8 @@ const MONTHLY_DATA = {"dates":["2020-01","2020-02","2020-03","2020-04","2020-05"
 let ROLE=null, SECTION=null, STUDENT_NAME=null, STUDENT_WEIGHTS=null;
 let STUDENT_INFO=null;
 let GATE_MODE='student';
-let STUDENT_CODE='FINA402'; // default; overridden by Firebase
-let INSTR_PIN='MIKEPATTON'; // instructor PIN
+let STUDENT_CODE=''; // default; overridden by Firebase
+// Shared instructor PIN is verified by Firebase Authentication.
 let ACTIVE_SECTION=null;    // set by prof
 let SESSION_ACTIVE=true;    // professor controls; default open
 let ACTIVE_SECTIONS={S01:false,S02:false,S03:false,S04:false}; // all OFF by default; prof activates
@@ -935,18 +936,17 @@ async function initFirebase() {
   try{
     const lsCode=localStorage.getItem('lec04_code');
     if(lsCode) STUDENT_CODE=lsCode;
-    const lsPin=localStorage.getItem('lec04_pin');
-    if(lsPin) INSTR_PIN=lsPin;
+    localStorage.removeItem('lec04_pin');
   }catch(e){}
   if(!FB_CONFIG) return;
   try{
     if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
     DB = firebase.firestore();
-    const cfg = await DB.collection('lec04').doc('config').get();
+    await new Promise(resolve=>{const unsub=firebase.auth().onAuthStateChanged(()=>{unsub();resolve();});});
+    const cfg = await DB.collection('lec04').doc('publicConfig').get();
     if(cfg.exists){
       const d=cfg.data();
       if(d.studentCode) STUDENT_CODE=d.studentCode;
-      if(d.instructorPin) INSTR_PIN=d.instructorPin;
       if(typeof d.sessionActive==='boolean') SESSION_ACTIVE=d.sessionActive;
       if(d.activeSections && typeof d.activeSections==='object'){
         Object.assign(ACTIVE_SECTIONS, d.activeSections);
@@ -963,7 +963,7 @@ function startListeners(){
 
   // Config doc — live sync for SESSION_ACTIVE and ACTIVE_SECTIONS (students get updates instantly)
   if(_unsub_config) _unsub_config();
-  _unsub_config=DB.collection('lec04').doc('config').onSnapshot(snap=>{
+  _unsub_config=DB.collection('lec04').doc('publicConfig').onSnapshot(snap=>{
     if(!snap.exists) return;
     const d=snap.data();
     if(typeof d.sessionActive==='boolean') SESSION_ACTIVE=d.sessionActive;
@@ -1054,15 +1054,15 @@ function updateRosterUI(){
 async function saveCode(code){
   try{
     if(localStorage) localStorage.setItem('lec04_code',code);
-    if(DB) await DB.collection('lec04').doc('config').set({studentCode:code},{merge:true});
+    if(DB) await DB.collection('lec04').doc('publicConfig').set({studentCode:code},{merge:true});
   }catch(e){}
 }
 
 async function savePin(pin){
-  try{
-    if(localStorage) localStorage.setItem('lec04_pin',pin);
-    if(DB) await DB.collection('lec04').doc('config').set({instructorPin:pin},{merge:true});
-  }catch(e){console.warn('savePin error:',e);}
+ const user=firebase.auth().currentUser;
+ if(!user || user.email!=='luisceballos@gmail.com') throw Error('Sign in as instructor first.');
+ if(pin.length<6) throw Error('Use at least 6 characters.');
+ await user.updatePassword(pin);
 }
 
 async function saveToStore(col,key,data){
@@ -1086,13 +1086,30 @@ async function loadStore(col){
   }catch(e){return JSON.parse(localStorage.getItem(col)||'{}');}
 }
 
+
+// ── Review mode (opened from Lecture Hub with ?mode=review) ─────────────
+// If the hub has this lecture set to Review, enter as guest automatically (no login).
+// Add ?login to the URL to force the normal login screen (e.g. instructor).
+async function reviewModeAllowed(lecId){
+  try{
+    if(new URLSearchParams(location.search).has('login')) return false;
+    const s=await firebase.firestore().doc('lectures_hub/config').get();
+    const l=(s.data()?.lectures||[]).find(x=>x.id===lecId);
+    return !!(l && l.hubStatus==='guest');
+  }catch(e){console.warn('Review check failed:',e);return false;}
+}
 // ── Gate / Auth ──────────────────────────────────────────────────────────
 async function initApp(){
   await initFirebase();
+  if(await reviewModeAllowed('lec04')){
+    ROLE='guest'; SECTION='Review mode'; STUDENT_NAME='Guest'; ACTIVE_SECTION=null;
+    finalizeLogin();
+    return;
+  }
   // Try restore local-only state if already logged in
   try{
     const s=JSON.parse(sessionStorage.getItem('lec04_state')||'null');
-    if(s && s.role){
+    if(s && s.role && (s.role!=='professor' || (firebase.auth().currentUser?.email==='luisceballos@gmail.com' && firebase.auth().currentUser?.emailVerified))){
       ROLE=s.role; SECTION=s.section; STUDENT_NAME=s.name;
       ACTIVE_SECTION=s.active_section||null;
       if(s.activeSections) Object.assign(ACTIVE_SECTIONS,s.activeSections);
@@ -1151,8 +1168,13 @@ async function submitGate(){
     return;
   } else {
     // Instructor — PIN only, no class code needed
-    const pin=(document.getElementById('gate-pin').value||'').trim().toUpperCase();
-    if(!pin||pin!==INSTR_PIN.toUpperCase()){errEl.textContent='Incorrect PIN.';errEl.style.display='block';return;}
+    const pin=(document.getElementById('gate-pin').value||'').trim();
+    try{
+      await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+      await firebase.auth().signInWithEmailAndPassword('luisceballos@gmail.com',pin);
+      await DB.collection('lec04').doc('publicConfig').get();
+      document.getElementById('gate-pin').value='';
+    }catch(e){errEl.textContent='PIN not accepted. Check the PIN and connection.';errEl.style.display='block';return;}
     ROLE='professor'; SECTION='ALL'; STUDENT_NAME='Instructor'; ACTIVE_SECTION=null;
   }
 
@@ -1201,6 +1223,7 @@ function finalizeLogin(){
 }
 
 function resetGate(){
+  firebase.auth().signOut();
   sessionStorage.removeItem('lec04_state');
   ROLE=null; SECTION=null; STUDENT_NAME=null; STUDENT_INFO=null; STUDENT_WEIGHTS=null;
   document.getElementById('gate').style.display='flex';
@@ -2133,7 +2156,7 @@ async function toggleSession(){
   SESSION_ACTIVE=!SESSION_ACTIVE;
   updateSessionBtn();
   try{
-    if(DB) await DB.collection('lec04').doc('config').set({sessionActive:SESSION_ACTIVE},{merge:true});
+    if(DB) await DB.collection('lec04').doc('publicConfig').set({sessionActive:SESSION_ACTIVE},{merge:true});
     const msg=document.getElementById('settings-msg');
     msg.style.color=SESSION_ACTIVE?'var(--green)':'var(--red)';
     msg.textContent=SESSION_ACTIVE?'✓ Session opened — students can log in.':'Session closed — students are blocked.';
@@ -2169,7 +2192,7 @@ async function toggleSectionActive(sec){
   ACTIVE_SECTIONS[sec]=!ACTIVE_SECTIONS[sec];
   updateSectionBtns();
   try{
-    if(DB) await DB.collection('lec04').doc('config').set({activeSections:ACTIVE_SECTIONS},{merge:true});
+    if(DB) await DB.collection('lec04').doc('publicConfig').set({activeSections:ACTIVE_SECTIONS},{merge:true});
     const msg=document.getElementById('settings-msg');
     const on=ACTIVE_SECTIONS[sec];
     msg.style.color=on?'var(--green)':'var(--red)';
@@ -2337,30 +2360,10 @@ async function updateCode(){
 }
 
 async function updatePin(){
-  const inp=document.getElementById('new-pin-input');
-  const pin=(inp?.value||'').trim().toUpperCase();
-  if(!pin){return;}
-  INSTR_PIN=pin;
-  inp.value='';
-  const msg=document.getElementById('settings-msg');
-  // 1. localStorage (always works, same PC)
-  try{ localStorage.setItem('lec04_pin',pin); }catch(e){}
-  // 2. Firebase (cross-PC persistence)
-  if(!DB){
-    msg.style.color='#B8962E';
-    msg.textContent='⚠ PIN guardado localmente. Firebase no conectado.';
-    setTimeout(()=>{msg.textContent='';},5000);
-    return;
-  }
-  try{
-    await DB.collection('lec04').doc('config').set({instructorPin:pin},{merge:true});
-    msg.style.color='var(--green)';
-    msg.textContent='✓ PIN guardado en Firebase. Funciona desde cualquier PC.';
-  }catch(e){
-    msg.style.color='var(--red)';
-    msg.textContent='✗ Error Firebase: '+e.message+' — PIN guardado solo localmente.';
-  }
-  setTimeout(()=>{msg.textContent='';},6000);
+ const inp=document.getElementById('new-pin-input'),pin=(inp.value||'').trim(),msg=document.getElementById('settings-msg');
+ if(!pin)return;
+ try{await savePin(pin);inp.value='';msg.style.color='var(--green)';msg.textContent='Shared instructor PIN updated for all lectures.';}
+ catch(e){msg.style.color='var(--red)';msg.textContent=e.code==='auth/requires-recent-login'?'Sign out and sign in with your current PIN before changing it.':e.message;}
 }
 
 // ── Professor controls ────────────────────────────────────────────────────

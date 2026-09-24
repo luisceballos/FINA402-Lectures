@@ -337,10 +337,12 @@ input:focus,select:focus{outline:none;border-color:var(--gold)}
    <option value="S03">Section S03</option>
    <option value="S04">Section S04</option>
   </select>
-  <button class="btn btn-gold" onclick="renderScores()" style="padding:6px 12px;font-size:.78rem">Refresh</button>
+  <button class="btn btn-gold" onclick="renderScores()" style="padding:6px 12px;font-size:.78rem">Live</button>
+  <button class="btn" onclick="loadSavedScores()" style="padding:6px 12px;font-size:.78rem;background:var(--accent);color:#fff">Saved</button>
+  <button class="btn" onclick="recoverAllSessions()" style="padding:6px 10px;font-size:.78rem;background:var(--gold);color:#000" title="Read all historical sessions from Firebase and reconstruct scores">🔍 Recover</button>
  </div>
- <div id="scores-list" style="font-size:.74rem;color:var(--text);line-height:1.75;max-height:220px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;margin-bottom:10px">
-  <div style="color:var(--muted);font-style:italic">Press Refresh</div>
+ <div id="scores-list" style="font-size:.74rem;color:var(--text);line-height:1.75;max-height:260px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;margin-bottom:10px">
+  <div style="color:var(--muted);font-style:italic">Press Live (current session) or Saved (previous sessions)</div>
  </div>
 
  <!-- Reset All -->
@@ -481,9 +483,120 @@ function renderParticipation(){
   $('done-list').innerHTML=doneRows.length?doneRows.map(s=>`<div>${esc(s.name)} <span style="color:var(--muted);font-size:.68rem">· ${esc(s.section)}</span>${s.r.activity1?' <span style="background:#1A7A4A;color:#fff;border-radius:3px;padding:1px 5px;font-size:.65rem">P1</span>':''}${s.r.activity2?' <span style="background:#1a5a8a;color:#fff;border-radius:3px;padding:1px 5px;font-size:.65rem">P2</span>':''}${(s.r.activity1&&s.r.activity2)?' <span style="background:#6a3a9a;color:#fff;border-radius:3px;padding:1px 5px;font-size:.65rem">SR</span>':''}</div>`).join(''):'<div style="color:var(--muted);font-style:italic">None yet</div>';
   if($('roster-report'))$('roster-report').innerHTML=rows.map(s=>`<div class="report-row"><span>${esc(s.name)}<br><span class="muted">${esc(s.section)} · ${s.p?'Connected':'Not connected'}${s.p&&Date.now()-s.p.lastSeen<120000?' · recent':''}</span></span><span>${s.r.activity1?'✓ P1':'— P1'}<br>${s.r.activity2?'✓ P2':'— P2'}</span></div>`).join('');
 }
+function _localSavedScores(){try{return JSON.parse(localStorage.getItem('fina402_lec05_savedScores')||'[]');}catch{return [];}}
+function _renderSavedSessions(sessions,label=''){
+  const sec=$('score-section')?.value||'all';
+  const html=sessions.map(sess=>{
+    const scores=sess.scores||{};
+    const dt=sess.savedAt?new Date(sess.savedAt.seconds*1000).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'Unknown date';
+    const rows=Object.entries(scores).map(([id,s])=>{const stu=S.students.find(st=>st.id===id)||LOGIN_ROSTER.find(st=>st.id===id);return{name:stu?.name||id,section:stu?.section||'—',pts:s.pts,p1:s.p1,p2:s.p2};}).filter(r=>sec==='all'||r.section===sec).sort((a,b)=>a.section.localeCompare(b.section)||b.pts-a.pts||a.name.localeCompare(b.name));
+    if(!rows.length)return '';
+    const avg=rows.length?(rows.reduce((a,r)=>a+r.pts,0)/rows.length).toFixed(1):'—';
+    const pct=Math.round(rows.filter(r=>r.pts>0).length/rows.length*100);
+    return `<div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:4px">${label?'💾 ':'📅 '}${dt} · avg ${avg}/5 · ${pct}% scored${label?' ('+label+')':''}</div>`+rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:8px"><span>${esc(r.name)} <span style="color:var(--muted)">${r.section}</span></span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${r.pts===5?'var(--green)':r.pts>=3?'var(--gold)':r.pts>0?'var(--text)':'var(--muted)'}">${r.pts}/5${r.p1?' P1':''}${r.p2?' P2':''}</span></div>`).join('');
+  }).join('');
+  return html||'<div style="color:var(--muted);font-style:italic">No saved scores for this section.</div>';
+}
+async function loadSavedScores(){
+  const list=$('scores-list');
+  list.innerHTML='<div style="color:var(--muted);font-style:italic">Loading…</div>';
+  if(LECTURE){
+    try{
+      // Primary: scoreHistory field on LECTURE doc (most reliable, no extra rules needed)
+      const lSnap=await LECTURE.get();
+      const hist=(lSnap.data()?.scoreHistory)||[];
+      if(hist.length){
+        // Normalize timestamps: hist entries use numeric savedAt, not Firestore Timestamp
+        const sessions=hist.map(e=>({...e,savedAt:{seconds:e.savedAt}})).sort((a,b)=>(b.savedAt?.seconds||0)-(a.savedAt?.seconds||0));
+        list.innerHTML=_renderSavedSessions(sessions);
+        $('settings-status').textContent=`✓ ${sessions.length} saved session(s).`;
+        return;
+      }
+      // Secondary: savedScores subcollection (legacy / may be blocked by rules)
+      try{
+        const snap=await LECTURE.collection('savedScores').get();
+        if(!snap.empty){
+          const sessions=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.savedAt?.seconds||0)-(a.savedAt?.seconds||0));
+          list.innerHTML=_renderSavedSessions(sessions);
+          $('settings-status').textContent=`✓ ${sessions.length} saved session(s).`;
+          return;
+        }
+      }catch(e){/* subcollection blocked — continue */}
+    }catch(e){/* fall through to localStorage */}
+  }
+  // Tertiary: localStorage backup
+  const local=_localSavedScores();
+  if(local.length){
+    list.innerHTML=_renderSavedSessions(local,'local backup');
+    $('settings-status').textContent=`⚠️ Firebase unavailable — showing ${local.length} locally saved session(s).`;
+    return;
+  }
+  list.innerHTML='<div style="color:var(--muted);font-style:italic">No saved score snapshots found.<br><span style="font-size:.68rem">Use "Save Scores &amp; Reset" after each class to save here. Or try 🔍 Recover to scan all Firebase sessions.</span></div>';
+  $('settings-status').textContent=LECTURE?'No saved sessions found.':'⚠️ Not connected to Firebase.';
+}
+async function recoverAllSessions(){
+  try{
+  const list=$('scores-list');
+  if(!list){alert('scores-list element not found — try refreshing the page.');return;}
+  if(!LECTURE){list.innerHTML='<div style="color:var(--muted);font-style:italic">⚠️ Not connected to Firebase. Log in as instructor first.</div>';return;}
+  list.innerHTML='<div style="color:var(--muted);font-style:italic">🔍 Scanning all Firebase sessions…</div>';
+  try{
+    const allSessions=await LECTURE.collection('sessions').get();
+    if(allSessions.empty){list.innerHTML='<div style="color:var(--muted);font-style:italic">No sessions found in Firebase.</div>';return;}
+    // Load results from every session in parallel
+    const roster=S.students.length?S.students:LOGIN_ROSTER;
+    const sessionData=await Promise.all(allSessions.docs.map(async d=>{
+      const sid=d.id;
+      try{
+        const [parts,results]=await Promise.all([
+          LECTURE.collection('sessions').doc(sid).collection('participants').get(),
+          LECTURE.collection('sessions').doc(sid).collection('results').get()
+        ]);
+        const ts=d.data().createdAt?.seconds||parseInt(sid.replace('session-',''))||0;
+        return {id:sid,ts,participants:dataRows(parts),results:dataRows(results)};
+      }catch(e){return null;}
+    }));
+    const valid=sessionData.filter(Boolean).filter(s=>s.results.length>0).sort((a,b)=>b.ts-a.ts);
+    if(!valid.length){list.innerHTML='<div style="color:var(--muted);font-style:italic">Sessions found but no results recorded yet.</div>';return;}
+    const sec=$('score-section')?.value||'all';
+    const html=valid.map(sess=>{
+      const dt=sess.ts?new Date(sess.ts*1000).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'Unknown';
+      const rows=sess.results.map(r=>{
+        const stu=roster.find(s=>s.id===r.id);
+        const pts=(r.activity1?3:0)+(r.activity2?2:0);
+        return{name:stu?.name||r.id,section:stu?.section||r.section||'—',pts,p1:!!r.activity1,p2:!!r.activity2};
+      }).filter(r=>sec==='all'||r.section===sec).sort((a,b)=>a.section.localeCompare(b.section)||b.pts-a.pts||a.name.localeCompare(b.name));
+      if(!rows.length)return '';
+      const avg=(rows.reduce((a,r)=>a+r.pts,0)/rows.length).toFixed(1);
+      const pct=Math.round(rows.filter(r=>r.pts>0).length/rows.length*100);
+      return `<div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:4px">🗄 ${dt} · ${sess.id.slice(-8)} · avg ${avg}/5 · ${pct}% scored</div>`+rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:8px"><span>${esc(r.name)} <span style="color:var(--muted)">${r.section}</span></span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${r.pts===5?'var(--green)':r.pts>=3?'var(--gold)':r.pts>0?'var(--text)':'var(--muted)'}">${r.pts}/5${r.p1?' P1':''}${r.p2?' P2':''}</span></div>`).join('');
+    }).join('');
+    list.innerHTML=html||'<div style="color:var(--muted);font-style:italic">No results for this section.</div>';
+    $('settings-status').textContent=`✓ Recovered ${valid.length} session(s) from Firebase.`;
+  }catch(e){
+    const msg=errorText(e);
+    const list2=$('scores-list');
+    if(list2)list2.innerHTML=`<div style="color:var(--red);font-style:italic">⚠️ ${esc(msg)}</div>`;
+    if($('settings-status'))$('settings-status').textContent='⚠️ '+msg;
+  }
+  }catch(outerErr){alert('recoverAllSessions error: '+outerErr.message);}
+}
 function renderScores(){const sec=$('score-section')?.value||'all';const rows=S.students.filter(s=>sec==='all'||s.section===sec).map(s=>{const r=S.results.find(r=>r.id===s.id)||{};const pts=(r.activity1?3:0)+(r.activity2?2:0);return {...s,r,pts};});if(!rows.length){$('scores-list').innerHTML='<div style="color:var(--muted);font-style:italic">No students in this section.</div>';return;}const sections=['S01','S02','S03','S04'];const html=sections.filter(sec2=>rows.some(s=>s.section===sec2)).map(sec2=>{const g=rows.filter(s=>s.section===sec2).sort((a,b)=>b.pts-a.pts||a.name.localeCompare(b.name));const avg=g.length?(g.reduce((a,s)=>a+s.pts,0)/g.length).toFixed(1):'—';return `<div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:4px">${sec2} · avg ${avg}/5 · ${g.filter(s=>s.pts>0).length}/${g.length} scored</div>`+g.map(s=>`<div style="display:flex;justify-content:space-between;gap:8px"><span>${esc(s.name)}</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${s.pts===5?'var(--green)':s.pts>=3?'var(--gold)':s.pts>0?'var(--text)':'var(--muted)'}">${s.pts}/5${s.r.activity1?' P1':''}${s.r.activity2?' P2':''}</span></div>`).join('');}).join('');$('scores-list').innerHTML=html||'<div style="color:var(--muted);font-style:italic">No submissions yet.</div>';}
 async function resetSubmissionsOnly(){if(!confirm('Reset all submissions and attendance?\n\nTest/practice data will be cleared. No scores will be saved.'))return;S.participants=[];S.results=[];if(S.config){S.config.sessionActive=false;S.config.activeSections={S01:false,S02:false,S03:false,S04:false};}try{localStorage.removeItem('fina402_lec05_config');}catch{}renderSettings(false);saveSetting({action:'newSession'}).catch(e=>{$('settings-status').textContent='⚠️ Firebase unavailable — reset locally only.';});}
-async function resetAll(){if(!confirm('Save current scores to Firebase, then reset all submissions and attendance for the next class?\n\nScores are preserved. Submissions and attendance will be cleared.'))return;const sessionId=S.sessionId||S.config?.sessionId||'session-'+Date.now();const scoreMap={};S.results.forEach(r=>{scoreMap[r.id]={pts:(r.activity1?3:0)+(r.activity2?2:0),p1:!!r.activity1,p2:!!r.activity2};});try{if(LECTURE&&S.sessionId!=='offline'){await LECTURE.collection('savedScores').doc(sessionId).set({savedAt:firebase.firestore.FieldValue.serverTimestamp(),scores:scoreMap,totalStudents:S.students.length});$('settings-status').textContent='✓ Scores saved to Firebase.';}else{$('settings-status').textContent='⚠️ Offline — scores not saved to Firebase.';}}catch(e){$('settings-status').textContent='⚠️ Score save failed: '+errorText(e);}S.participants=[];S.results=[];if(S.config){S.config.sessionActive=false;S.config.activeSections={S01:false,S02:false,S03:false,S04:false};}try{localStorage.removeItem('fina402_lec05_config');}catch{}renderSettings(false);saveSetting({action:'newSession'}).catch(e=>{$('settings-status').textContent='⚠️ Firebase unavailable — reset locally only.';});}
+async function resetAll(){if(!confirm('Save current scores to Firebase, then reset all submissions and attendance for the next class?\n\nScores are preserved. Submissions and attendance will be cleared.'))return;const sessionId=S.sessionId||S.config?.sessionId||'session-'+Date.now();const scoreMap={};S.results.forEach(r=>{scoreMap[r.id]={pts:(r.activity1?3:0)+(r.activity2?2:0),p1:!!r.activity1,p2:!!r.activity2};});
+// Always save to localStorage as backup (survives offline/Firebase failures)
+try{const backup=JSON.parse(localStorage.getItem('fina402_lec05_savedScores')||'[]');backup.unshift({id:sessionId,savedAt:{seconds:Math.floor(Date.now()/1000)},scores:scoreMap,totalStudents:S.students.length});localStorage.setItem('fina402_lec05_savedScores',JSON.stringify(backup.slice(0,10)));}catch{}
+try{if(LECTURE&&S.sessionId!=='offline'){
+  // Save directly on the LECTURE document (guaranteed write access) as scoreHistory array
+  const snap2=await LECTURE.get();const existing=(snap2.data()?.scoreHistory)||[];
+  const entry={id:sessionId,savedAt:Math.floor(Date.now()/1000),scores:scoreMap,totalStudents:S.students.length};
+  existing.unshift(entry);
+  await LECTURE.update({scoreHistory:existing.slice(0,20)});
+  // Also try the savedScores subcollection (may fail on stricter rules — not critical)
+  LECTURE.collection('savedScores').doc(sessionId).set({savedAt:firebase.firestore.FieldValue.serverTimestamp(),scores:scoreMap,totalStudents:S.students.length}).catch(()=>{});
+  $('settings-status').textContent='✓ Scores saved to Firebase.';
+}else{$('settings-status').textContent='⚠️ Offline — scores saved locally only (press Saved to view).';}}catch(e){$('settings-status').textContent='⚠️ Firebase save failed — scores saved locally. '+errorText(e);}
+S.participants=[];S.results=[];if(S.config){S.config.sessionActive=false;S.config.activeSections={S01:false,S02:false,S03:false,S04:false};}try{localStorage.removeItem('fina402_lec05_config');}catch{}renderSettings(false);saveSetting({action:'newSession'}).catch(e=>{$('settings-status').textContent='⚠️ Firebase unavailable — reset locally only.';});}
 function toggleSection(sec){if(!S.config)S.config={sessionActive:false,activeSections:{},sessionId:'offline'};if(!S.config.activeSections)S.config.activeSections={};S.config.activeSections[sec]=!S.config.activeSections[sec];if(S.config.activeSections[sec])S.config.sessionActive=true;try{localStorage.setItem('fina402_lec05_config',JSON.stringify({activeSections:S.config.activeSections,sessionActive:S.config.sessionActive}));}catch{}renderSettings(false);saveSetting({action:'section',section:sec,open:S.config.activeSections[sec]}).catch(e=>{if($('settings-status'))$('settings-status').textContent='⚠️ '+errorText(e)+' — students may not be able to join until reconnected.';});}
 async function saveSetting(data){$('settings-status').textContent='Saving…';try{await api('lec05Settings',data);if(data.action!=='section'&&data.action!=='session'){teacherCache=null;applyInstructorState(await api('lec05InstructorState'));}renderSettings(false);if(data.action==='newSession')startPolling();$('settings-status').textContent='✓ Saved.';if(data.action==='code'){$('new-code').value='';if($('current-code'))$('current-code').textContent='(updated — hidden for security)';}if(data.action==='linkEmail')$('link-email').value='';if(isActivity()){renderToolbar();renderActivity();}}catch(e){$('settings-status').textContent=errorText(e);}}
 function csvSafe(value){let s=String(value??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
@@ -613,4 +726,27 @@ document.querySelectorAll('[data-reveal]').forEach(b=>b.onclick=()=>{const el=$(
 $('settings-btn').onclick=()=>{if(S.role!=='instructor')return;$('settings-panel').hidden=false;renderSettings();};$('save-pin').onclick=async()=>{try{const pin=$('new-pin').value.trim();if(pin.length<6)throw Error('Use at least 6 characters.');await LECTURE.update({instructorPin:pin});$('new-pin').value='';$('settings-status').textContent='✓ Instructor PIN updated in Firebase.';}catch(e){$('settings-status').textContent=errorText(e);}};
 $('close-settings').onclick=()=>{$('settings-panel').hidden=true;};$('session-toggle').onclick=()=>saveSetting({action:'session',open:!S.config.sessionActive});$('save-code').onclick=()=>saveSetting({action:'code',code:$('new-code').value});$('new-session').onclick=()=>{if(confirm('Archive the current session and start a closed, empty session?'))saveSetting({action:'newSession'});};if($('link-email-btn'))$('link-email-btn').onclick=()=>saveSetting({action:'linkEmail',studentId:$('link-student').value,email:$('link-email').value});$('report-section').onchange=renderParticipation;if($('download-report'))$('download-report').onclick=downloadReport;$('save-participation').onclick=async()=>{try{$('settings-status').textContent='Saving snapshot…';await api('lec05SaveParticipation');$('settings-status').textContent='✓ Attendance and both activities saved.';}catch(e){$('settings-status').textContent=errorText(e);}};
 let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(drawCurrent,100);});document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});goSlide(0);
+
+// ── Review mode (opened from Lecture Hub with ?mode=review) ─────────────
+// If the hub has this lecture set to Review, enter as guest automatically (no login).
+// Add ?login to the URL to force the normal login screen (e.g. instructor).
+async function reviewModeAllowed(lecId){
+  try{
+    if(new URLSearchParams(location.search).has('login')) return false;
+    const s=await firebase.firestore().doc('lectures_hub/config').get();
+    const l=(s.data()?.lectures||[]).find(x=>x.id===lecId);
+    return !!(l && l.hubStatus==='guest');
+  }catch(e){console.warn('Review check failed:',e);return false;}
+}
+(async()=>{
+  $('gate').hidden=true;                       // avoid flashing the login screen
+  try{ setupFirebase(); }catch(e){}
+  if(await reviewModeAllowed('lec05')){
+    previewLecture();
+    $('user-label').textContent='Review mode';
+    notify('Review mode · practice checks stay on this page; nothing is recorded.');
+  }else{
+    $('gate').hidden=false;                    // lecture is live/closed → normal login
+  }
+})();
 </script></body></html>
