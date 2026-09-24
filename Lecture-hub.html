@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FINA 402 · Lectures | USD Investments</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<style>
+:root {
+  --navy: #002147;
+  --gold: #c49a3c;
+  --bg: #f4f4f6;
+  --border: #dde0e6;
+  --text: #1a1a2e;
+  --muted: #6b7280;
+  --green: #16a34a;
+  --orange: #d97706;
+  --red: #dc2626;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; display: flex; flex-direction: column;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--navy); color: #fff;
+  padding: 18px 32px; display: flex; align-items: center; gap: 20px;
+}
+.school { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
+.course { font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+.sub { font-size: .82rem; color: #b0bec5; margin-top: 2px; }
+.term { margin-left: auto; font-size: .85rem; color: var(--gold); font-weight: 600; letter-spacing: .05em; }
+
+/* ── MAIN ── */
+main { flex: 1; padding: 36px 32px 48px; max-width: 1200px; }
+.section-title {
+  font-size: 1.05rem; font-weight: 700; color: var(--navy);
+  letter-spacing: .04em; text-transform: uppercase;
+  margin-bottom: 20px; padding-bottom: 8px;
+  border-bottom: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.legend { display: flex; gap: 16px; font-size: .72rem; font-weight: 600; }
+.legend span { display: flex; align-items: center; gap: 5px; }
+
+/* ── CARDS ── */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+
+.card {
+  background: #fff; border-radius: 10px;
+  border: 1px solid var(--border); overflow: hidden;
+  transition: box-shadow .2s, transform .15s;
+  display: flex; flex-direction: column;
+}
+.card.clickable { cursor: pointer; }
+.card.clickable:hover { box-shadow: 0 6px 24px rgba(0,33,71,.14); transform: translateY(-3px); }
+.card.dimmed { opacity: .48; }
+
+.card-hd {
+  background: var(--navy); padding: 13px 17px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.lec-num { font-size: .73rem; font-weight: 700; color: var(--gold); letter-spacing: .1em; text-transform: uppercase; }
+.class-label { font-size: .7rem; color: rgba(255,255,255,.5); margin-top: 2px; }
+
+.pill { font-size: .68rem; padding: 3px 9px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
+.pill.live  { background: var(--orange); color: #fff; }
+.pill.guest { background: var(--green);  color: #fff; }
+.pill.closed { background: #9ca3af; color: #fff; }
+
+.card-bd { padding: 16px 17px 12px; flex: 1; }
+.card-title { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 4px; line-height: 1.3; }
+.card-topic { font-size: .82rem; color: var(--muted); line-height: 1.5; }
+
+.card-ft {
+  padding: 10px 17px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ft-cta { font-size: .78rem; font-weight: 600; color: var(--navy); }
+.notes-badge {
+  font-size: .7rem; background: #f0fdf4; border: 1px solid #bbf7d0;
+  color: var(--green); padding: 2px 8px; border-radius: 10px; font-weight: 600;
+}
+.pdf-link {
+  display: inline-flex; align-items: center; gap: 6px; font-size: .74rem; font-weight: 700;
+  color: var(--navy); background: #fbf6ea; border: 1px solid var(--gold); border-radius: 6px;
+  padding: 3px 9px; text-decoration: none; white-space: nowrap;
+}
+.pdf-link:hover { background: var(--gold); color: #fff; }
+.pdf-row { padding: 0 17px 12px; }
+.btn-pdf { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px; border-radius: 8px;
+  border: 1.5px solid var(--gold); background: #fbf6ea; color: var(--navy); font-weight: 700; font-size: .9rem; text-decoration: none; }
+.btn-pdf:hover { background: var(--gold); color: #fff; }
+.soon { font-size: .78rem; color: var(--muted); font-style: italic; }
+
+/* ── OVERLAYS ── */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.52); z-index: 900;
+  align-items: center; justify-content: center; padding: 16px;
+}
+.overlay.show { display: flex; }
+
+.modal {
+  background: #fff; border-radius: 12px;
+  width: min(460px, 100%); max-height: 90vh;
+  overflow: hidden; display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+.modal.wide { width: min(680px, 100%); }
+.modal.tall { max-height: 94vh; }
+
+.mhd {
+  background: var(--navy); color: #fff;
+  padding: 17px 22px; display: flex; align-items: flex-start;
+  justify-content: space-between; flex-shrink: 0;
+}
+.mhd h3 { font-size: 1rem; font-weight: 700; }
+.mhd-sub { font-size: .77rem; color: #b0bec5; margin-top: 2px; }
+.xbtn { background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer; opacity: .6; padding: 0; line-height: 1; }
+.xbtn:hover { opacity: 1; }
+
+.mbody { padding: 24px; overflow-y: auto; flex: 1; }
+.mfoot { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0; }
+
+/* ── AUTH MODAL ── */
+.auth-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 8px 0; }
+.auth-icon { font-size: 2.4rem; }
+.auth-desc { color: var(--muted); font-size: .88rem; text-align: center; line-height: 1.5; }
+.pw-input {
+  padding: 10px 16px; border: 2px solid var(--border); border-radius: 8px;
+  font-size: 1rem; width: 210px; text-align: center; letter-spacing: .12em;
+}
+.pw-input:focus { outline: none; border-color: var(--navy); }
+.pw-err { color: var(--red); font-size: .82rem; display: none; margin-top: -6px; }
+.sep { font-size: .78rem; color: var(--muted); }
+
+/* ── NOTES MODAL ── */
+.notes-meta { margin-bottom: 20px; }
+.notes-badge-lg { font-size: .72rem; font-weight: 700; color: var(--gold); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+.notes-main-title { font-size: 1.3rem; font-weight: 700; color: var(--navy); margin-bottom: 4px; line-height: 1.3; }
+.notes-topic-line { font-size: .85rem; color: var(--muted); margin-bottom: 0; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+
+.notes-prose {
+  font-size: .95rem; line-height: 1.8; color: #2d3748;
+  border-left: 3px solid var(--gold); padding-left: 18px;
+}
+.notes-prose p { margin-bottom: 1em; }
+.notes-prose p:last-child { margin-bottom: 0; }
+.notes-empty { color: var(--muted); font-style: italic; font-size: .9rem; text-align: center; padding: 24px 0; }
+
+/* ── INSTRUCTOR SETTINGS ── */
+.accordion { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
+.acc-hd {
+  background: var(--bg); padding: 11px 14px; display: flex;
+  align-items: center; gap: 10px; cursor: pointer; user-select: none;
+}
+.acc-hd:hover { background: #eaecf0; }
+.acc-num { font-weight: 700; color: var(--navy); font-size: .82rem; min-width: 52px; }
+.acc-lec-title { font-size: .84rem; color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-status-tag { font-size: .7rem; }
+.arr { font-size: .6rem; color: var(--muted); transition: transform .2s; }
+.arr.open { transform: rotate(180deg); }
+.acc-body { padding: 14px; border-top: 1px solid var(--border); display: none; }
+.acc-body.open { display: block; }
+
+.frow { margin-bottom: 13px; }
+.frow:last-child { margin-bottom: 0; }
+.frow > label {
+  display: block; font-size: .72rem; font-weight: 700;
+  color: var(--muted); margin-bottom: 5px;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.frow input[type=text], .frow select {
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 7px 10px; font-size: .88rem; width: 100%; background: #fff;
+}
+.frow input:focus, .frow select:focus { outline: none; border-color: var(--navy); }
+.frow textarea {
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 9px 10px; font-size: .88rem; width: 100%;
+  resize: vertical; min-height: 90px; line-height: 1.65;
+  font-family: inherit; background: #fff;
+}
+.frow textarea:focus { outline: none; border-color: var(--navy); }
+
+.status-row { display: flex; gap: 7px; }
+.status-opt {
+  flex: 1; padding: 8px 6px; border: 2px solid var(--border); border-radius: 7px;
+  text-align: center; cursor: pointer; font-size: .78rem;
+  font-weight: 600; transition: all .15s; color: var(--muted);
+}
+.status-opt:hover { border-color: var(--navy); }
+.status-opt.s-closed  { border-color: #9ca3af; background: #f9fafb; color: #6b7280; }
+.status-opt.s-student { border-color: var(--orange); background: #fff7ed; color: var(--orange); }
+.status-opt.s-guest   { border-color: var(--green); background: #f0fdf4; color: var(--green); }
+
+/* ── BUTTONS ── */
+.btn { border: none; border-radius: 8px; font-size: .9rem; font-weight: 700; cursor: pointer; padding: 10px 26px; }
+.btn-primary { background: var(--navy); color: #fff; }
+.btn-primary:hover { background: #003060; }
+.btn-secondary { background: none; border: 1px solid var(--border); color: var(--muted); }
+.btn-secondary:hover { background: var(--bg); }
+.btn-gold { background: var(--gold); color: var(--navy); }
+.btn-gold:hover { background: #b08830; }
+.btn-open { background: var(--navy); color: #fff; border: none; border-radius: 8px; padding: 12px; width: 100%; font-size: .95rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-open:hover { background: #003060; }
+
+/* ── FOOTER ── */
+footer { text-align: center; padding: 16px; font-size: .75rem; color: var(--muted); border-top: 1px solid var(--border); }
+#instr-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .75rem; margin-top: 4px; opacity: .4; }
+#instr-btn:hover { opacity: 1; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--navy); color: #fff; padding: 11px 18px;
+  border-radius: 8px; font-size: .85rem; font-weight: 600;
+  z-index: 9999; transform: translateY(60px); opacity: 0; transition: all .3s;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── SPINNER ── */
+.spinner {
+  width: 30px; height: 30px; border: 3px solid var(--border);
+  border-top-color: var(--navy); border-radius: 50%;
+  animation: spin .8s linear infinite; margin: 48px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 600px) {
+  header { padding: 14px 16px; }
+  main { padding: 20px 16px 40px; }
+  .term { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="school">University of San Diego · Knauss School of Business</div>
+    <div class="course">FINA 402 · Investments</div>
+    <div class="sub">Interactive Lecture Hub</div>
+  </div>
+  <div class="term">Fall 2026</div>
+</header>
+
+<main>
+  <div class="section-title">
+    Class Lectures
+    <div class="legend">
+      <span><span class="pill live" style="font-size:.65rem">Live</span> Class in session</span>
+      <span><span class="pill guest" style="font-size:.65rem">Review</span> Open for review</span>
+    </div>
+  </div>
+  <div id="grid" class="grid">
+    <div class="spinner"></div>
+  </div>
+</main>
+
+<footer>
+  FINA 402 · University of San Diego<br>
+  <button id="instr-btn" onclick="openInstrPin()">⚙ Instructor</button>
+</footer>
+
+<!-- ══ PIN MODAL ══ -->
+<div class="overlay" id="ov-pin">
+  <div class="modal">
+    <div class="mhd">
+      <div><h3>🔐 Instructor Access</h3><div class="mhd-sub">FINA 402 · Lecture Hub</div></div>
+      <button class="xbtn" onclick="closeOv('ov-pin')">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="auth-wrap">
+        <div class="auth-icon">🔒</div>
+        <div class="auth-desc">Enter the instructor PIN to manage lecture settings.</div>
+        <input id="pin-in" class="pw-input" type="password" placeholder="PIN"
+               onkeydown="if(event.key==='Enter')checkPin()">
+        <div id="pin-err" class="pw-err">Incorrect PIN. Please try again.</div>
+        <button class="btn btn-primary" onclick="checkPin()">Enter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ NOTES MODAL ══ -->
+<div class="overlay" id="ov-notes">
+  <div class="modal wide tall">
+    <div class="mhd">
+      <div><h3 id="notes-title">Lecture Notes</h3><div class="mhd-sub" id="notes-sub">—</div></div>
+      <button class="xbtn" onclick="closeOv('ov-notes')">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="notes-meta">
+        <div class="notes-badge-lg" id="notes-badge">—</div>
+        <div class="notes-main-title" id="notes-h2">—</div>
+        <div class="notes-topic-line" id="notes-topic">—</div>
+      </div>
+      <hr class="divider">
+      <div class="notes-prose" id="notes-body"></div>
+    </div>
+    <div class="mfoot" style="flex-direction:column;gap:8px;align-items:stretch">
+      <a class="btn-pdf" id="notes-pdf-btn" target="_blank" rel="noopener" style="display:none"></a>
+      <button class="btn-open" id="notes-open-btn">
+        🎓 Open Lecture
+      </button>
+      <div style="text-align:center">
+        <button class="btn btn-secondary" style="padding:7px 20px;font-size:.8rem" onclick="closeOv('ov-notes')">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ INSTRUCTOR SETTINGS ══ -->
+<div class="overlay" id="ov-instr">
+  <div class="modal wide tall">
+    <div class="mhd">
+      <div><h3>⚙ Lecture Settings</h3><div class="mhd-sub">Access, passwords &amp; notes</div></div>
+      <button class="xbtn" onclick="closeOv('ov-instr')">✕</button>
+    </div>
+    <div class="mbody" id="instr-body"></div>
+    <div class="mfoot">
+      <button class="btn btn-secondary" onclick="closeOv('ov-instr')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveSettings()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════ CONFIG ══════════════ */
+const FB_CFG = {
+  apiKey: "AIzaSyAjHL3MztreUN7J7QKW3q_nRbiNoxLwA0E",
+  authDomain: "fina402-60e86.firebaseapp.com",
+  projectId: "fina402-60e86",
+  storageBucket: "fina402-60e86.firebasestorage.app",
+  messagingSenderId: "1058911893067",
+  appId: "1:1058911893067:web:0ab85f8a600d4fb8d2ffce"
+};
+const INSTR_EMAIL = 'luisceballos@gmail.com';
+const LEC_BASE    = 'fina402_free/course/lectures';
+
+// Default lectures — overridden by Firebase on load
+const SEED = [
+  { id:'lec01', week:1, title:'Investment Companies',  topic:'Mutual Funds, ETFs & Closed-End Funds',     file:'Lec01_Investment-companies.html', status:'guest',   classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'' },
+  { id:'lec02', week:2, title:'Leveraged Strategies',  topic:'Margin Accounts, Short Selling & Leverage', file:'Lec02_LevStrats.html',            status:'guest',   classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec02.pdf' },
+  { id:'lec03', week:3, title:'Risk & Return',         topic:'Portfolio Statistics & Diversification',    file:'Lec03_RiskReturn.html',           status:'guest',   classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec03.pdf' },
+  { id:'lec04', week:4, title:'Asset Allocation I',    topic:'Efficient Frontier & Capital Allocation',   file:'Lec04_Allocation.html',           status:'student', classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec04.pdf' },
+  { id:'lec05', week:5, title:'Asset Allocation II',   topic:'CAL, Sharpe Ratio & Portfolio Selection',   file:'Lec05_Allocation.html',           status:'student', classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec05.pdf' },
+];
+
+/* ══════════════ STATE ══════════════ */
+let db, lectures = [], curIdx = -1;
+
+/* ══════════════ INIT ══════════════ */
+async function init() {
+  if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
+  db = firebase.firestore();
+  try { await firebase.auth().signInAnonymously(); } catch(_) {}
+
+  lectures = JSON.parse(JSON.stringify(SEED));
+  const apply = snap => {
+    if (snap.exists && snap.data()?.lectures?.length) {
+      snap.data().lectures.forEach(d => {
+        const i = lectures.findIndex(l => l.id === d.id);
+        if (i < 0) return;
+        if (d.hubStatus !== undefined) lectures[i].status      = d.hubStatus;
+        if (d.hubLabel  !== undefined) lectures[i].classLabel  = d.hubLabel;
+        if (d.hubPass   !== undefined) lectures[i].studentPass = d.hubPass;
+        if (d.hubNotes  !== undefined) lectures[i].notes       = d.hubNotes;
+        if (d.hubPdf) lectures[i].reviewPdf = d.hubPdf;
+      });
+    }
+    renderCards();
+  };
+  try { apply(await db.doc('lectures_hub/config').get()); } catch(e) { console.warn(e); renderCards(); }
+  // keep cards in sync when the instructor changes a status
+  db.doc('lectures_hub/config').onSnapshot(apply, e => console.warn('hub listener:', e));
+}
+
+/* ══════════════ RENDER CARDS ══════════════ */
+function pillHtml(status) {
+  const map = { student:'🟠 Live', guest:'✓ Review', closed:'Closed' };
+  const cls = status === 'student' ? 'live' : status;
+  return `<span class="pill ${cls}">${map[status] || 'Closed'}</span>`;
+}
+
+function pdfName(f) { return f.replace(/\.pdf$/i, ''); }
+
+function renderCards() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  lectures.forEach((lec, i) => {
+    const active    = lec.status !== 'closed';
+    const hasNotes  = lec.notes?.trim().length > 0;
+    const isStudent = lec.status === 'student';
+    const isGuest   = lec.status === 'guest';
+
+    const card = document.createElement('div');
+    card.className = 'card' + (active ? ' clickable' : ' dimmed');
+    if (active) card.onclick = () => handleCard(i);
+
+    let footerLeft = '';
+    if (!active)        footerLeft = '<span class="soon">Coming soon</span>';
+    else if (isStudent) footerLeft = '<span class="ft-cta">Join live class →</span>';
+    else if (isGuest)   footerLeft = '<span class="ft-cta">Review notes &amp; lecture →</span>';
+
+    card.innerHTML = `
+      <div class="card-hd">
+        <div>
+          <div class="lec-num">Lecture ${lec.week}</div>
+          ${lec.classLabel ? `<div class="class-label">${lec.classLabel}</div>` : ''}
+        </div>
+        ${pillHtml(lec.status)}
+      </div>
+      <div class="card-bd">
+        <div class="card-title">${lec.title}</div>
+        <div class="card-topic">${lec.topic}</div>
+      </div>
+      ${isGuest && lec.reviewPdf ? `<div class="pdf-row"><a class="pdf-link" href="${lec.reviewPdf}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 ${pdfName(lec.reviewPdf)}</a></div>` : ''}
+      <div class="card-ft">
+        ${footerLeft}
+        ${hasNotes ? '<span class="notes-badge">📄 Notes available</span>' : ''}
+      </div>`;
+
+    grid.appendChild(card);
+  });
+}
+
+/* ══════════════ CARD CLICK ══════════════ */
+function handleCard(i) {
+  curIdx = i;
+  const lec = lectures[i];
+  if (lec.status === 'guest') {
+    showNotes(i);
+  } else if (lec.status === 'student') {
+    window.open(lec.file, '_blank');   // lecture's own screen asks for class code, section & name
+  }
+}
+
+
+/* ══════════════ NOTES MODAL ══════════════ */
+function showNotes(i) {
+  curIdx = i;
+  const lec = lectures[i];
+
+  document.getElementById('notes-badge').textContent =
+    ['Lecture ' + lec.week, lec.classLabel].filter(Boolean).join(' · ');
+  document.getElementById('notes-h2').textContent    = lec.title;
+  document.getElementById('notes-topic').textContent = lec.topic;
+  document.getElementById('notes-title').textContent = lec.title;
+  document.getElementById('notes-sub').textContent   = lec.classLabel || 'Class Notes';
+
+  const body = document.getElementById('notes-body');
+  if (lec.notes?.trim()) {
+    body.innerHTML = lec.notes.trim()
+      .split(/\n\n+/)
+      .map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+      .join('');
+  } else {
+    body.innerHTML = (lec.status === 'guest' && lec.reviewPdf)
+      ? '<div class="notes-empty">The review notes for this lecture are available in the PDF below.</div>'
+      : '<div class="notes-empty">Notes for this class will be posted after the session.</div>';
+  }
+
+  const pdfBtn = document.getElementById('notes-pdf-btn');
+  if (lec.status === 'guest' && lec.reviewPdf) {
+    pdfBtn.href = lec.reviewPdf;
+    pdfBtn.textContent = '📄 ' + pdfName(lec.reviewPdf);
+    pdfBtn.style.display = '';
+  } else {
+    pdfBtn.style.display = 'none';
+  }
+
+  document.getElementById('notes-open-btn').onclick = () => {
+    closeOv('ov-notes');
+    window.open(lec.status === 'guest' ? lec.file + '?mode=review' : lec.file, '_blank');
+  };
+
+  openOv('ov-notes');
+}
+
+/* ══════════════ INSTRUCTOR PIN ══════════════ */
+function openInstrPin() {
+  document.getElementById('pin-in').value = '';
+  document.getElementById('pin-err').style.display = 'none';
+  document.getElementById('pin-err').textContent = 'Incorrect PIN. Please try again.';
+  openOv('ov-pin');
+  setTimeout(() => document.getElementById('pin-in').focus(), 120);
+}
+
+async function checkPin() {
+  const btn = document.querySelector('#ov-pin .btn-primary');
+  const pin = document.getElementById('pin-in').value.trim();
+  if (!pin) return;
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+  try {
+    await firebase.auth().signInWithEmailAndPassword(INSTR_EMAIL, pin);
+    closeOv('ov-pin');
+    buildInstrUI();
+    openOv('ov-instr');
+  } catch(e) {
+    document.getElementById('pin-err').textContent = 'Incorrect PIN. Please try again.';
+    document.getElementById('pin-err').style.display = 'block';
+    document.getElementById('pin-in').select();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Enter';
+  }
+}
+
+/* ══════════════ INSTRUCTOR SETTINGS UI ══════════════ */
+function buildInstrUI() {
+  document.getElementById('instr-body').innerHTML = lectures.map((lec, i) => {
+    const st = lec.status;
+    return `
+    <div class="accordion">
+      <div class="acc-hd" onclick="toggleAcc(${i})">
+        <span class="acc-num">Lec ${lec.week}</span>
+        <span class="acc-lec-title">${lec.title}</span>
+        <span class="acc-status-tag">${pillHtml(st)}</span>
+        <span class="arr" id="arr-${i}">▼</span>
+      </div>
+      <div class="acc-body" id="accb-${i}">
+
+        <div class="frow">
+          <label>Access Status</label>
+          <div class="status-row">
+            <div class="status-opt ${st==='closed' ?'s-closed' :''}" id="opt-closed-${i}"  onclick="pickStatus(${i},'closed')">🔒 Closed</div>
+            <div class="status-opt ${st==='student'?'s-student':''}" id="opt-student-${i}" onclick="pickStatus(${i},'student')">🟠 Live</div>
+            <div class="status-opt ${st==='guest'  ?'s-guest'  :''}" id="opt-guest-${i}"   onclick="pickStatus(${i},'guest')">✅ Review</div>
+          </div>
+        </div>
+
+        <div class="frow">
+          <label>Class Label (week, date, section)</label>
+          <input type="text" id="lbl-${i}" value="${lec.classLabel||''}" placeholder="e.g. Week 5 · Sep 24 · S01 &amp; S02">
+        </div>
+
+        <div class="frow">
+          <label>Review notes PDF (file in the Lectures folder, shown when in Review)</label>
+          <input type="text" id="pdf-${i}" value="${lec.reviewPdf||''}" placeholder="e.g. Review_Notes_Lec0${lec.week}.pdf">
+        </div>
+
+        <div class="frow">
+          <label>Lecture Notes (narrative summary — visible to students in Review mode)</label>
+          <textarea id="notes-${i}" placeholder="Write a clear, prose explanation of what was covered in this lecture. Avoid bullet points — write as if explaining to a student who missed class…">${lec.notes||''}</textarea>
+        </div>
+
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function pickStatus(i, st) {
+  ['closed','student','guest'].forEach(s => {
+    const el = document.getElementById(`opt-${s}-${i}`);
+    if (el) el.className = 'status-opt' + (s === st ? ` s-${st}` : '');
+  });
+}
+
+function toggleAcc(i) {
+  document.getElementById(`accb-${i}`).classList.toggle('open');
+  document.getElementById(`arr-${i}`).classList.toggle('open');
+}
+
+/* ══════════════ SAVE ══════════════ */
+async function saveSettings() {
+  const updated = lectures.map((lec, i) => {
+    let status = lec.status;
+    ['closed','student','guest'].forEach(s => {
+      if (document.getElementById(`opt-${s}-${i}`)?.classList.contains(`s-${s}`)) status = s;
+    });
+    return {
+      id: lec.id, week: lec.week, title: lec.title, topic: lec.topic, file: lec.file,
+      status,
+      classLabel:  (document.getElementById(`lbl-${i}`)?.value  || '').trim(),
+      studentPass: lec.studentPass || '',
+      notes:       (document.getElementById(`notes-${i}`)?.value || '').trim(),
+      reviewPdf:   (document.getElementById(`pdf-${i}`)?.value   || '').trim(),
+    };
+  });
+
+  try {
+    await db.doc('lectures_hub/config').set({
+      lectures: updated.map(lec => ({
+        id: lec.id, hubStatus: lec.status, hubLabel: lec.classLabel,
+        hubPass: lec.studentPass, hubNotes: lec.notes, hubPdf: lec.reviewPdf,
+      })),
+      updatedAt: new Date().toISOString()
+    });
+    lectures = updated;
+    closeOv('ov-instr');
+    renderCards();
+    showToast('✅ Changes saved');
+  } catch(e) {
+    showToast('❌ Save error: ' + e.message);
+  }
+}
+
+/* ══════════════ HELPERS ══════════════ */
+function openOv(id)  { document.getElementById(id).classList.add('show'); }
+function closeOv(id) { document.getElementById(id).classList.remove('show'); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('show'); });
+});
+
+init();
+</script>
+</body>
+</html>
