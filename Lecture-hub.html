@@ -94,7 +94,13 @@ main { flex: 1; padding: 36px 32px 48px; max-width: 1200px; }
   padding: 3px 9px; text-decoration: none; white-space: nowrap;
 }
 .pdf-link:hover { background: var(--gold); color: #fff; }
-.pdf-row { padding: 0 17px 12px; }
+.pdf-row { padding: 0 17px 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+.video-link { display: inline-flex; align-items: center; gap: 6px; font-size: .74rem; font-weight: 700; color: #fff; background: var(--navy);
+  border: 1px solid var(--navy); border-radius: 6px; padding: 3px 9px; text-decoration: none; white-space: nowrap; }
+.video-link:hover { background: var(--gold); border-color: var(--gold); }
+.btn-video { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px; border-radius: 8px;
+  background: #fff; border: 1.5px solid var(--navy); color: var(--navy); font-weight: 700; font-size: .9rem; text-decoration: none; }
+.btn-video:hover { background: var(--navy); color: #fff; }
 .btn-pdf { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px; border-radius: 8px;
   border: 1.5px solid var(--gold); background: #fbf6ea; color: var(--navy); font-weight: 700; font-size: .9rem; text-decoration: none; }
 .btn-pdf:hover { background: var(--gold); color: #fff; }
@@ -309,6 +315,7 @@ footer { text-align: center; padding: 16px; font-size: .75rem; color: var(--mute
       <div class="notes-prose" id="notes-body"></div>
     </div>
     <div class="mfoot" style="flex-direction:column;gap:8px;align-items:stretch">
+      <a class="btn-video" id="notes-video-btn" target="_blank" rel="noopener" style="display:none">▶ Watch lecture video</a>
       <a class="btn-pdf" id="notes-pdf-btn" target="_blank" rel="noopener" style="display:none"></a>
       <button class="btn-open" id="notes-open-btn">
         🎓 Open Lecture
@@ -352,12 +359,12 @@ const LEC_BASE    = 'fina402_free/course/lectures';
 
 // Default lectures — overridden by Firebase on load
 const SEED = [
-  { id:'lec01', week:1, title:'Investment Companies',  topic:'Mutual Funds, ETFs & Closed-End Funds',     file:'Lec01_Investment-companies.html', status:'guest',   classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'' },
-  { id:'lec02', week:2, title:'Leveraged Strategies',  topic:'Margin Accounts, Short Selling & Leverage', file:'Lec02_LevStrats.html',            status:'guest',   classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec02.pdf' },
-  { id:'lec03', week:3, title:'Risk & Return',         topic:'Portfolio Statistics & Diversification',    file:'Lec03_RiskReturn.html',           status:'guest',   classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec03.pdf' },
-  { id:'lec04', week:4, title:'Asset Allocation I',    topic:'Efficient Frontier & Capital Allocation',   file:'Lec04_Allocation.html',           status:'student', classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec04.pdf' },
-  { id:'lec05', week:5, title:'Asset Allocation II',   topic:'CAL, Sharpe Ratio & Portfolio Selection',   file:'Lec05_Allocation.html',           status:'student', classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec05.pdf' },
-  { id:'lec06', week:6, title:'CAPM',                  topic:'Systematic Risk, Beta, SML & Alpha',        file:'Lec06_CAPM.html',                 status:'closed',  classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec06.pdf' },
+  { id:'lec01', week:1, title:'Investment Companies',  topic:'Mutual Funds, ETFs & Closed-End Funds',     file:'Lec01_Investment-companies.html', status:'guest',   classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'', videoUrl:'' },
+  { id:'lec02', week:2, title:'Leveraged Strategies',  topic:'Margin Accounts, Short Selling & Leverage', file:'Lec02_LevStrats.html',            status:'guest',   classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec02.pdf', videoUrl:'' },
+  { id:'lec03', week:3, title:'Risk & Return',         topic:'Portfolio Statistics & Diversification',    file:'Lec03_RiskReturn.html',           status:'guest',   classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec03.pdf', videoUrl:'' },
+  { id:'lec04', week:4, title:'Asset Allocation I',    topic:'Efficient Frontier & Capital Allocation',   file:'Lec04_Allocation.html',           status:'student', classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec04.pdf', videoUrl:'' },
+  { id:'lec05', week:5, title:'Asset Allocation II',   topic:'CAL, Sharpe Ratio & Portfolio Selection',   file:'Lec05_Allocation.html',           status:'student', classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec05.pdf', videoUrl:'' },
+  { id:'lec06', week:6, title:'CAPM',                  topic:'Systematic Risk, Beta, SML & Alpha',        file:'Lec06_CAPM.html',                 status:'closed',  classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec06.pdf', videoUrl:'Lec06_CAPM_Video.mp4' },
 ];
 
 /* ══════════════ STATE ══════════════ */
@@ -380,6 +387,7 @@ async function init() {
         if (d.hubPass   !== undefined) lectures[i].studentPass = d.hubPass;
         if (d.hubNotes  !== undefined) lectures[i].notes       = d.hubNotes;
         if (d.hubPdf) lectures[i].reviewPdf = d.hubPdf;
+        if (d.hubVideo) lectures[i].videoUrl = d.hubVideo;
       });
     }
     renderCards();
@@ -428,7 +436,7 @@ function renderCards() {
         <div class="card-title">${lec.title}</div>
         <div class="card-topic">${lec.topic}</div>
       </div>
-      ${isGuest && lec.reviewPdf ? `<div class="pdf-row"><a class="pdf-link" href="${lec.reviewPdf}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 ${pdfName(lec.reviewPdf)}</a></div>` : ''}
+      ${(active && lec.videoUrl) || (isGuest && lec.reviewPdf) ? `<div class="pdf-row">${active && lec.videoUrl ? `<a class="video-link" href="${lec.videoUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">▶ Watch lecture video</a>` : ''}${isGuest && lec.reviewPdf ? `<a class="pdf-link" href="${lec.reviewPdf}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 ${pdfName(lec.reviewPdf)}</a>` : ''}</div>` : ''}
       <div class="card-ft">
         ${footerLeft}
         ${hasNotes ? '<span class="notes-badge">📄 Notes available</span>' : ''}
@@ -474,6 +482,8 @@ function showNotes(i) {
       : '<div class="notes-empty">Notes for this class will be posted after the session.</div>';
   }
 
+  const vidBtn = document.getElementById('notes-video-btn');
+  if (lec.status !== 'closed' && lec.videoUrl) { vidBtn.href = lec.videoUrl; vidBtn.style.display = ''; } else { vidBtn.style.display = 'none'; }
   const pdfBtn = document.getElementById('notes-pdf-btn');
   if (lec.status === 'guest' && lec.reviewPdf) {
     pdfBtn.href = lec.reviewPdf;
@@ -555,6 +565,11 @@ function buildInstrUI() {
         </div>
 
         <div class="frow">
+          <label>Lecture video (file name or link, e.g. Google Drive — shown when Live or Review)</label>
+          <input type="text" id="video-${i}" value="${lec.videoUrl||''}" placeholder="e.g. Lec0${lec.week}_Video.mp4 or https://drive.google.com/...">
+        </div>
+
+        <div class="frow">
           <label>Lecture Notes (narrative summary — visible to students in Review mode)</label>
           <textarea id="notes-${i}" placeholder="Write a clear, prose explanation of what was covered in this lecture. Avoid bullet points — write as if explaining to a student who missed class…">${lec.notes||''}</textarea>
         </div>
@@ -590,6 +605,7 @@ async function saveSettings() {
       studentPass: lec.studentPass || '',
       notes:       (document.getElementById(`notes-${i}`)?.value || '').trim(),
       reviewPdf:   (document.getElementById(`pdf-${i}`)?.value   || '').trim(),
+      videoUrl:    (document.getElementById(`video-${i}`)?.value || '').trim(),
     };
   });
 
@@ -597,7 +613,7 @@ async function saveSettings() {
     await db.doc('lectures_hub/config').set({
       lectures: updated.map(lec => ({
         id: lec.id, hubStatus: lec.status, hubLabel: lec.classLabel,
-        hubPass: lec.studentPass, hubNotes: lec.notes, hubPdf: lec.reviewPdf,
+        hubPass: lec.studentPass, hubNotes: lec.notes, hubPdf: lec.reviewPdf, hubVideo: lec.videoUrl,
       })),
       updatedAt: new Date().toISOString()
     });
