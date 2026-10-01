@@ -350,6 +350,14 @@ input:focus,select:focus{outline:none;border-color:var(--gold)}
   <button class="btn" onclick="loadSavedScores()" style="padding:6px 12px;font-size:.78rem;background:var(--accent);color:#fff">Saved</button>
   <button class="btn" onclick="recoverAllSessions()" style="padding:6px 10px;font-size:.78rem;background:var(--gold);color:#000" title="Read all historical sessions from Firebase and reconstruct scores">🔍 Recover</button>
  </div>
+ <div style="display:flex;gap:8px;margin-bottom:8px">
+  <select id="score-view" style="flex:1;padding:6px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.8rem">
+   <option value="all">All students (incl. not submitted)</option>
+   <option value="submitted">Submitted only</option>
+   <option value="missing">Not submitted only (0 pts)</option>
+  </select>
+  <button class="btn" onclick="exportScoresCSV()" style="padding:6px 10px;font-size:.78rem;background:var(--green);color:#fff" title="Download every student with points, including zeros, for Canvas">⬇ CSV for Canvas</button>
+ </div>
  <div id="scores-list" style="font-size:.74rem;color:var(--text);line-height:1.75;max-height:260px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:8px 10px;margin-bottom:10px">
   <div style="color:var(--muted);font-style:italic">Press Live (current session) or Saved (previous sessions)</div>
  </div>
@@ -532,17 +540,46 @@ function renderParticipation(){
   $('done-list').innerHTML=doneRows.length?doneRows.map(s=>`<div>${esc(s.name)} <span style="color:var(--muted);font-size:.68rem">· ${esc(s.section)}</span>${s.r.activity1?' <span style="background:#1A7A4A;color:#fff;border-radius:3px;padding:1px 5px;font-size:.65rem">P1</span>':''}${s.r.activity2?' <span style="background:#1a5a8a;color:#fff;border-radius:3px;padding:1px 5px;font-size:.65rem">P2</span>':''}${(s.r.activity1&&s.r.activity2)?' <span style="background:#6a3a9a;color:#fff;border-radius:3px;padding:1px 5px;font-size:.65rem">SR</span>':''}</div>`).join(''):'<div style="color:var(--muted);font-style:italic">None yet</div>';
   if($('roster-report'))$('roster-report').innerHTML=rows.map(s=>`<div class="report-row"><span>${esc(s.name)}<br><span class="muted">${esc(s.section)} · ${s.p?'Connected':'Not connected'}${s.p&&Date.now()-s.p.lastSeen<120000?' · recent':''}</span></span><span>${s.r.activity1?'✓ P1':'— P1'}<br>${s.r.activity2?'✓ P2':'— P2'}</span></div>`).join('');
 }
+function _scoreRoster(){return (S.students&&S.students.length?S.students:LOGIN_ROSTER).map(s=>({id:s.id,name:s.name,section:s.section}));}
+/* rows: submitted records [{id,name,section,pts,p1,p2}]. Adds roster students with no record as 0 pts.
+   Missing students are only listed for sections that took part in that session (or the selected section). */
+function _completeRows(rows,label,opts={}){
+  const sec=$('score-section')?.value||'all',view=$('score-view')?.value||'all';
+  const have=new Set(rows.map(r=>r.id)),part=new Set((opts.participants||[]).map(p=>p.id));
+  const secs=sec!=='all'?[sec]:[...new Set([...rows.map(r=>r.section),...(opts.sections||[])])].filter(x=>/^S0\d$/.test(x));
+  const base=rows.filter(r=>sec==='all'||r.section===sec).map(r=>({...r,missing:false}));
+  const missing=_scoreRoster().filter(st=>secs.includes(st.section)&&!have.has(st.id)).map(st=>({...st,pts:0,p1:false,p2:false,missing:true,connected:part.has(st.id)}));
+  const ord=(a,b)=>a.section.localeCompare(b.section)||(a.missing-b.missing)||b.pts-a.pts||a.name.localeCompare(b.name);
+  const all=[...base,...missing].sort(ord);
+  (window._scoreExport=window._scoreExport||[]).push({label,rows:all});
+  return {base,missing,shown:(view==='submitted'?base:view==='missing'?missing:all).slice().sort(ord)};
+}
+function _scoreRowHTML(r){
+  if(r.missing)return `<div style="display:flex;justify-content:space-between;gap:8px"><span>${esc(r.name)} <span style="color:var(--muted)">${r.section}</span></span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--red)">0/5 · ${r.connected?'connected, no answer':'not submitted'}</span></div>`;
+  return `<div style="display:flex;justify-content:space-between;gap:8px"><span>${esc(r.name)} <span style="color:var(--muted)">${r.section}</span></span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${r.pts===5?'var(--green)':r.pts>=3?'var(--gold)':r.pts>0?'var(--text)':'var(--muted)'}">${r.pts}/5${r.p1?' P1':''}${r.p2?' P2':''}${!r.p1&&!r.p2?' · tried, 0 correct':''}</span></div>`;
+}
+function _scoreHeader(icon,title,base,missing){
+  const avg=base.length?(base.reduce((a,r)=>a+r.pts,0)/base.length).toFixed(1):'—';
+  return `<div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:4px">${icon} ${title} · <span style="color:var(--green)">${base.length} submitted</span> · <span style="color:var(--red)">${missing.length} not submitted</span> · avg ${avg}/5</div>`;
+}
+function _scoreBlock(icon,title,res){return _scoreHeader(icon,title,res.base,res.missing)+(res.shown.length?res.shown.map(_scoreRowHTML).join(''):'<div style="color:var(--muted);font-style:italic">None in this view.</div>');}
+function exportScoresCSV(){
+  const t=window._scoreExport||[];if(!t.length){alert('Load scores first: press Live, Saved or Recover.');return;}
+  const rows=[['Session','Section','Student','Points (max 5)','Activity 1','Activity 2','Status']];
+  t.forEach(x=>x.rows.forEach(r=>rows.push([x.label,r.section,r.name,r.pts,r.p1?'yes':'no',r.p2?'yes':'no',r.missing?(r.connected?'Connected, no answer':'Not submitted'):'Submitted'])));
+  const url=URL.createObjectURL(new Blob(['﻿'+rows.map(r=>r.map(csvSafe).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download='lec06_scores_for_canvas.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
 function _localSavedScores(){try{return JSON.parse(localStorage.getItem('fina402_lec06_savedScores')||'[]');}catch{return [];}}
 function _renderSavedSessions(sessions,label=''){
-  const sec=$('score-section')?.value||'all';
+  window._scoreExport=[];
   const html=sessions.map(sess=>{
     const scores=sess.scores||{};
     const dt=sess.savedAt?new Date(sess.savedAt.seconds*1000).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'Unknown date';
-    const rows=Object.entries(scores).map(([id,s])=>{const stu=S.students.find(st=>st.id===id)||LOGIN_ROSTER.find(st=>st.id===id);return{name:stu?.name||id,section:stu?.section||'—',pts:s.pts,p1:s.p1,p2:s.p2};}).filter(r=>sec==='all'||r.section===sec).sort((a,b)=>a.section.localeCompare(b.section)||b.pts-a.pts||a.name.localeCompare(b.name));
-    if(!rows.length)return '';
-    const avg=rows.length?(rows.reduce((a,r)=>a+r.pts,0)/rows.length).toFixed(1):'—';
-    const pct=Math.round(rows.filter(r=>r.pts>0).length/rows.length*100);
-    return `<div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:4px">${label?'💾 ':'📅 '}${dt} · avg ${avg}/5 · ${pct}% scored${label?' ('+label+')':''}</div>`+rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:8px"><span>${esc(r.name)} <span style="color:var(--muted)">${r.section}</span></span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${r.pts===5?'var(--green)':r.pts>=3?'var(--gold)':r.pts>0?'var(--text)':'var(--muted)'}">${r.pts}/5${r.p1?' P1':''}${r.p2?' P2':''}</span></div>`).join('');
+    const rows=Object.entries(scores).map(([id,sc])=>{const stu=S.students.find(st=>st.id===id)||LOGIN_ROSTER.find(st=>st.id===id);return{id,name:stu?.name||id,section:stu?.section||'—',pts:sc.pts,p1:sc.p1,p2:sc.p2};});
+    const res=_completeRows(rows,dt+(label?' ('+label+')':''));
+    if(!res.base.length&&!res.missing.length)return '';
+    return _scoreBlock(label?'💾':'📅',dt+(label?' ('+label+')':''),res);
   }).join('');
   return html||'<div style="color:var(--muted);font-style:italic">No saved scores for this section.</div>';
 }
@@ -608,17 +645,13 @@ async function recoverAllSessions(){
     const valid=sessionData.filter(Boolean).filter(s=>s.results.length>0).sort((a,b)=>b.ts-a.ts);
     if(!valid.length){list.innerHTML='<div style="color:var(--muted);font-style:italic">Sessions found but no results recorded yet.</div>';return;}
     const sec=$('score-section')?.value||'all';
+    window._scoreExport=[];
     const html=valid.map(sess=>{
       const dt=sess.ts?new Date(sess.ts*1000).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'Unknown';
-      const rows=sess.results.map(r=>{
-        const stu=roster.find(s=>s.id===r.id);
-        const pts=(r.activity1?3:0)+(r.activity2?2:0);
-        return{name:stu?.name||r.id,section:stu?.section||r.section||'—',pts,p1:!!r.activity1,p2:!!r.activity2};
-      }).filter(r=>sec==='all'||r.section===sec).sort((a,b)=>a.section.localeCompare(b.section)||b.pts-a.pts||a.name.localeCompare(b.name));
-      if(!rows.length)return '';
-      const avg=(rows.reduce((a,r)=>a+r.pts,0)/rows.length).toFixed(1);
-      const pct=Math.round(rows.filter(r=>r.pts>0).length/rows.length*100);
-      return `<div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:4px">🗄 ${dt} · ${sess.id.slice(-8)} · avg ${avg}/5 · ${pct}% scored</div>`+rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:8px"><span>${esc(r.name)} <span style="color:var(--muted)">${r.section}</span></span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${r.pts===5?'var(--green)':r.pts>=3?'var(--gold)':r.pts>0?'var(--text)':'var(--muted)'}">${r.pts}/5${r.p1?' P1':''}${r.p2?' P2':''}</span></div>`).join('');
+      const rows=sess.results.map(r=>{const stu=roster.find(x=>x.id===r.id);return{id:r.id,name:stu?.name||r.id,section:stu?.section||r.section||'—',pts:(r.activity1?3:0)+(r.activity2?2:0),p1:!!r.activity1,p2:!!r.activity2};});
+      const res=_completeRows(rows,dt+' · '+sess.id.slice(-8),{participants:sess.participants,sections:sess.participants.map(p=>p.section)});
+      if(!res.base.length&&!res.missing.length)return '';
+      return _scoreBlock('🗄',dt+' · '+sess.id.slice(-8),res);
     }).join('');
     list.innerHTML=html||'<div style="color:var(--muted);font-style:italic">No results for this section.</div>';
     $('settings-status').textContent=`✓ Recovered ${valid.length} session(s) from Firebase.`;
@@ -630,7 +663,14 @@ async function recoverAllSessions(){
   }
   }catch(outerErr){alert('recoverAllSessions error: '+outerErr.message);}
 }
-function renderScores(){const sec=$('score-section')?.value||'all';const rows=S.students.filter(s=>sec==='all'||s.section===sec).map(s=>{const r=S.results.find(r=>r.id===s.id)||{};const pts=(r.activity1?3:0)+(r.activity2?2:0);return {...s,r,pts};});if(!rows.length){$('scores-list').innerHTML='<div style="color:var(--muted);font-style:italic">No students in this section.</div>';return;}const sections=['S01','S02','S03','S04'];const html=sections.filter(sec2=>rows.some(s=>s.section===sec2)).map(sec2=>{const g=rows.filter(s=>s.section===sec2).sort((a,b)=>b.pts-a.pts||a.name.localeCompare(b.name));const avg=g.length?(g.reduce((a,s)=>a+s.pts,0)/g.length).toFixed(1):'—';return `<div style="font-size:.68rem;font-weight:700;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:4px">${sec2} · avg ${avg}/5 · ${g.filter(s=>s.pts>0).length}/${g.length} scored</div>`+g.map(s=>`<div style="display:flex;justify-content:space-between;gap:8px"><span>${esc(s.name)}</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${s.pts===5?'var(--green)':s.pts>=3?'var(--gold)':s.pts>0?'var(--text)':'var(--muted)'}">${s.pts}/5${s.r.activity1?' P1':''}${s.r.activity2?' P2':''}</span></div>`).join('');}).join('');$('scores-list').innerHTML=html||'<div style="color:var(--muted);font-style:italic">No submissions yet.</div>';}
+function renderScores(){
+  window._scoreExport=[];
+  const rows=S.results.map(r=>{const stu=S.students.find(x=>x.id===r.id)||LOGIN_ROSTER.find(x=>x.id===r.id);return{id:r.id,name:stu?.name||r.id,section:stu?.section||r.section||'—',pts:(r.activity1?3:0)+(r.activity2?2:0),p1:!!r.activity1,p2:!!r.activity2};});
+  const active=Object.entries(S.config?.activeSections||{}).filter(([k,v])=>v).map(([k])=>k);
+  const res=_completeRows(rows,'Live · '+(S.sessionId||'current'),{participants:S.participants,sections:[...active,...S.participants.map(p=>p.section)]});
+  if(!res.base.length&&!res.missing.length){$('scores-list').innerHTML='<div style="color:var(--muted);font-style:italic">No submissions yet. Choose a section to list who has not submitted.</div>';return;}
+  $('scores-list').innerHTML=_scoreBlock('🟢','Live session',res);
+}
 async function resetSubmissionsOnly(){if(!confirm('Reset all submissions and attendance?\n\nTest/practice data will be cleared. No scores will be saved.'))return;S.participants=[];S.results=[];if(S.config){S.config.sessionActive=false;S.config.activeSections={S01:false,S02:false,S03:false,S04:false};}try{localStorage.removeItem('fina402_lec06_config');}catch{}renderSettings(false);saveSetting({action:'newSession'}).catch(e=>{$('settings-status').textContent='⚠️ Firebase unavailable — reset locally only.';});}
 async function resetAll(){if(!confirm('Save current scores to Firebase, then reset all submissions and attendance for the next class?\n\nScores are preserved. Submissions and attendance will be cleared.'))return;const sessionId=S.sessionId||S.config?.sessionId||'session-'+Date.now();const scoreMap={};S.results.forEach(r=>{scoreMap[r.id]={pts:(r.activity1?3:0)+(r.activity2?2:0),p1:!!r.activity1,p2:!!r.activity2};});
 // Always save to localStorage as backup (survives offline/Firebase failures)
