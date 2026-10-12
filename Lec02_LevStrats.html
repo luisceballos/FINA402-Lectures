@@ -5,17 +5,17 @@
 
 <style>
 :root {
-  --navy:#003087;--navy-deep:#001452;--gold:#B8962E;--gold-light:#D4AE45;
+  --navy:#6B1A2B;--navy-deep:#3D0A18;--gold:#B8962E;--gold-light:#D4AE45;
   --gain:#15803D;--loss:#DC2626;--warn:#D97706;--teal:#0891B2;--purple:#7C3AED;
-  --bg:#EEF0F8;--surface:#FFFFFF;--surface-2:#F4F5FB;
-  --border:#D8DCF0;--text:#0D1435;--text-muted:#4B5880;--text-subtle:#8A95B8;
-  --radius:12px;--shadow:0 2px 16px rgba(0,20,82,0.09);
+  --bg:#F8F2F3;--surface:#FFFFFF;--surface-2:#FAF4F5;
+  --border:#E8D4D8;--text:#1A0810;--text-muted:#5C3D46;--text-subtle:#9E7A85;
+  --radius:12px;--shadow:0 2px 16px rgba(82,0,20,0.09);
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#060B18;--surface:#0C1526;--surface-2:#111E35;--border:#1A2A45;
-  --text:#E2EAF8;--text-muted:#7B91BA;--text-subtle:#3E5278;--shadow:0 2px 20px rgba(0,0,0,.5);
+  --bg:#120608;--surface:#1C0A0F;--surface-2:#240D14;--border:#3A1520;
+  --text:#F8EAF0;--text-muted:#BA7B8D;--text-subtle:#78394B;--shadow:0 2px 20px rgba(30,0,10,.5);
 }}
-:root[data-theme="dark"]{--bg:#060B18;--surface:#0C1526;--surface-2:#111E35;--border:#1A2A45;--text:#E2EAF8;--text-muted:#7B91BA;--text-subtle:#3E5278;}
+:root[data-theme="dark"]{--bg:#120608;--surface:#1C0A0F;--surface-2:#240D14;--border:#3A1520;--text:#F8EAF0;--text-muted:#BA7B8D;--text-subtle:#78394B;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;width:100vw;}
 .deck{position:relative;width:100%;height:100vh;overflow:hidden;}
@@ -59,7 +59,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .loss{color:var(--loss);}
 .warn{color:var(--warn);}
 .navy{color:var(--navy);}
-.anno{background:rgba(0,48,135,0.06);border:1px solid rgba(0,48,135,0.16);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text-muted);line-height:1.55;margin-top:10px;}
+.anno{background:rgba(107,26,43,0.06);border:1px solid rgba(107,26,43,0.16);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text-muted);line-height:1.55;margin-top:10px;}
 .anno strong{color:var(--navy);}
 .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:2px 7px;}
 .tag-ok{background:rgba(21,128,61,.1);color:var(--gain);}
@@ -202,6 +202,17 @@ input[type=range]{accent-color:var(--navy);cursor:pointer;}
   .title-meta{grid-template-columns:1fr;}
   .mgn-steps{grid-template-columns:1fr;}
 }
+
+.mgn-progress{display:flex;align-items:center;gap:8px;margin-bottom:20px;}
+.mgn-pip{width:28px;height:28px;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.mgn-pip.done{background:var(--gain);color:#fff;}
+.mgn-pip.active{background:var(--navy);color:#fff;box-shadow:0 0 0 3px rgba(107,26,43,.18);}
+.mgn-pip.pending{background:var(--border);color:var(--text-subtle);}
+.mgn-pip-line{flex:1;height:2px;background:var(--border);border-radius:1px;}
+.mgn-pip-line.done{background:var(--gain);}
+.mgn-step-full{border-radius:var(--radius);padding:24px 28px;margin-bottom:14px;}
+.mgn-row-big{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;font-size:13px;}
+.mgn-val-big{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;}
 </style>
 
 <div class="progress-bar" id="pb"></div>
@@ -215,13 +226,13 @@ input[type=range]{accent-color:var(--navy);cursor:pointer;}
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:12px;">
     <div>
       <div class="eyebrow">Student Presentation · 8 min</div>
-      <h2 class="slide-title" style="margin-bottom:5px;">Evolution of Major Stock Indexes</h2>
+      <h2 class="slide-title" style="margin-bottom:5px;">Evolution of Major Stock Indexes (2019–2026)</h2>
       <p style="font-size:12px;color:var(--text-muted);">S&amp;P 500 · Dow Jones · NASDAQ-100 — Base 100 = Jan 2019</p>
     </div>
     <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">
       <button class="tog" id="p-btn-bull" onclick="showPeriod('bull')">2019–21 Bull</button>
       <button class="tog" id="p-btn-bear" onclick="showPeriod('bear')">2022 Bear</button>
-      <button class="tog active" id="p-btn-full" onclick="showPeriod('full')">Full 2019–24</button>
+      <button class="tog active" id="p-btn-full" onclick="showPeriod('full')">2019–Sep'26 Full</button>
     </div>
   </div>
   <div class="legend" style="margin-bottom:6px;">
@@ -231,9 +242,9 @@ input[type=range]{accent-color:var(--navy);cursor:pointer;}
   </div>
   <div class="chart-wrap" style="height:195px;margin-bottom:12px;"><canvas id="idxChart"></canvas></div>
   <div class="grid3">
-    <div class="stat-tile"><div class="stat-lbl">S&amp;P 500 · 2019–2024</div><div class="stat-val gain">+155.9%</div><div class="stat-note">SPY ETF · 6-year cumulative</div></div>
-    <div class="stat-tile"><div class="stat-lbl">DJIA · 2019–2024</div><div class="stat-val gain">+83.7%</div><div class="stat-note">DIA ETF · 6-year cumulative</div></div>
-    <div class="stat-tile"><div class="stat-lbl">NASDAQ-100 · 2019–2024</div><div class="stat-val gain">+243.9%</div><div class="stat-note">QQQ ETF · 6-year cumulative</div></div>
+    <div class="stat-tile"><div class="stat-lbl">S&amp;P 500 · 2019–Sep'26</div><div class="stat-val gain">+182.4%</div><div class="stat-note">SPY ETF · 7.5-year cumulative</div></div>
+    <div class="stat-tile"><div class="stat-lbl">DJIA · 2019–Sep'26</div><div class="stat-val gain">+109.5%</div><div class="stat-note">DIA ETF · 7.5-year cumulative</div></div>
+    <div class="stat-tile"><div class="stat-lbl">NASDAQ-100 · 2019–Sep'26</div><div class="stat-val gain">+260.5%</div><div class="stat-note">QQQ ETF · 7.5-year cumulative</div></div>
   </div>
 </div>
 </div>
@@ -426,17 +437,19 @@ input[type=range]{accent-color:var(--navy);cursor:pointer;}
 </div>
 </div>
 
-<!-- ══ S7 · HOW LEVERAGE WORKS — STEP THROUGH ══ -->
+<!-- ══ S7 · LEVERAGE — STEP 1: CAPITAL STRUCTURE ══ -->
 <div class="slide" id="s7">
 <div class="si top">
   <div class="eyebrow">Part B — Role of Debt</div>
   <h2 class="slide-title">Leverage Step-by-Step: Same $10,000 Invested</h2>
-  <div style="text-align:center;margin-bottom:10px;">
-    <div class="scen-toggle">
-      <button class="scen-btn active" id="sb-bull" onclick="setScen('bull')">📈 Bull +20%</button>
-      <button class="scen-btn" id="sb-bear" onclick="setScen('bear')">📉 Bear −20%</button>
-    </div>
+  <div class="mgn-progress">
+    <div class="mgn-pip active">1</div>
+    <div class="mgn-pip-line"></div>
+    <div class="mgn-pip pending">2</div>
+    <div class="mgn-pip-line"></div>
+    <div class="mgn-pip pending">3</div>
   </div>
+  <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;">Step 1 — Capital Structure: How is the position funded?</div>
   <div class="lev-stage">
     <div class="lev-col">
       <div class="lev-col-head">
@@ -444,34 +457,15 @@ input[type=range]{accent-color:var(--navy);cursor:pointer;}
         <div class="lev-col-title">All your own money</div>
         <div class="lev-col-sub">Equity $10,000 · Debt $0</div>
       </div>
-      <div class="lev-step" data-ls="1">
-        <div class="lev-blk blk-eq"><div class="blk-lbl">Step 1 — Capital</div>
-          <div class="blk-row"><span class="blk-name">Your equity</span><span class="blk-val navy">$10,000</span></div>
-          <div class="blk-row"><span class="blk-name">Borrowed</span><span class="blk-val">$0</span></div>
-          <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;"><span class="blk-name" style="font-weight:700;">Total invested</span><span class="blk-val navy" style="font-size:15px;">$10,000</span></div>
+      <div class="lev-blk blk-eq" style="margin-top:10px;">
+        <div class="blk-lbl">Capital Structure</div>
+        <div class="blk-row"><span class="blk-name">Your equity</span><span class="blk-val navy">$10,000</span></div>
+        <div class="blk-row"><span class="blk-name">Borrowed</span><span class="blk-val">$0</span></div>
+        <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;">
+          <span class="blk-name" style="font-weight:700;">Total invested</span>
+          <span class="blk-val navy" style="font-size:15px;">$10,000</span>
         </div>
-      </div>
-      <div class="lev-arrow" data-ls="2">↓</div>
-      <div class="lev-step" data-ls="2">
-        <div class="lev-blk" id="u-s2"><div class="blk-lbl">Step 2 — Asset Return</div>
-          <div class="blk-row"><span class="blk-name">Start value</span><span class="blk-val">$10,000</span></div>
-          <div class="blk-row"><span class="blk-name" id="u-rl">Return (+20%)</span><span class="blk-val gain" id="u-rv">+$2,000</span></div>
-          <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;"><span class="blk-name" style="font-weight:700;">End value</span><span class="blk-val gain" id="u-ev" style="font-size:15px;">$12,000</span></div>
-        </div>
-      </div>
-      <div class="lev-arrow" data-ls="3">↓</div>
-      <div class="lev-step" data-ls="3">
-        <div class="lev-blk blk-neutral"><div class="blk-lbl">Step 3 — Repay Debt</div>
-          <div class="blk-row"><span class="blk-name">Principal</span><span class="blk-val">$0</span></div>
-          <div class="blk-row"><span class="blk-name">Interest</span><span class="blk-val">$0</span></div>
-          <div class="blk-note">No debt → no cost.</div>
-        </div>
-      </div>
-      <div class="lev-arrow" data-ls="4">↓</div>
-      <div class="lev-step" data-ls="4">
-        <div class="lev-blk" id="u-res">
-          <div class="roe-big"><div class="roe-num gain" id="u-roe">+20%</div><div class="roe-lbl">Return on Equity</div><div class="roe-detail" id="u-rod">Profit $2,000 ÷ Equity $10,000</div></div>
-        </div>
+        <div class="blk-note">100% equity. No interest cost whatsoever.</div>
       </div>
     </div>
     <div class="lev-divider"></div>
@@ -481,108 +475,234 @@ input[type=range]{accent-color:var(--navy);cursor:pointer;}
         <div class="lev-col-title">Half yours, half borrowed</div>
         <div class="lev-col-sub">Equity $5,000 · Debt $5,000 @ 6%</div>
       </div>
-      <div class="lev-step" data-ls="1">
-        <div class="lev-blk blk-eq"><div class="blk-lbl">Step 1 — Capital</div>
-          <div class="blk-row"><span class="blk-name">Your equity</span><span class="blk-val navy">$5,000</span></div>
-          <div class="blk-row"><span class="blk-name">Borrowed @ 6%</span><span class="blk-val warn">$5,000</span></div>
-          <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;"><span class="blk-name" style="font-weight:700;">Total invested</span><span class="blk-val navy" style="font-size:15px;">$10,000</span></div>
+      <div class="lev-blk blk-eq" style="margin-top:10px;">
+        <div class="blk-lbl">Capital Structure</div>
+        <div class="blk-row"><span class="blk-name">Your equity</span><span class="blk-val navy">$5,000</span></div>
+        <div class="blk-row"><span class="blk-name">Borrowed @ 6%</span><span class="blk-val warn">$5,000</span></div>
+        <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;">
+          <span class="blk-name" style="font-weight:700;">Total invested</span>
+          <span class="blk-val navy" style="font-size:15px;">$10,000</span>
         </div>
-      </div>
-      <div class="lev-arrow" data-ls="2">↓</div>
-      <div class="lev-step" data-ls="2">
-        <div class="lev-blk" id="l-s2"><div class="blk-lbl">Step 2 — Asset Return</div>
-          <div class="blk-row"><span class="blk-name">Start value</span><span class="blk-val">$10,000</span></div>
-          <div class="blk-row"><span class="blk-name" id="l-rl">Return (+20%)</span><span class="blk-val gain" id="l-rv">+$2,000</span></div>
-          <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;"><span class="blk-name" style="font-weight:700;">End value</span><span class="blk-val gain" id="l-ev" style="font-size:15px;">$12,000</span></div>
-        </div>
-      </div>
-      <div class="lev-arrow" data-ls="3">↓</div>
-      <div class="lev-step" data-ls="3">
-        <div class="lev-blk blk-cost"><div class="blk-lbl">Step 3 — Repay Debt</div>
-          <div class="blk-row"><span class="blk-name">Principal</span><span class="blk-val warn">$5,000</span></div>
-          <div class="blk-row"><span class="blk-name">Interest (6%×$5K)</span><span class="blk-val warn">$300</span></div>
-          <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;"><span class="blk-name" style="font-weight:700;">Total outflow</span><span class="blk-val warn" style="font-size:15px;">$5,300</span></div>
-          <div class="blk-note">Lender gets paid regardless of asset performance.</div>
-        </div>
-      </div>
-      <div class="lev-arrow" data-ls="4">↓</div>
-      <div class="lev-step" data-ls="4">
-        <div class="lev-blk" id="l-res">
-          <div class="roe-big"><div class="roe-num gain" id="l-roe">+34%</div><div class="roe-lbl">Return on Equity</div><div class="roe-detail" id="l-rod">Profit $1,700 ÷ Your Equity $5,000</div></div>
-        </div>
+        <div class="blk-note">50% equity · 50% debt. Lender charges 6% = $300/yr interest.</div>
       </div>
     </div>
   </div>
-  <div class="lev-insight" id="lev-ins"></div>
-  <div class="lev-step-tracker">
-    <button class="lev-nav" id="ls-prev" onclick="levPrev()" disabled>← Back</button>
-    <div id="ls-dots"></div>
-    <button class="lev-nav" id="ls-next" onclick="levNext()">Next →</button>
+  <div style="margin-top:16px;background:rgba(107,26,43,.06);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.6;">
+    <strong style="color:var(--text);">Same total position — different ownership.</strong> Both investors control $10,000 of assets. The leveraged investor contributes only $5,000 of their own money; the rest is borrowed and must be repaid with interest <em>regardless</em> of how the asset performs.
   </div>
 </div>
 </div>
 
-<!-- ══ S8 · MARGIN ACCOUNTS — 3 STEPS ══ -->
+<!-- ══ S7B · LEVERAGE — STEPS 2 & 3: RETURN + DEBT COST ══ -->
+<div class="slide" id="s7b">
+<div class="si top">
+  <div class="eyebrow">Part B — Role of Debt</div>
+  <h2 class="slide-title">Leverage Step-by-Step: Same $10,000 Invested</h2>
+  <div class="mgn-progress">
+    <div class="mgn-pip done">✓</div>
+    <div class="mgn-pip-line done"></div>
+    <div class="mgn-pip active">2</div>
+    <div class="mgn-pip-line"></div>
+    <div class="mgn-pip pending">3</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);">Steps 2 &amp; 3 — Asset Return and Debt Repayment</div>
+    <div class="scen-toggle" style="margin-left:auto;">
+      <button class="scen-btn active" id="sb-bull" onclick="setScen('bull')">📈 Bull +20%</button>
+      <button class="scen-btn" id="sb-bear" onclick="setScen('bear')">📉 Bear −20%</button>
+    </div>
+  </div>
+  <div class="lev-stage">
+    <div class="lev-col">
+      <div class="lev-col-head">
+        <div class="lev-badge badge-u">Unleveraged</div>
+        <div class="lev-col-sub">Equity $10,000 · Debt $0</div>
+      </div>
+      <div class="lev-blk" id="u-s2" style="margin-top:10px;margin-bottom:10px;">
+        <div class="blk-lbl">Step 2 — Asset Return</div>
+        <div class="blk-row"><span class="blk-name">Start value</span><span class="blk-val">$10,000</span></div>
+        <div class="blk-row"><span class="blk-name" id="u-rl">Return (+20%)</span><span class="blk-val gain" id="u-rv">+$2,000</span></div>
+        <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;">
+          <span class="blk-name" style="font-weight:700;">End value</span>
+          <span class="blk-val gain" id="u-ev" style="font-size:15px;">$12,000</span>
+        </div>
+      </div>
+      <div class="lev-blk blk-neutral">
+        <div class="blk-lbl">Step 3 — Repay Debt</div>
+        <div class="blk-row"><span class="blk-name">Principal</span><span class="blk-val">$0</span></div>
+        <div class="blk-row"><span class="blk-name">Interest</span><span class="blk-val">$0</span></div>
+        <div class="blk-note">No debt → no cost.</div>
+      </div>
+    </div>
+    <div class="lev-divider"></div>
+    <div class="lev-col">
+      <div class="lev-col-head">
+        <div class="lev-badge badge-l">Leveraged 2:1</div>
+        <div class="lev-col-sub">Equity $5,000 · Debt $5,000 @ 6%</div>
+      </div>
+      <div class="lev-blk" id="l-s2" style="margin-top:10px;margin-bottom:10px;">
+        <div class="blk-lbl">Step 2 — Asset Return</div>
+        <div class="blk-row"><span class="blk-name">Start value</span><span class="blk-val">$10,000</span></div>
+        <div class="blk-row"><span class="blk-name" id="l-rl">Return (+20%)</span><span class="blk-val gain" id="l-rv">+$2,000</span></div>
+        <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;">
+          <span class="blk-name" style="font-weight:700;">End value</span>
+          <span class="blk-val gain" id="l-ev" style="font-size:15px;">$12,000</span>
+        </div>
+      </div>
+      <div class="lev-blk blk-cost">
+        <div class="blk-lbl">Step 3 — Repay Debt</div>
+        <div class="blk-row"><span class="blk-name">Principal</span><span class="blk-val warn">$5,000</span></div>
+        <div class="blk-row"><span class="blk-name">Interest (6%×$5K)</span><span class="blk-val warn">$300</span></div>
+        <div class="blk-row" style="border-top:1px solid rgba(0,0,0,.07);padding-top:5px;margin-top:5px;">
+          <span class="blk-name" style="font-weight:700;">Total outflow</span>
+          <span class="blk-val warn" style="font-size:15px;">$5,300</span>
+        </div>
+        <div class="blk-note">Lender gets paid regardless of asset performance.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ S7C · LEVERAGE — STEP 4: RETURN ON EQUITY ══ -->
+<div class="slide" id="s7c">
+<div class="si top">
+  <div class="eyebrow">Part B — Role of Debt</div>
+  <h2 class="slide-title">Leverage Step-by-Step: Same $10,000 Invested</h2>
+  <div class="mgn-progress">
+    <div class="mgn-pip done">✓</div>
+    <div class="mgn-pip-line done"></div>
+    <div class="mgn-pip done">✓</div>
+    <div class="mgn-pip-line done"></div>
+    <div class="mgn-pip active">3</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);">Step 4 — Return on Equity: The Leverage Effect</div>
+    <div class="scen-toggle" style="margin-left:auto;">
+      <button class="scen-btn active" id="sb-bull2" onclick="setScen('bull')">📈 Bull +20%</button>
+      <button class="scen-btn" id="sb-bear2" onclick="setScen('bear')">📉 Bear −20%</button>
+    </div>
+  </div>
+  <div class="lev-stage">
+    <div class="lev-col">
+      <div class="lev-col-head">
+        <div class="lev-badge badge-u">Unleveraged</div>
+        <div class="lev-col-sub">Equity $10,000 · Debt $0</div>
+      </div>
+      <div class="lev-blk" id="u-res" style="margin-top:10px;">
+        <div class="roe-big">
+          <div class="roe-num gain" id="u-roe">+20%</div>
+          <div class="roe-lbl">Return on Equity</div>
+          <div class="roe-detail" id="u-rod">Profit $2,000 ÷ Equity $10,000</div>
+        </div>
+      </div>
+    </div>
+    <div class="lev-divider"></div>
+    <div class="lev-col">
+      <div class="lev-col-head">
+        <div class="lev-badge badge-l">Leveraged 2:1</div>
+        <div class="lev-col-sub">Equity $5,000 · Debt $5,000 @ 6%</div>
+      </div>
+      <div class="lev-blk" id="l-res" style="margin-top:10px;">
+        <div class="roe-big">
+          <div class="roe-num gain" id="l-roe">+34%</div>
+          <div class="roe-lbl">Return on Equity</div>
+          <div class="roe-detail" id="l-rod">Profit $1,700 ÷ Your Equity $5,000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="lev-insight vis" id="lev-ins" style="margin-top:16px;"></div>
+</div>
+</div>
+
+<!-- ══ S8 · MARGIN — STEP 1 ══ -->
 <div class="slide" id="s8">
 <div class="si top">
   <div class="eyebrow">Part B — Margin Accounts</div>
-  <h2 class="slide-title">Borrowing on Margin: Three Critical Moments</h2>
-  <div class="mgn-steps">
-    <!-- STEP 1 -->
-    <div class="mgn-step mgn-step-ok">
-      <div class="mgn-step-label ok">Step 1 · Open Position</div>
-      <div class="mgn-row"><span class="mgn-row-lbl">Price per share</span><span class="mgn-row-val">$150</span></div>
-      <div class="mgn-row"><span class="mgn-row-lbl">Buy 100 shares</span></div>
-      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
-      <div class="mgn-row"><span class="mgn-row-lbl">Position value</span><span class="mgn-row-val">$15,000</span></div>
-      <div class="mgn-row"><span class="mgn-row-lbl">Loan from broker</span><span class="mgn-row-val" style="color:var(--warn);">$7,500</span></div>
-      <div class="mgn-row"><span class="mgn-row-lbl">Your equity</span><span class="mgn-row-val navy">$7,500</span></div>
-      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
-      <div class="mgn-row"><span class="mgn-row-lbl" style="font-weight:700;">Initial Margin</span><span class="mgn-row-val" style="font-size:14px;">50%</span></div>
-      <div style="margin-top:6px;"><span class="mgn-margin-pill pill-ok">✓ Reg T satisfied</span></div>
-      <div class="mgn-formula">Margin = Equity ÷ Value<br>= $7,500 ÷ $15,000 = 50%</div>
-    </div>
-    <!-- STEP 2 -->
-    <div class="mgn-step mgn-step-warn">
-      <div class="mgn-step-label warn">Step 2 · Price Drops to $130</div>
-      <div class="mgn-row"><span class="mgn-row-lbl">New price per share</span><span class="mgn-row-val" style="color:var(--warn);">$130</span></div>
-      <div class="mgn-row"><span class="mgn-row-lbl">Price change</span><span class="mgn-row-val loss">−$20/share</span></div>
-      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
-      <div class="mgn-row"><span class="mgn-row-lbl">New position value</span><span class="mgn-row-val">$13,000</span></div>
-      <div class="mgn-row"><span class="mgn-row-lbl">Loan (unchanged)</span><span class="mgn-row-val" style="color:var(--warn);">$7,500</span></div>
-      <div class="mgn-row"><span class="mgn-row-lbl">Your equity</span><span class="mgn-row-val navy">$5,500</span></div>
-      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
-      <div class="mgn-row"><span class="mgn-row-lbl" style="font-weight:700;">Current Margin</span><span class="mgn-row-val" style="font-size:14px;color:var(--warn);">42.3%</span></div>
-      <div style="margin-top:6px;"><span class="mgn-margin-pill pill-warn">▲ Above 30% maint.</span></div>
-      <div class="mgn-formula">Margin = (P×Q − Loan) ÷ (P×Q)<br>= ($130×100 − $7,500) ÷ ($130×100)<br>= $5,500 ÷ $13,000 = 42.3%</div>
-    </div>
-    <!-- STEP 3 -->
-    <div class="mgn-step mgn-step-call">
-      <div class="mgn-step-label call">Step 3 · Price Drops to $107 ⚠️</div>
-      <div class="mgn-row"><span class="mgn-row-lbl">New price per share</span><span class="mgn-row-val loss">$107</span></div>
-      <div class="mgn-row"><span class="mgn-row-lbl">Price change</span><span class="mgn-row-val loss">−$43/share total</span></div>
-      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
-      <div class="mgn-row"><span class="mgn-row-lbl">New position value</span><span class="mgn-row-val">$10,700</span></div>
-      <div class="mgn-row"><span class="mgn-row-lbl">Loan (unchanged)</span><span class="mgn-row-val" style="color:var(--warn);">$7,500</span></div>
-      <div class="mgn-row"><span class="mgn-row-lbl">Your equity</span><span class="mgn-row-val loss">$3,200</span></div>
-      <div style="height:1px;background:var(--border);margin:8px 0;"></div>
-      <div class="mgn-row"><span class="mgn-row-lbl" style="font-weight:700;">Current Margin</span><span class="mgn-row-val" style="font-size:14px;color:var(--loss);">29.9%</span></div>
-      <div style="margin-top:6px;"><span class="mgn-margin-pill pill-call">⚠️ MARGIN CALL</span></div>
-      <div class="mgn-formula">Margin = (P×Q − Loan) ÷ (P×Q)<br>= ($107×100 − $7,500) ÷ ($107×100)<br>= $3,200 ÷ $10,700 = 29.9% &lt; 30%</div>
-    </div>
+  <h2 class="slide-title">Borrowing on Margin</h2>
+  <div class="mgn-progress">
+    <div class="mgn-pip active">1</div>
+    <div class="mgn-pip-line"></div>
+    <div class="mgn-pip pending">2</div>
+    <div class="mgn-pip-line"></div>
+    <div class="mgn-pip pending">3</div>
   </div>
-  <div class="card" style="margin-bottom:10px;">
+  <div class="mgn-step-full mgn-step-ok" style="max-width:640px;">
+    <div class="mgn-step-label ok" style="font-size:11px;margin-bottom:14px;">Step 1 · Open Position @ $10 &nbsp;·&nbsp; 100 shares &nbsp;·&nbsp; Loan $500</div>
+    <div class="mgn-row-big"><span class="mgn-row-lbl">Position value</span><span class="mgn-val-big">100 × $10 = $1,000</span></div>
+    <div class="mgn-row-big"><span class="mgn-row-lbl">Loan from broker</span><span class="mgn-val-big" style="color:var(--warn);">$500</span></div>
+    <div class="mgn-row-big"><span class="mgn-row-lbl">Your equity</span><span class="mgn-val-big navy">$1,000 − $500 = $500</span></div>
+    <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+    <div class="mgn-row-big"><span class="mgn-row-lbl" style="font-weight:700;">Initial Margin</span><span class="mgn-val-big" style="font-size:22px;">50%</span></div>
+    <div style="margin-top:10px;"><span class="mgn-margin-pill pill-ok" style="font-size:12px;padding:6px 16px;">✓ Reg T satisfied (min 50%)</span></div>
+  </div>
+  <div class="mgn-formula" style="max-width:640px;font-size:12px;padding:10px 14px;">
+    Margin = Equity ÷ Value &nbsp;=&nbsp; $500 ÷ $1,000 &nbsp;=&nbsp; <strong>50%</strong>
+  </div>
+</div>
+</div>
+
+<!-- ══ S8b · MARGIN — STEP 2 ══ -->
+<div class="slide" id="s8b">
+<div class="si top">
+  <div class="eyebrow">Part B — Margin Accounts</div>
+  <h2 class="slide-title">Borrowing on Margin</h2>
+  <div class="mgn-progress">
+    <div class="mgn-pip done">✓</div>
+    <div class="mgn-pip-line done"></div>
+    <div class="mgn-pip active">2</div>
+    <div class="mgn-pip-line"></div>
+    <div class="mgn-pip pending">3</div>
+  </div>
+  <div class="mgn-step-full mgn-step-warn" style="max-width:640px;">
+    <div class="mgn-step-label warn" style="font-size:11px;margin-bottom:14px;">Step 2 · Price Falls to $8 &nbsp;·&nbsp; −$2/share &nbsp;·&nbsp; Loan still $500</div>
+    <div class="mgn-row-big"><span class="mgn-row-lbl">New position value</span><span class="mgn-val-big">100 × $8 = $800</span></div>
+    <div class="mgn-row-big"><span class="mgn-row-lbl">Loan (unchanged)</span><span class="mgn-val-big" style="color:var(--warn);">$500</span></div>
+    <div class="mgn-row-big"><span class="mgn-row-lbl">Your equity</span><span class="mgn-val-big navy">$800 − $500 = $300</span></div>
+    <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+    <div class="mgn-row-big"><span class="mgn-row-lbl" style="font-weight:700;">Current Margin</span><span class="mgn-val-big" style="font-size:22px;color:var(--warn);">37.5%</span></div>
+    <div style="margin-top:10px;"><span class="mgn-margin-pill pill-warn" style="font-size:12px;padding:6px 16px;">▲ Above 30% maintenance — no call yet</span></div>
+  </div>
+  <div class="mgn-formula" style="max-width:640px;font-size:12px;padding:10px 14px;">
+    Margin = (P×Q − Loan) ÷ (P×Q) &nbsp;=&nbsp; ($800 − $500) ÷ $800 &nbsp;=&nbsp; $300 ÷ $800 &nbsp;=&nbsp; <strong>37.5%</strong>
+  </div>
+</div>
+</div>
+
+<!-- ══ S8c · MARGIN — STEP 3 (MARGIN CALL) ══ -->
+<div class="slide" id="s8c">
+<div class="si top">
+  <div class="eyebrow">Part B — Margin Accounts</div>
+  <h2 class="slide-title">Borrowing on Margin</h2>
+  <div class="mgn-progress">
+    <div class="mgn-pip done">✓</div>
+    <div class="mgn-pip-line done"></div>
+    <div class="mgn-pip done">✓</div>
+    <div class="mgn-pip-line done"></div>
+    <div class="mgn-pip active" style="background:var(--loss);">!</div>
+  </div>
+  <div class="mgn-step-full mgn-step-call" style="max-width:640px;">
+    <div class="mgn-step-label call" style="font-size:11px;margin-bottom:14px;">Step 3 · Price Falls to $7 &nbsp;·&nbsp; −$3/share total &nbsp;·&nbsp; Loan still $500</div>
+    <div class="mgn-row-big"><span class="mgn-row-lbl">New position value</span><span class="mgn-val-big">100 × $7 = $700</span></div>
+    <div class="mgn-row-big"><span class="mgn-row-lbl">Loan (unchanged)</span><span class="mgn-val-big" style="color:var(--warn);">$500</span></div>
+    <div class="mgn-row-big"><span class="mgn-row-lbl">Your equity</span><span class="mgn-val-big loss">$700 − $500 = $200</span></div>
+    <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+    <div class="mgn-row-big"><span class="mgn-row-lbl" style="font-weight:700;">Current Margin</span><span class="mgn-val-big" style="font-size:22px;color:var(--loss);">28.6%</span></div>
+    <div style="margin-top:10px;"><span class="mgn-margin-pill pill-call" style="font-size:12px;padding:6px 16px;">⚠️ MARGIN CALL — below 30% maintenance</span></div>
+  </div>
+  <div class="card" style="max-width:640px;margin-bottom:10px;">
     <div class="card-title">Margin Call Price Formula</div>
-    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 14px;color:var(--navy);">
-        P* = Loan ÷ [Shares × (1 − Maintenance%)]
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 14px;color:var(--navy);">
+        P* = Loan ÷ [Shares × (1 − Maint.%)]
       </div>
-      <div style="font-size:12px;color:var(--text-muted);">
-        P* = $7,500 ÷ [100 × (1 − 0.30)] = $7,500 ÷ 70 = <strong style="color:var(--loss);">$107.14</strong>
+      <div style="font-size:13px;color:var(--text-muted);">
+        P* = $500 ÷ [100 × 0.70] = <strong style="color:var(--loss);">$7.14</strong>
       </div>
     </div>
   </div>
-  <div class="anno"><strong>The lender always gets paid first.</strong> At $107.14, your equity = $10,714 − $7,500 = $3,214 = exactly 30% of position value. Below this price, the broker can liquidate your position without notice to recover the loan.</div>
+  <div class="anno" style="max-width:640px;"><strong>The lender always gets paid first.</strong> At $7.14, equity = $714 − $500 = $214 = exactly 30% of value. Below this, the broker can liquidate your position without notice.</div>
 </div>
 </div>
 
@@ -860,10 +980,10 @@ function exportPDF() {
 // ── INDEX CHART (S0) — 2019–2024 ─────────────────────────
 const IDX = {
   full:{
-    labels:["Jan'19","Jan'20","Jan'21","Jan'22","Jan'23","Jan'24","Dec'24"],
-    spx: [100, 131.5, 155.7, 200.5, 164.3, 207.5, 255.9],
-    djia:[100, 122.3, 131.1, 155.6, 141.7, 161.1, 183.7],
-    nsdq:[100, 139.0, 206.5, 262.3, 176.8, 273.8, 343.9]
+    labels:["Jan'19","Jan'20","Jan'21","Jan'22","Jan'23","Jan'24","Dec'24","Jun'25","Dec'25","Sep'26"],
+    spx: [100, 119.3, 137.4, 167.0, 150.7, 179.2, 217.5, 229.5, 253.1, 282.4],
+    djia:[100, 113.0, 119.9, 140.5, 136.3, 152.6, 170.2, 176.4, 192.3, 209.5],
+    nsdq:[100, 125.7, 179.5, 195.6, 159.1, 208.2, 265.2, 279.7, 319.2, 360.5]
   },
   bull:{
     labels:["Jan'19","End'19","End'20","End'21"],
@@ -911,9 +1031,9 @@ const PERF = {
   bear:{labels:["Jan'22","Apr'22","Jul'22","Oct'22","Dec'22"],
     tqqq:[10000,6200,4200,3900,2100],qqq:[10000,7800,6200,6500,6700],
     st:{te:2100,qe:6700,td:-79,qd:-33}},
-  full:{labels:['2019','2020','2021','2022','2023','2024'],
-    tqqq:[10000,21100,79000,166000,34900,104000,139000],qqq:[10000,14800,21900,28600,19200,29800,36000],
-    st:{te:139000,qe:36000,td:-79,qd:-33}}
+  full:{labels:['2019','2020','2021','2022','2023','2024','2025',"Sep'26"],
+    tqqq:[10000,18400,38700,70700,14700,43100,67300,89700,122300],qqq:[10000,12600,18700,23700,15800,24400,30400,36500,42600],
+    st:{te:122300,qe:42600,td:-79,qd:-33}}
 };
 let perfChart, perfP='bull';
 function setPerfPeriod(p) {
@@ -950,40 +1070,8 @@ function drawPerf(p) {
 }
 drawPerf('bull');
 
-// ── LEVERAGE STEP-THROUGH (S7) ────────────────────────────
-let lCur=1, lScen='bull';
-const lSteps=4;
-const lDotsEl=document.getElementById('ls-dots');
-for(let i=1;i<=lSteps;i++){
-  const d=document.createElement('button');
-  d.className='lev-sdot'+(i===1?' active':'');
-  d.setAttribute('data-ld',i);
-  d.onclick=()=>levGoTo(i);
-  lDotsEl.appendChild(d);
-}
-function updateLevDots(){
-  document.querySelectorAll('[data-ld]').forEach(d=>{
-    const n=+d.getAttribute('data-ld');
-    d.className='lev-sdot'+(n===lCur?' active':n<lCur?' done':'');
-  });
-  document.getElementById('ls-prev').disabled=lCur===1;
-  document.getElementById('ls-next').disabled=lCur===lSteps;
-  document.getElementById('ls-next').textContent=lCur===lSteps?'✓ Done':'Next →';
-}
-function levShowUpTo(n){
-  document.querySelectorAll('.lev-step').forEach(el=>{
-    const s=+el.getAttribute('data-ls');
-    el.classList.toggle('vis',s<=n);
-  });
-  document.querySelectorAll('.lev-arrow').forEach(el=>{
-    const s=+el.getAttribute('data-ls');
-    el.classList.toggle('vis',s<=n);
-  });
-  document.getElementById('lev-ins').classList.toggle('vis',n>=4);
-}
-function levGoTo(n){lCur=Math.max(1,Math.min(lSteps,n));levShowUpTo(lCur);updateLevDots();}
-function levNext(){if(lCur<lSteps)levGoTo(lCur+1);}
-function levPrev(){if(lCur>1)levGoTo(lCur-1);}
+// ── LEVERAGE SLIDES (S7 / S7B / S7C) ────────────────────────────
+let lScen='bull';
 function renderLev(){
   const r=lScen==='bull'?0.20:-0.20;
   const isBull=r>0;
@@ -1022,13 +1110,15 @@ function renderLev(){
 }
 function setScen(s){
   lScen=s;
-  document.getElementById('sb-bull').classList.toggle('active',s==='bull');
-  document.getElementById('sb-bear').classList.toggle('active',s==='bear');
+  ['','2'].forEach(sfx=>{
+    const b=document.getElementById('sb-bull'+sfx);
+    const br=document.getElementById('sb-bear'+sfx);
+    if(b) b.classList.toggle('active',s==='bull');
+    if(br) br.classList.toggle('active',s==='bear');
+  });
   renderLev();
 }
 renderLev();
-levShowUpTo(1);
-updateLevDots();
 
 // ── VOLATILITY DECAY (S11) ──────────────────────────────
 let dcChart;
@@ -1083,3 +1173,9 @@ function onEnter(idx){
   if(idx===11) runDecay2();
 }
 </script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="assets/js/lecture-platform.js"></script>
+<script src="assets/js/lecture-adapter.js" data-lecture="lec02"></script>

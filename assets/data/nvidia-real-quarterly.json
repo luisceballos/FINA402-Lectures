@@ -1,0 +1,222 @@
+[
+  {
+    "quarter": "FY22 Q3",
+    "quarter_end": "2021-10-31",
+    "price_date": "2021-10-29",
+    "assets_usd": 40632000000,
+    "liabilities_usd": 16834000000,
+    "equity_usd": 23798000000,
+    "close_split_adjusted_usd": 25.567,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581021000163/0001045810-21-000163-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY22 Q4",
+    "quarter_end": "2022-01-30",
+    "price_date": "2022-01-28",
+    "assets_usd": 44187000000,
+    "liabilities_usd": 17575000000,
+    "equity_usd": 26612000000,
+    "close_split_adjusted_usd": 22.84,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000017/0001045810-23-000017-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY23 Q1",
+    "quarter_end": "2022-05-01",
+    "price_date": "2022-04-29",
+    "assets_usd": 45212000000,
+    "liabilities_usd": 18892000000,
+    "equity_usd": 26320000000,
+    "close_split_adjusted_usd": 18.547,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000079/0001045810-22-000079-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY23 Q2",
+    "quarter_end": "2022-07-31",
+    "price_date": "2022-07-29",
+    "assets_usd": 43476000000,
+    "liabilities_usd": 19625000000,
+    "equity_usd": 23851000000,
+    "close_split_adjusted_usd": 18.163,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000147/0001045810-22-000147-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY23 Q3",
+    "quarter_end": "2022-10-30",
+    "price_date": "2022-10-28",
+    "assets_usd": 40488000000,
+    "liabilities_usd": 19139000000,
+    "equity_usd": 21349000000,
+    "close_split_adjusted_usd": 13.834,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000166/0001045810-22-000166-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY23 Q4",
+    "quarter_end": "2023-01-29",
+    "price_date": "2023-01-27",
+    "assets_usd": 41182000000,
+    "liabilities_usd": 19081000000,
+    "equity_usd": 22101000000,
+    "close_split_adjusted_usd": 20.365,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000029/0001045810-24-000029-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY24 Q1",
+    "quarter_end": "2023-04-30",
+    "price_date": "2023-04-28",
+    "assets_usd": 44460000000,
+    "liabilities_usd": 19940000000,
+    "equity_usd": 24520000000,
+    "close_split_adjusted_usd": 27.749,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000093/0001045810-23-000093-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY24 Q2",
+    "quarter_end": "2023-07-30",
+    "price_date": "2023-07-28",
+    "assets_usd": 49555000000,
+    "liabilities_usd": 22054000000,
+    "equity_usd": 27501000000,
+    "close_split_adjusted_usd": 46.75,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000175/0001045810-23-000175-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY24 Q3",
+    "quarter_end": "2023-10-29",
+    "price_date": "2023-10-27",
+    "assets_usd": 54148000000,
+    "liabilities_usd": 20883000000,
+    "equity_usd": 33265000000,
+    "close_split_adjusted_usd": 40.5,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581023000227/0001045810-23-000227-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY24 Q4",
+    "quarter_end": "2024-01-28",
+    "price_date": "2024-01-26",
+    "assets_usd": 65728000000,
+    "liabilities_usd": 22750000000,
+    "equity_usd": 42978000000,
+    "close_split_adjusted_usd": 61.031,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000023/0001045810-25-000023-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY25 Q1",
+    "quarter_end": "2024-04-28",
+    "price_date": "2024-04-26",
+    "assets_usd": 77072000000,
+    "liabilities_usd": 27930000000,
+    "equity_usd": 49142000000,
+    "close_split_adjusted_usd": 87.735,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000124/0001045810-24-000124-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY25 Q2",
+    "quarter_end": "2024-07-28",
+    "price_date": "2024-07-26",
+    "assets_usd": 85227000000,
+    "liabilities_usd": 27070000000,
+    "equity_usd": 58157000000,
+    "close_split_adjusted_usd": 113.06,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000264/0001045810-24-000264-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY25 Q3",
+    "quarter_end": "2024-10-27",
+    "price_date": "2024-10-25",
+    "assets_usd": 96013000000,
+    "liabilities_usd": 30114000000,
+    "equity_usd": 65899000000,
+    "close_split_adjusted_usd": 141.54,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581024000316/0001045810-24-000316-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY25 Q4",
+    "quarter_end": "2025-01-26",
+    "price_date": "2025-01-24",
+    "assets_usd": 111601000000,
+    "liabilities_usd": 32274000000,
+    "equity_usd": 79327000000,
+    "close_split_adjusted_usd": 142.62,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/0001045810-26-000021-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY26 Q1",
+    "quarter_end": "2025-04-27",
+    "price_date": "2025-04-25",
+    "assets_usd": 125254000000,
+    "liabilities_usd": 41411000000,
+    "equity_usd": 83843000000,
+    "close_split_adjusted_usd": 111.01,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000116/0001045810-25-000116-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY26 Q2",
+    "quarter_end": "2025-07-27",
+    "price_date": "2025-07-25",
+    "assets_usd": 140740000000,
+    "liabilities_usd": 40609000000,
+    "equity_usd": 100131000000,
+    "close_split_adjusted_usd": 173.5,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000209/0001045810-25-000209-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY26 Q3",
+    "quarter_end": "2025-10-26",
+    "price_date": "2025-10-24",
+    "assets_usd": 161148000000,
+    "liabilities_usd": 42251000000,
+    "equity_usd": 118897000000,
+    "close_split_adjusted_usd": 186.26,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000230/0001045810-25-000230-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY26 Q4",
+    "quarter_end": "2026-01-25",
+    "price_date": "2026-01-23",
+    "assets_usd": 206803000000,
+    "liabilities_usd": 49510000000,
+    "equity_usd": 157293000000,
+    "close_split_adjusted_usd": 187.67,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/0001045810-26-000075-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY27 Q1",
+    "quarter_end": "2026-04-26",
+    "price_date": "2026-04-24",
+    "assets_usd": 259474000000,
+    "liabilities_usd": 64000000000,
+    "equity_usd": 195474000000,
+    "close_split_adjusted_usd": 208.27,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000052/0001045810-26-000052-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  },
+  {
+    "quarter": "FY27 Q2",
+    "quarter_end": "2026-07-26",
+    "price_date": "2026-07-24",
+    "assets_usd": 320272000000,
+    "liabilities_usd": 91288000000,
+    "equity_usd": 228984000000,
+    "close_split_adjusted_usd": 206.84,
+    "balance_source": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/0001045810-26-000075-index.html",
+    "price_source": "https://finance.yahoo.com/quote/NVDA/history/"
+  }
+]

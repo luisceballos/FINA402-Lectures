@@ -248,6 +248,7 @@ footer { text-align: center; padding: 16px; font-size: .75rem; color: var(--mute
   .term { display: none; }
 }
 </style>
+<link rel="stylesheet" href="assets/css/hub-layout.css">
 </head>
 <body>
 
@@ -364,7 +365,7 @@ const SEED = [
   { id:'lec03', week:3, title:'Risk & Return',         topic:'Portfolio Statistics & Diversification',    file:'Lec03_RiskReturn.html',           status:'guest',   classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec03.pdf', videoUrl:'' },
   { id:'lec04', week:4, title:'Asset Allocation I',    topic:'Efficient Frontier & Capital Allocation',   file:'Lec04_Allocation.html',           status:'student', classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec04.pdf', videoUrl:'' },
   { id:'lec05', week:5, title:'Asset Allocation II',   topic:'CAL, Sharpe Ratio & Portfolio Selection',   file:'Lec05_Allocation.html',           status:'student', classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec05.pdf', videoUrl:'' },
-  { id:'lec06', week:6, title:'CAPM',                  topic:'Systematic Risk, Beta, SML & Alpha',        file:'Lec06_CAPM.html',                 status:'closed',  classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec06.pdf', videoUrl:'Lec06_CAPM_Video.mp4' },
+  { id:'lec06', week:6, title:'CAPM',                  topic:'Systematic Risk, Beta, SML & Alpha',        file:'Lec06_CAPM.html',                 status:'closed',  classLabel:'', studentPass:'fina402', notes:'', reviewPdf:'Review_Notes_Lec06.pdf', videoUrl:'media/Lec06_CAPM_Video.mp4' },
 ];
 
 /* ══════════════ STATE ══════════════ */
@@ -495,7 +496,7 @@ function showNotes(i) {
 
   document.getElementById('notes-open-btn').onclick = () => {
     closeOv('ov-notes');
-    window.open(lec.status === 'guest' ? lec.file + '?mode=review' : lec.file, '_blank');
+    hpLaunch(i);
   };
 
   openOv('ov-notes');
@@ -641,7 +642,8 @@ document.querySelectorAll('.overlay').forEach(ov => {
   ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('show'); });
 });
 
-init();
 </script>
+<script src="assets/js/lecture-platform.js"></script>
+<script src="assets/js/hub-platform.js"></script>
 </body>
 </html>

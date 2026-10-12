@@ -1544,8 +1544,8 @@ async function submitP1(){
   }
 
   const entry={name:STUDENT_NAME,section:SECTION,er,sigma:sig,ts:Date.now()};
-  SUBMISSIONS_P1[STUDENT_NAME]=entry;
   await saveToStore('lec04_p1',STUDENT_NAME,entry);
+  SUBMISSIONS_P1[STUDENT_NAME]=entry;
   showMsg('p1-msg','✓ Correct! Your dot has been added to the chart.','ok');
   refreshCharts();
   addLogEntry('s8-log',STUDENT_NAME+': E[r]='+er+'%, σ='+sig+'%');
@@ -1591,8 +1591,8 @@ async function submitP2(){
   }
 
   const entry={name:STUDENT_NAME,section:SECTION,er,sigma:sigma_computed,weights,ts:Date.now()};
-  SUBMISSIONS_P2[STUDENT_NAME]=entry;
   await saveToStore('lec04_p2',STUDENT_NAME,entry);
+  SUBMISSIONS_P2[STUDENT_NAME]=entry;
   showMsg('p2-msg','✓ Correct! Optimal portfolio plotted (★).','ok');
   refreshCharts();
   addLogEntry('s10-log',STUDENT_NAME+': E[r]='+er.toFixed(2)+'% σ='+sigma_computed.toFixed(1)+'%');
@@ -1680,8 +1680,8 @@ async function submitSR(){
   }
 
   const entry={name:STUDENT_NAME,section:SECTION,sr:val,ts:Date.now()};
-  SUBMISSIONS_SR[STUDENT_NAME]=entry;
   await saveToStore('lec04_sr',STUDENT_NAME,entry);
+  SUBMISSIONS_SR[STUDENT_NAME]=entry;
   showMsg('sr-msg','✓ Submitted!','ok');
   refreshSRBars();
   drawS14Scatter();
@@ -2375,10 +2375,9 @@ window.changeCode=async function(code){
 };
 
 // ── Boot ──────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{
-  buildProgressDots();
-  initApp();
-});
+// Startup is managed by assets/js/lecture-adapter.js.
 </script>
+<script src="assets/js/lecture-platform.js"></script>
+<script src="assets/js/lecture-adapter.js" data-lecture="lec04"></script>
 </body>
 </html>

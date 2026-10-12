@@ -1,0 +1,77 @@
+FINA 402 · LECTURE 06 (CAPM) · VIDEO NARRATION SCRIPT
+13 blocks, one per slide · 8,371 characters in total (about 10 minutes of audio)
+Note: "CAPM" is written as "Cap-em" so the voice says it as one word.
+
+HOW TO GENERATE THE AUDIO IN ELEVENLABS
+1. Open elevenlabs.io > Text to Speech and choose your cloned voice (My Voices).
+2. Use the SAME voice and model (Multilingual v2) for all 13 blocks.
+3. Paste ONE block at a time (only the text between the lines), generate, listen, and download it.
+4. Save each file with the name shown in the block: slide01.mp3, slide02.mp3, ... slide13.mp3.
+5. Put the 13 files in one folder and tell me where they are. I will build the video.
+Tip: listen to slide01 first. If the voice or pace is not right, change it before generating the rest.
+
+==============================================================================
+slide01.mp3  ·  Slide 1: Title · From Risk to Price  ·  433 characters
+------------------------------------------------------------------------------
+Welcome to Lecture Six of FINA 402. Today we move from risk to price. In the last two lectures, we learned how to build the best risky portfolio. Today we ask two questions. First: which risk does the market actually pay you for? And second: how can we tell whether a stock is mispriced? The answer to both is the Capital Asset Pricing Model, or Cap-em. The readings are chapters six point five, seven point one, and seven point two.
+
+==============================================================================
+slide02.mp3  ·  Slide 2: From the efficient frontier to the Cap-em  ·  977 characters
+------------------------------------------------------------------------------
+Let's start where we left off. With a risk-free asset, every investor should hold the tangency portfolio. Now look at the chart. It shows what happens to portfolio volatility as we add stocks, each with thirty percent volatility and a correlation of zero point three. With one stock, risk is thirty percent. With ten stocks, it falls to about eighteen percent. But with fifty stocks, it is still almost seventeen percent. Risk falls quickly, and then it hits a floor of about sixteen point four percent. The part that disappears is idiosyncratic risk: news specific to each firm. The part that remains is systematic risk: the market-wide movements that hit all stocks together. Now the key step. If everyone holds the tangency portfolio, it must be the market portfolio. And if idiosyncratic risk can be eliminated for free, the market has no reason to pay you for bearing it. Only exposure to the market is rewarded, and we measure that exposure with beta. That is the Cap-em.
+
+==============================================================================
+slide03.mp3  ·  Slide 3: The Capital Asset Pricing Model  ·  553 characters
+------------------------------------------------------------------------------
+Here is the model. The expected return on a security equals the risk-free rate, plus beta times the market risk premium. The market risk premium is the expected market return minus the risk-free rate. Said differently, a stock's risk premium is simply its beta times the market's risk premium. The market has a beta of one, so it earns exactly the market premium. A stock with a beta of two should earn twice that premium, and a stock with a beta of one half, half of it. Notice what is missing: total volatility does not appear anywhere in the formula.
+
+==============================================================================
+slide04.mp3  ·  Slide 4: Pick a stock  ·  823 characters
+------------------------------------------------------------------------------
+Let's apply it to real stocks. On this slide, you can pick any of twenty large U.S. companies. Their betas were estimated from five years of monthly returns against the S and P five hundred. We use a risk-free rate of four point three percent and a market risk premium of six percent. Take Apple, with a beta of one point zero eight. Its expected excess return is one point zero eight times six percent, about six and a half percent, so its expected return is about ten point eight percent. NVIDIA, with a beta of two point one nine, gets an expected return of about seventeen point four percent. And every stock lands on one line, the Security Market Line. Under the Cap-em, expected return depends only on beta. Try a few stocks yourself, and change the risk-free rate or the risk premium to see how the whole line moves.
+
+==============================================================================
+slide05.mp3  ·  Slide 5: What beta measures  ·  847 characters
+------------------------------------------------------------------------------
+So what exactly does beta measure? Beta tells us how much a stock moves, on average, when the market moves one percent. A beta above one means riskier than the market, like NVIDIA or Tesla. A beta near one means as risky as the market, like JPMorgan or Microsoft. A beta below one means less risky, like Coca-Cola or Johnson and Johnson. Investors are compensated for systematic risk, but not for idiosyncratic risk, because it can be diversified away. Standard deviation measures total risk, both kinds together. Beta measures only the systematic part. Here is a puzzle. Exxon Mobil had a volatility of twenty-seven percent, but a beta of only zero point one eight. Is it risky? It has high total risk, but very little market risk. Most of its volatility was specific to oil. So under the Cap-em, it earns only a small premium, about one percent.
+
+==============================================================================
+slide06.mp3  ·  Slide 6: Decomposition of total risk  ·  642 characters
+------------------------------------------------------------------------------
+We can make this precise. The single-index model writes a stock's excess return as beta times the market's excess return, plus a firm-specific shock. Take the variance of both sides, and total variance splits in two: beta squared times the market variance, which is the systematic part, plus the variance of the firm-specific shock, which is the idiosyncratic part. Use the sliders and the presets to see it. For Coca-Cola, only about eight percent of its variance comes from the market. For NVIDIA, a bit less than half. Even for a high-beta stock, most of the risk is firm-specific, and that is exactly what a diversified portfolio removes.
+
+==============================================================================
+slide07.mp3  ·  Slide 7: R squared  ·  819 characters
+------------------------------------------------------------------------------
+The share of variance explained by the market has a name: R squared. It equals beta squared times the market variance, divided by the stock's total variance. It is also the squared correlation between the stock and the market. Let's work an example. The Vanguard Financials ETF, V F H, has a beta of one point one four and a volatility of fifteen point six percent. The S and P five hundred has a volatility of eleven point five percent. The systematic variance is one point one four squared, times zero point one one five squared: about zero point zero one seven two. The total variance is zero point one five six squared: about zero point zero two four three. Divide one by the other, and R squared is about seventy point six percent. Because V F H is already a diversified fund, the market explains most of its risk.
+
+==============================================================================
+slide08.mp3  ·  Slide 8: Activity 1  ·  367 characters
+------------------------------------------------------------------------------
+Now it's your turn. In Activity One, you receive your own company, with its beta, its volatility, the market's volatility, the risk-free rate, and the expected market return. You compute three things: its expected return under the Cap-em, its R squared, and its idiosyncratic volatility. Use the formulas from the last three slides, and enter your answers in percent.
+
+==============================================================================
+slide09.mp3  ·  Slide 9: Alpha and beta  ·  630 characters
+------------------------------------------------------------------------------
+Next, performance. To judge an investment, we compare its return with a benchmark. The difference is alpha. Relative to the Cap-em, alpha is the expected return minus the return the Cap-em requires for that beta. A positive alpha means the stock is expected to earn more than its risk requires, so it is undervalued. A negative alpha means it is overvalued. Any strategy can be split into two pieces: return equals beta plus alpha. The beta part you can get cheaply, with an index fund. So what is the alpha of a passive strategy? Zero, before fees. An active manager is worth paying only if the manager delivers a positive alpha.
+
+==============================================================================
+slide10.mp3  ·  Slide 10: The Security Market Line  ·  831 characters
+------------------------------------------------------------------------------
+The Security Market Line is the Cap-em drawn as a picture: expected return against beta. Stocks above the line have positive alpha and are undervalued. Stocks below the line have negative alpha and are overvalued. Here is an example. An analyst expects JPMorgan to return twelve percent, and Microsoft eight percent. The expected market return is twelve percent, and the risk-free rate is two percent. JPMorgan has a beta of one point two, so the Cap-em requires two, plus one point two times ten: fourteen percent. Twelve is below fourteen, so alpha is minus two percent. JPMorgan is overvalued: sell. Microsoft has a beta of zero point five, so the Cap-em requires seven percent. Eight is above seven, so alpha is plus one percent. Microsoft is undervalued: buy. Notice that the stock with the higher forecast is the one to sell.
+
+==============================================================================
+slide11.mp3  ·  Slide 11: Activity 2  ·  294 characters
+------------------------------------------------------------------------------
+In Activity Two, you play the analyst. You receive a company with its beta and an analyst's forecast. First, compute the return the Cap-em requires. Then compute alpha: the forecast minus that required return. Finally, decide. Positive alpha: undervalued, buy. Negative alpha: overvalued, sell.
+
+==============================================================================
+slide12.mp3  ·  Slide 12: Portfolio beta  ·  540 characters
+------------------------------------------------------------------------------
+One last idea. A portfolio's beta is simply the weighted average of the betas of its holdings, and cash has a beta of zero. Half in NVIDIA and half in Coca-Cola gives a beta of one point two four. Because betas add up, we can also build a portfolio with no market risk at all. Buy one hundred dollars of NVIDIA, and sell short two hundred nineteen dollars of an S and P five hundred fund. The market exposure cancels out. That is exactly what the long-short funds from Lecture Five do: they hedge the market, and keep the stock-picking bet.
+
+==============================================================================
+slide13.mp3  ·  Slide 13: Summary  ·  615 characters
+------------------------------------------------------------------------------
+Let's wrap up with three ideas. First, only beta is priced: diversification removes idiosyncratic risk, so the market rewards only systematic risk. Second, total risk splits into a systematic and an idiosyncratic part, and R squared tells us the share that comes from the market. Third, alpha spots mispricing: above the Security Market Line, buy; below it, sell. And back to Exxon Mobil: should investors demand a high return for a stock with twenty-seven percent volatility, but a beta of zero point one eight? No. The Cap-em gives it only about five point four percent. Thanks for watching, and see you in class.
+
