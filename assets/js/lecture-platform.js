@@ -46,6 +46,7 @@
       const claim=cs.data();if(!claim||claim.ownerUid!==user.uid)throw Error('This name is reserved by another login.');
       assertOpen((hs.data()?.lectures||[]).find(x=>x.id===id),claim.section);
       if(ls.data()?.sessionId!==sessionId)throw Error('The session changed. Rejoin from the hub.');
+      if(id==='lec07'){const pacing=ls.data()?.activityPacing;if(pacing?.sessionId!==sessionId||pacing.sections?.[claim.section]?.['activity'+activity]!==true)throw Error('Wait for your instructor to open this activity.');}
       const prior=rs.data()||{};if(activity===2&&!prior.activity1)throw Error('Complete Activity 1 first.');
       const update={section:claim.section,caseId,ownerUid:user.uid,updatedAt:stamp(),['attempts'+activity]:(prior['attempts'+activity]||0)+1};
       if(grade.ok)update['activity'+activity]=grade.result;
@@ -67,8 +68,8 @@
   }
   function heartbeat(id,studentId,sessionId,onError) {
     let stopped=false;
-    const ping=async()=>{if(stopped||document.hidden)return;try{const user=firebase.auth().currentUser,ref=claimRef(id,studentId);await init().runTransaction(async tx=>{const s=await tx.get(ref);if(!s.exists||s.data().ownerUid!==user?.uid)throw Error('Name reservation changed. Rejoin from the hub.');tx.update(ref,{lastSeen:stamp()});tx.update(sessions(id).doc(sessionId).collection('participants').doc(studentId),{lastSeen:stamp()});});}catch(e){onError?.(e);}};
-    const timer=setInterval(ping,30000);ping();return()=>{stopped=true;clearInterval(timer);};
+    const ping=async()=>{if(stopped||document.hidden)return;try{const user=firebase.auth().currentUser,ref=claimRef(id,studentId);await init().runTransaction(async tx=>{const s=await tx.get(ref);if(!s.exists||s.data().ownerUid!==user?.uid)throw Error('Name reservation changed. Rejoin from the hub.');tx.update(sessions(id).doc(sessionId).collection('participants').doc(studentId),{lastSeen:stamp()});});}catch(e){onError?.(e);}};
+    const timer=setInterval(ping,60000);ping();return()=>{stopped=true;clearInterval(timer);};
   }
   root.LecturePlatform={PATHS,EMAIL,cfg,esc,compareStudents,millis,score,missing,teacher,init,hub,lecture,sessions,stamp,hash,ready,instructor,config,claimRef,assertOpen,join,submit,legacySubmit,heartbeat};
 })(typeof window!=='undefined'?window:globalThis);

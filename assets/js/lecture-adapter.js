@@ -21,7 +21,7 @@
     select.value=ids.includes(value)?value:'';select.dispatchEvent(new Event('change'));locks();
   }
   function locks(){const uid=firebase.auth().currentUser?.uid,select=document.getElementById(modern?'gate-student':legacy?'gate-name':'platform-name');if(!select)return;[...select.options].forEach(o=>{const c=claims.find(c=>c.studentId===o.value);o.disabled=!!c&&c.ownerUid!==uid;if(o.disabled&&o.selected)select.value='';});}
-  async function watchClaims(){if(claimStop)return;if(!firebase.auth().currentUser)await firebase.auth().signInAnonymously();claimStop=P.hub().collection('claims').where('lectureId','==',id).onSnapshot(s=>{claims=s.docs.map(d=>d.data());locks();},e=>say('Name availability could not be loaded. Entry will be verified when you join. '+e.message));}
+  async function watchClaims(){if(claimStop||(modern&&S.role==='student'))return;if(!firebase.auth().currentUser)await firebase.auth().signInAnonymously();claimStop=P.hub().collection('claims').where('lectureId','==',id).onSnapshot(s=>{claims=s.docs.map(d=>d.data());locks();},e=>say('Name availability could not be loaded. Entry will be verified when you join. '+e.message));}
   function readonly(){
     if(instructor())return;
     if(modern){document.querySelectorAll('.activity-slide input,.activity-slide select,.activity-slide button[type="submit"]').forEach(e=>e.disabled=true);document.querySelectorAll('.activity-message').forEach(e=>e.textContent='Review only — assignments are closed.');}
@@ -85,7 +85,7 @@
       try{
         requireLive();setupFirebase();const student=LOGIN_ROSTER.find(s=>s.id===selection.value&&s.section===section);if(!student)throw Error('Select a valid student.');
         const studentDoc=await COURSE.collection('students').doc(student.id).get();if(!studentDoc.exists)throw Error('The course roster record is missing. Ask your instructor.');const joined=await P.join(id,student,code);
-        Object.assign(S,joined);S.assignment=id==='lec05'?(studentDoc.data().assignment&&Number.isFinite(studentDoc.data().assignment.muA2)?studentDoc.data().assignment:offlineAssignment(student.id)):id==='lec06'?lec06Assignment(student.id):id==='lec07'?lec07Assignment(student.id):id==='lec08'?lec08Assignment(student.id):lec09Assignment(student.id);
+        claimStop?.();claimStop=null;claims=[];Object.assign(S,joined);S.assignment=id==='lec05'?(studentDoc.data().assignment&&Number.isFinite(studentDoc.data().assignment.muA2)?studentDoc.data().assignment:offlineAssignment(student.id)):id==='lec06'?lec06Assignment(student.id):id==='lec07'?lec07Assignment(student.id):id==='lec08'?lec08Assignment(student.id):lec09Assignment(student.id);
         S.role='student';S.open=true;S.previewId='';S.results=[];S.localResults={};S.messages={};document.getElementById('gate-secret').value='';document.getElementById('gate').hidden=true;document.getElementById('settings-btn').hidden=true;document.getElementById('user-label').textContent=S.name+' · '+S.section;document.getElementById('logout-btn').textContent='Sign out';goSlide(0);startPolling();startPresence(S.studentId,S.sessionId);say('Connected · your name is reserved for this lecture.');
       }catch(e){status.textContent=e.message;}finally{joinBusy=false;button.disabled=false;document.getElementById('gate-confirm-step').hidden=true;button.textContent='Join class';}
     };
