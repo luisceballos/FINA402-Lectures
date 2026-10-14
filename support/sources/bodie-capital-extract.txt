@@ -1,0 +1,765 @@
+PDF PAGE 625
+596 PART V  Security Analysis
+bod77178_ch18_569-612.indd 596 04/04/17  03:21 PM
+Alternatively, we can focus on cash flow available to equityholders. This will differ  
+from free cash flow to the firm by after-tax interest expenditures, as well as by cash 
+flow associated with net issuance or repurchase of debt (i.e., principal repayments minus  
+proceeds from issuance of new debt).
+ FCFE = FCFF − Interest expense × (1 −  tc ) + Increases in net debt (18.10)
+A free cash flow to the firm valuation model discounts year-by-year cash flows plus 
+some estimate of terminal value, VT. In Equation 18.11, we use the constant-growth model 
+to estimate terminal value and discount at the weighted-average cost of capital.
+ Firm value =    ∑  
+t=1
+  
+T
+        FCFFt ____________  
+(1 + WACC)t    +    VT ____________  
+(1 + WACC)T    where  VT =   FCFFT + 1 __________ 
+WACC − g    (18.11)
+To find equity value, we subtract the existing market value of debt from the derived value 
+of the firm.
+Alternatively, we can discount free cash flows to equity (FCFE) at the cost of equity, kE.
+ Intrinsic value of equity =    ∑  
+t=1
+  
+T
+        FCFEt ________ (1 + kE )t    +    ET
+ ________ 
+(1 + kE)T
+     where ET =    FCFET + 1 ________ kE − g     (18.12)
+As in the dividend discount model, free cash flow models use a terminal value to avoid 
+adding the present values of an infinite sum of cash flows. That terminal value may simply 
+be the present value of a constant-growth perpetuity (as in the formulas above) or it may 
+be based on a multiple of EBIT, book value, earnings, or free cash flow. As a general rule, 
+estimates of intrinsic value depend critically on terminal value.
+Spreadsheet 18.2 presents a free cash flow valuation of GE using the data supplied by 
+Value Line in Figure 18.2. We start with the free cash flow to the firm approach given 
+in Equation 18.9. Panel A of the spreadsheet lays out values supplied by Value Line for 
+2016, 2017, and 2020. Entries for middle years are interpolated from beginning and final  
+values. Panel B calculates free cash flow. The sum of after-tax profits in row 11 (from Value 
+Line) plus after-tax interest payments in row 12 [i.e., interest expense × (1 − tc)] equals 
+EBIT(1 − tc). In row 13 we subtract the change in net working capital, in row 14 we add 
+back depreciation, and in row 15 we subtract capital expenditures. The result in row 17 is 
+the free cash flow to the firm, FCFF, for each year between 2017 and 2020.
+To find the present value of these cash flows, we will discount at WACC, which is 
+calculated in Panel C. WACC is the weighted average of the after-tax cost of debt and the 
+cost of equity in each year. When computing WACC, we must account for the change in 
+leverage forecast by Value Line. To compute the cost of equity, we will use the CAPM as 
+in our earlier (dividend discount model) valuation exercise, but accounting for the fact that 
+equity beta will decline each year as the firm reduces leverage.9
+To find GE’s cost of debt, we note that its long-term bonds were rated A1 by Moody’s 
+in 2016 and that yields to maturity on this quality debt at the time were about 3.8%. GE’s 
+9Call βL the firm’s equity beta at the initial level of leverage as provided by Value Line. Equity betas reflect both 
+business risk and financial risk. When a firm changes its capital structure (debt/equity mix), it changes financial 
+risk, and therefore equity beta changes. How should we recognize the change in financial risk? As you may remem-
+ber from an introductory corporate finance class, you must first unleverage beta. This leaves us with business risk. 
+We use the following formula to find unleveraged beta, βU (where D/E is the firm’s current debt-equity ratio):
+βU =    βL _______________  
+1 + (D / E )(1 −  tc )   
+Then, we re-leverage beta in any particular year using the forecast capital structure for that year (which reintro -
+duces the financial risk associated with that year’s capital structure):
+βL = βU  [   1 + (D / E )(1 −  tc)  ]   
+Final PDF to printer
+
+PDF PAGE 626
+ CHAPTER 18  Equity Valuation Models 597
+bod77178_ch18_569-612.indd 597 04/04/17  03:21 PM
+debt-to-value ratio (assuming its debt is selling near par value) is computed in row 29.  
+In 2016, the ratio was .33. Based on Value Line forecasts, it will fall to .23 by 2020.  
+We interpolate the debt-to-value ratio for the intermediate years. WACC is computed in 
+row 32. WACC increases slightly over time as leverage declines between 2016 and 2020. 
+The present value factor for cash flows accruing in each year is the previous year’s factor 
+divided by (1 + WACC) for that year. The present value of each cash flow (row 37) is the 
+free cash flow times the cumulative discount factor.
+The terminal value of the firm (cell H17) is computed from the constant-growth model as 
+FCFF2020 × (1 + g)/(WACC2020 − g), where g (cell B23) is the assumed value for the steady 
+growth rate. We assume in the spreadsheet that g = .06, in line with the long-run growth rate 
+used in Spreadsheet 18.1. Terminal value is also discounted back to 2016 (cell H37), and the 
+intrinsic value of the firm is thus found as the sum of discounted free cash flows between 
+2017 and 2020 plus the discounted terminal value. Finally, the value of debt in 2016 is  
+subtracted from firm value to arrive at the intrinsic value of equity in 2016 (cell K37), and 
+value per share is calculated in cell L37 as equity value divided by number of shares.
+Spreadsheet 18.2
+Free cash flow valuation of General Electric
+/one.tnum
+/two.tnum
+/three.tnum
+/four.tnum
+/five.tnum
+/six.tnum
+/seven.tnum
+/eight.tnum
+/nine.tnum
+/one.tnum/zero.tnum
+/one.tnum/one.tnum
+/one.tnum/two.tnum
+/one.tnum/three.tnum
+/one.tnum/four.tnum
+/one.tnum/five.tnum
+/one.tnum/six.tnum
+/one.tnum/seven.tnum
+/one.tnum/eight.tnum
+/one.tnum/nine.tnum
+/two.tnum/zero.tnum
+/two.tnum/one.tnum
+/two.tnum/two.tnum
+/two.tnum/three.tnum
+/two.tnum/four.tnum
+/two.tnum/five.tnum
+/two.tnum/six.tnum
+/two.tnum/seven.tnum
+/two.tnum/eight.tnum
+/two.tnum/nine.tnum
+/three.tnum/zero.tnum
+/three.tnum/one.tnum
+/three.tnum/two.tnum
+/three.tnum/three.tnum
+/three.tnum/four.tnum
+/three.tnum/five.tnum
+/three.tnum/six.tnum
+/three.tnum/seven.tnum
+/three.tnum/eight.tnum
+/two.tnum/zero.tnum/one.tnum/six.tnum/two.tnum/zero.tnum/one.tnum/seven.tnum/two.tnum/zero.tnum/one.tnum/eight.tnum/two.tnum/zero.tnum/one.tnum/nine.tnum/two.tnum/zero.tnum/two.tnum/zero.tnum
+A. Input Data
+P/E /two.tnum/zero.tnum./three.tnum/zero.tnum
+/one.tnum./four.tnum/five.tnum
+/one.tnum/four.tnum/zero.tnum,/zero.tnum/zero.tnum/zero.tnum
+/nine.tnum,/three.tnum/zero.tnum/zero.tnum
+/one.tnum./five.tnum/zero.tnum
+/three.tnum/zero.tnum,/zero.tnum/zero.tnum/zero.tnum
+/one.tnum/three.tnum,/nine.tnum/five.tnum/zero.tnum
+/three.tnum,/four.tnum/five.tnum/eight.tnum
+/one.tnum/eight.tnum./nine.tnum/eight.tnum/one.tnum/seven.tnum./six.tnum/five.tnum/one.tnum/six.tnum./three.tnum/three.tnum/one.tnum/five.tnum./zero.tnum/zero.tnum
+Cap spending/shr /one.tnum./five.tnum/zero.tnum/one.tnum./five.tnum/zero.tnum/one.tnum./five.tnum/zero.tnum/one.tnum./five.tnum/zero.tnum
+LT Debt ($M) /one.tnum/three.tnum/five.tnum,/zero.tnum/zero.tnum/zero.tnum/one.tnum/three.tnum/zero.tnum,/zero.tnum/zero.tnum/zero.tnum/one.tnum/two.tnum/five.tnum,/zero.tnum/zero.tnum/zero.tnum/one.tnum/two.tnum/zero.tnum,/zero.tnum/zero.tnum/zero.tnum
+Shares (million) /nine.tnum,/two.tnum/five.tnum/zero.tnum/nine.tnum,/one.tnum/six.tnum/seven.tnum/nine.tnum,/zero.tnum/eight.tnum/three.tnum/nine.tnum,/zero.tnum/zero.tnum/zero.tnum
+EPS /one.tnum./seven.tnum/five.tnum/two.tnum./one.tnum/seven.tnum/two.tnum./five.tnum/eight.tnum/three.tnum./zero.tnum/zero.tnum
+Working capital /four.tnum/zero.tnum,/zero.tnum/zero.tnum/zero.tnum/five.tnum/one.tnum,/six.tnum/six.tnum/seven.tnum/six.tnum/three.tnum,/three.tnum/three.tnum/three.tnum/seven.tnum/five.tnum,/zero.tnum/zero.tnum/zero.tnum
+B. Cash Flow Calculations
+Proﬁts ($M, after tax) /one.tnum/six.tnum,/one.tnum/seven.tnum/five.tnum/one.tnum/nine.tnum,/seven.tnum/eight.tnum/three.tnum/two.tnum/three.tnum,/three.tnum/nine.tnum/two.tnum/two.tnum/seven.tnum,/zero.tnum/zero.tnum/zero.tnum
+Interest ($M, after tax) /three.tnum,/three.tnum/three.tnum/five.tnum/three.tnum,/two.tnum/one.tnum/one.tnum/three.tnum,/zero.tnum/eight.tnum/eight.tnum/two.tnum,/nine.tnum/six.tnum/four.tnum= (/one.tnum-tax_rate) × r_debt × LT debt
+Chg working cap ($M) /one.tnum/zero.tnum,/zero.tnum/zero.tnum/zero.tnum/one.tnum/one.tnum,/six.tnum/six.tnum/seven.tnum/one.tnum/one.tnum,/six.tnum/six.tnum/seven.tnum/one.tnum/one.tnum,/six.tnum/six.tnum/seven.tnum
+Depreciation ($M) /five.tnum,/eight.tnum/zero.tnum/zero.tnum/six.tnum,/two.tnum/eight.tnum/three.tnum/six.tnum,/seven.tnum/six.tnum/seven.tnum/seven.tnum,/two.tnum/five.tnum/zero.tnum
+Cap Spending ($M) /one.tnum/three.tnum,/eight.tnum/seven.tnum/five.tnum
+/five.tnum,/three.tnum/five.tnum/zero.tnum
+/one.tnum/three.tnum,/seven.tnum/five.tnum/zero.tnum/one.tnum/three.tnum,/six.tnum/two.tnum/five.tnum/one.tnum/three.tnum,/five.tnum/zero.tnum/zero.tnum
+Terminal value
+FCFF ($M) /one.tnum,/four.tnum/three.tnum/five.tnum/three.tnum,/eight.tnum/six.tnum/one.tnum/seven.tnum,/nine.tnum/five.tnum/four.tnum/one.tnum/two.tnum,/zero.tnum/four.tnum/seven.tnum/four.tnum/eight.tnum/seven.tnum,/three.tnum/six.tnum/eight.tnum
+FCFE ($M) -/six.tnum,/nine.tnum/zero.tnum/zero.tnum-/four.tnum,/three.tnum/five.tnum/zero.tnum-/one.tnum/three.tnum/three.tnum/four.tnum,/zero.tnum/eight.tnum/three.tnum/three.tnum/nine.tnum/five.tnum,/six.tnum/eight.tnum/three.tnum
+C. Discount Rate Calculations
+Current beta /one.tnum./one.tnum from Value Line
+assumes ﬁxed debt ratio after /two.tnum/zero.tnum/two.tnum/zero.tnum
+Unlevered beta /zero.tnum./eight.tnum/three.tnum/two.tnum current beta/[/one.tnum + (/one.tnum-tax)*debt/equity]
+Terminal growth /zero.tnum./zero.tnum/six.tnum
+tax_rate /zero.tnum./three.tnum/five.tnum
+r_debt /zero.tnum./zero.tnum/three.tnum/eight.tnum YTM in /two.tnum/zero.tnum/one.tnum/six.tnum on A/one.tnum rated LT debt
+Risk-free rate /zero.tnum./zero.tnum/two.tnum/five.tnum
+Market risk prem /zero.tnum./zero.tnum/eight.tnum
+MV equity /two.tnum/eight.tnum/three.tnum,/one.tnum/eight.tnum/five.tnum
+/zero.tnum./three.tnum/three.tnum
+/one.tnum./one.tnum/zero.tnum/zero.tnum
+/zero.tnum./one.tnum/one.tnum/three.tnum
+/zero.tnum./zero.tnum/eight.tnum/four.tnum
+/four.tnum/zero.tnum/five.tnum,/zero.tnum/zero.tnum/zero.tnumRow /three.tnum × Row /one.tnum/one.tnum
+Debt/Value /zero.tnum./three.tnum/one.tnum/zero.tnum./two.tnum/eight.tnum/zero.tnum./two.tnum/five.tnum/zero.tnum./two.tnum/three.tnumlinear trend from initial to ﬁnal value
+Levered beta /one.tnum./zero.tnum/seven.tnum/zero.tnum/one.tnum./zero.tnum/four.tnum/three.tnum/one.tnum./zero.tnum/one.tnum/seven.tnum/zero.tnum./nine.tnum/nine.tnum/three.tnumunlevered beta × [/one.tnum + (/one.tnum-tax)*debt/equity]
+k_equity /zero.tnum./one.tnum/one.tnum/one.tnum/zero.tnum./one.tnum/zero.tnum/eight.tnum/zero.tnum./one.tnum/zero.tnum/six.tnum/zero.tnum./one.tnum/zero.tnum/four.tnum/zero.tnum./one.tnum/zero.tnum/four.tnumfrom CAPM and levered beta
+WACC /zero.tnum./zero.tnum/eight.tnum/four.tnum/zero.tnum./zero.tnum/eight.tnum/five.tnum/zero.tnum./zero.tnum/eight.tnum/six.tnum/zero.tnum./zero.tnum/eight.tnum/six.tnum/zero.tnum./zero.tnum/eight.tnum/six.tnum(/one.tnum-t)*r_debt*D/V + k_equity*(/one.tnum-D/V)
+PV factor for FCFF /one.tnum./zero.tnum/zero.tnum/zero.tnum/zero.tnum./nine.tnum/two.tnum/two.tnum/zero.tnum./eight.tnum/five.tnum/zero.tnum/zero.tnum./seven.tnum/eight.tnum/three.tnum/zero.tnum./seven.tnum/two.tnum/one.tnum/zero.tnum./seven.tnum/two.tnum/one.tnumDiscount each year at WACC
+PV factor for FCFE /one.tnum./zero.tnum/zero.tnum/zero.tnum/zero.tnum./nine.tnum/zero.tnum/zero.tnum/zero.tnum./eight.tnum/one.tnum/two.tnum/zero.tnum./seven.tnum/three.tnum/four.tnum/zero.tnum./six.tnum/six.tnum/five.tnum/zero.tnum./six.tnum/six.tnum/five.tnumDiscount each year at k_equity
+D. Present Values Intrinsic val Equity val Intrin/share
+PV(FCFF) /one.tnum,/three.tnum/two.tnum/three.tnum/three.tnum,/two.tnum/eight.tnum/two.tnum/six.tnum,/two.tnum/two.tnum/seven.tnum/eight.tnum,/six.tnum/eight.tnum/four.tnum/three.tnum/five.tnum/one.tnum,/two.tnum/eight.tnum/seven.tnum/three.tnum/seven.tnum/zero.tnum,/eight.tnum/zero.tnum/three.tnum/two.tnum/three.tnum/zero.tnum,/eight.tnum/zero.tnum/three.tnum/two.tnum/four.tnum./eight.tnum/two.tnum
+PV(FCFE) -/six.tnum,/two.tnum/one.tnum/three.tnum-/three.tnum,/five.tnum/three.tnum/four.tnum-/nine.tnum/eight.tnum/two.tnum,/seven.tnum/one.tnum/five.tnum/two.tnum/six.tnum/three.tnum,/zero.tnum/six.tnum/zero.tnum/two.tnum/five.tnum/five.tnum,/nine.tnum/three.tnum/zero.tnum/two.tnum/five.tnum/five.tnum,/nine.tnum/three.tnum/zero.tnum/two.tnum/seven.tnum./five.tnum/two.tnum
+IA C DE FG HJ LKMB
+Final PDF to printer
+
+PDF PAGE 627
+598 PART V  Security Analysis
+bod77178_ch18_569-612.indd 598 04/04/17  03:21 PM
+The free cash flow to equity approach yields a similar intrinsic value for the stock. 10 
+Free cash flow to equity (row 18) is obtained from FCFF by subtracting after-tax interest 
+expense and net debt repurchases. FCFE in the early years is negative because the firm is 
+devoting $5 billion a year to reducing debt, which more than absorbs the profits the firm 
+is expected to earn. However, profits are expected to increase rapidly, and FCFE turns 
+positive after 2019. FCFE is discounted at the equity rate. Like WACC, the cost of equity 
+changes each period as leverage changes. The present value factor for equity cash flows is 
+presented in row 34. Equity value is reported in cell J38, which is put on a per share basis 
+in cell L38.
+Spreadsheet 18.2 is available in Connect or through your course instructor.
+Comparing the Valuation Models
+In principle, the free cash flow approach is fully consistent with the dividend discount 
+model and should provide the same estimate of intrinsic value if one can extrapolate to 
+a period in which the firm begins to pay dividends growing at a constant rate. This was 
+demonstrated in two famous papers by Modigliani and Miller.11 However, in practice, you 
+will find that values from these models may differ, sometimes substantially. This is due 
+to the fact that in practice, analysts are always forced to make simplifying assumptions. 
+For example, how long will it take the firm to enter a constant-growth stage? How should 
+depreciation best be treated? What is the best estimate of ROE? Answers to questions 
+like these can have a big impact on value, and it is not always easy to maintain consistent 
+assumptions across the models.
+We have now valued GE using several approaches, with estimates of intrinsic value as 
+follows:
+Model Intrinsic Value
+Two-stage dividend discount model $53.40
+DDM with earnings multiple terminal value 33.31
+Three-stage DDM 35.70
+Free cash flow to the firm 24.82
+Free cash flow to equity 27.52
+Market price (from Value Line) 30.98
+What should we make of these differences? Aside from the two-stage DDM, which 
+clearly assumes GE will enter a sustainable growth period earlier and with a higher growth 
+rate than is realistic, the estimates of intrinsic value cluster pretty much symmetrically 
+around the actual market price. The dividend discount models tend to give estimates that 
+exceed price, while the estimates from the free cash flow models are less than price. But by 
+and large, there is no clear signal that GE is substantially mispriced.
+On balance, therefore, this valuation exercise suggests that finding bargains is not gen-
+erally going to be easy. Although applying these models is straightforward, establishing 
+10Over the 2016–2020 period, Value Line predicts that GE will retire a considerable fraction of its outstanding 
+debt. The implied debt repurchases are a use of cash and reduce the cash flow available to equity. Such repur -
+chases cannot be sustained indefinitely, however, for debt outstanding would soon be run down to zero. Therefore, 
+in our estimate of the terminal value of equity, we compute the final cash flow assuming that, starting in 2020, GE 
+will begin issuing enough debt to maintain its debt-to-value ratio. This approach is consistent with the assumption 
+of constant growth and constant discount rates after 2020.
+11Franco Modigliani and M. Miller, “The Cost of Capital, Corporation Finance, and the Theory of Investment,” 
+American Economic Review, June 1958; and “Dividend Policy, Growth, and the Valuation of Shares,” Journal of 
+Business, October 1961.
+Final PDF to printer
+
+PDF PAGE 631
+bod77178_ch18_569-612.indd 602 04/04/17  03:21 PM
+602 PART V  Security Analysis
+book value
+liquidation value
+replacement cost
+Tobin’s q
+intrinsic value (of a share)
+market capitalization rate
+KEY TERMS dividend discount model 
+(DDM)
+constant-growth DDM
+dividend payout ratio
+plowback ratio
+earnings retention ratio
+present value of growth  
+opportunities (PVGO)
+two-stage dividend discount 
+model
+price–earnings multiple
+earnings management
+Intrinsic value: V0 =    D1 _____ 
+1 + k    +    D2 _______ 
+(1 + k)2    + ⋅ ⋅ ⋅ +    DH + PH ________ 
+(1 + k)H   
+Constant-growth DDM: V0 =    D1 _____ 
+k −  g   
+Growth opportunities: Price =    E1 ___ 
+k    + PVGO
+Determinant of P/E ratio:    P0 ___ 
+E1
+    =    1 __ 
+k     (1 +   PVGO ______ 
+E1 / k  )  
+Free cash flow to the firm:
+FCFF = EBIT(1 −  tc ) + Depreciation − Capital expenditures − Increases in NWC
+Free cash flow to equity: FCFE = FCFF − Interest expense × (1 − tc) + Increases in net debt 
+KEY EQUATIONS
+a middle, or transition, period in which the dividend growth rate declines from its initial high 
+rate to the lower sustainable rate.
+ 6. Stock market analysts devote considerable attention to a company’s price-to-earnings ratio.  
+The P/E ratio is a useful measure of the market’s assessment of the firm’s growth opportunities. 
+Firms with no growth opportunities should have a P/E ratio that is just the reciprocal of the  
+capitalization rate, k. As growth opportunities become a progressively more important compo -
+nent of the total value of the firm, the P/E ratio will increase.
+ 7. The expected growth rate of earnings is related both to the firm’s expected profitability and to 
+its dividend policy. The relationship can be expressed as
+g = (ROE on new investment ) × (1 − Dividend payout ratio  )
+ 8. You can relate any DDM to a simple capitalized earnings model by comparing the expected 
+ROE on future investments to the market capitalization rate, k. If the two rates are equal, then 
+the stock’s intrinsic value reduces to expected earnings per share (EPS) divided by k.
+ 9. Many analysts form their estimates of a stock’s value by multiplying their forecast of next year’s 
+EPS by a predicted P/E multiple. Some analysts mix the P/E approach with the dividend dis -
+count model. They use an earnings multiplier to forecast the terminal value of shares at a future 
+date, and add the present value of that terminal value with the present value of all interim divi -
+dend payments.
+ 10. The free cash flow approach is the one used most often in corporate finance. The analyst first 
+estimates the value of the firm as the present value of expected future free cash flows to the 
+entire firm and then subtracts the value of all claims other than equity. Alternatively, free cash 
+flows to equity can be discounted at a discount rate appropriate to the risk of the stock.
+ 11. The models presented in this chapter can be used to explain and forecast the behavior of the 
+aggregate stock market. The key macroeconomic variables that determine the level of stock 
+prices in the aggregate are interest rates and corporate profits.
+Final PDF to printer
+
+PDF PAGE 639
+bod77178_ch18_569-612.indd 610 04/04/17  03:21 PM
+610  PART V  Security Analysis
+Table 18G
+Rio National Corp. sum-
+mary income statement 
+for the year ended 
+December 31, 2017  
+(U.S. $ millions)
+Revenue $300.80
+Total operating expenses  (173.74 )
+Operating profit $127.06
+Gain on sale  4.00
+Earnings before interest, taxes, depreciation, & amortization (EBITDA) $131.06
+Depreciation and amortization  (71.17 )
+Earnings before interest & taxes (EBIT) $ 59.89
+Interest (16.80)
+Income tax expense  (12.93 )
+Net income $ 30.16
+Table 18H
+Rio National Corp. 
+supplemental notes for 
+2017
+Note 1: Rio National had $75 million in capital expenditures during the year.
+Note 2: A piece of equipment that was originally purchased for $10 million was sold for $7 million at year-
+end, when it had a net book value of $3 million. Equipment sales are unusual for Rio National.
+Note 3: The decrease in long-term debt represents an unscheduled principal repayment;  
+there was no new borrowing during the year.
+Note 4: On January 1, 2017, the company received cash from issuing 400,000 shares of  
+common equity at a price of $25.00 per share.
+Note 5: A new appraisal during the year increased the estimated market value of land held for 
+investment by $2 million, which was not recognized in 2017 income.
+Table 18J
+Industry and market 
+data December 31, 
+2017
+Risk-free rate of return 4.00%
+Expected rate of return on market index 9.00%
+Median industry price/earnings (P/E) ratio 19.90
+Expected industry earnings growth rate 12.00%
+Table 18I
+Rio National Corp.  
+common equity data 
+for 2017
+Dividends paid (U.S. $ millions) $3.20
+Weighted-average shares outstanding 16,000,000
+Dividend per share $0.20
+Earnings per share $1.89
+Beta 1.80
+Note: The dividend payout ratio is expected to be constant.
+ 10. While valuing the equity of Rio National Corp. (see CFA Problem 9), Katrina Shaar is consider-
+ing the use of either cash flow from operations (CFO) or free cash flow to equity (FCFE) in her 
+valuation process.
+ a. State two adjustments that Shaar should make to cash flow from operations to obtain free 
+cash flow to equity.
+ b. Shaar decides to calculate Rio National’s FCFE for the year 2017, starting with net income. 
+Determine for each of the five supplemental notes given in Table 18H whether an adjust -
+ment should be made to net income to calculate Rio National’s free cash flow to equity for 
+the year 2017, and the dollar amount of any adjustment.
+ c. Calculate Rio National’s free cash flow to equity for the year 2017.
+ 11. Shaar (see CFA Problem 10) has revised slightly her estimated earnings growth rate for Rio 
+National and, using normalized (underlying trend) EPS, which is adjusted for temporary 
+impacts on earnings, now wants to compare the current value of Rio National’s equity to that 
+of the industry, on a growth-adjusted basis. Selected information about Rio National and the 
+industry is given in Table 18K.
+  Compared to the industry, is Rio National’s equity overvalued or undervalued on a P/E-to-
+growth (PEG) basis, using normalized (underlying trend) earnings per share? Assume that the 
+risk of Rio National is similar to the risk of the industry.
+Final PDF to printer
+
+PDF PAGE 650
+ CHAPTER 19  Financial Statement Analysis 621
+bod77178_ch19_613-656.indd 621 04/03/17  07:44 PM
+financial risk differs. Although Nodett and Somdett have the same ROA in each scenario, 
+Somdett’s ROE exceeds that of Nodett in normal and good years and is lower in bad years.
+We can summarize the exact relationship among ROE, ROA, and leverage in the fol -
+lowing equation:3
+  ROE = (1 − Tax rate)   [  ROA + (ROA − Interest rate)   Debt _ Equity   ]     (19.1)
+This result makes sense: If ROA exceeds the borrowing rate, the firm earns more on its 
+money than it pays out to creditors. The surplus earnings are available to the firm’s owners, 
+the equityholders, which increases ROE. If, on the other hand, ROA is less than the interest 
+rate paid on debt, then ROE will decline by an amount that depends on the debt-to-equity 
+ratio.
+3The derivation of Equation 19.1 is as follows:
+  
+ROE
+  
+=
+  
+  Net profit _________ Equity   =   EBIT − Interest − Taxes   _____________________  Equity   =   (1 − Tax rate)(EBIT − Interest  )   ___________________________  Equity  
+        
+ 
+  
+=
+  
+ (1 − Tax rate)   [     (ROA × Assets) −   (Interest rate × Debt)    _________________________________  Equity   ]   
+       
+ 
+  
+=
+  
+ (1 − Tax rate)   [  ROA ×   Equity + Debt  ____________ Equity   − Interest rate ×    Debt ______ Equity   ]   
+       
+ 
+  
+=
+  
+ (1 − Tax rate)   [  ROA + (ROA − Interest rate)   Debt ______ Equity   ]   
+   
+    Nodett Somdett
+Scenario
+EBIT  
+($ millions)
+Net Profits  
+($ millions)
+ROE  
+(%)
+Net Profits*  
+($ millions)
+ROE†  
+(%)
+Bad year 5 3 3 1.08 1.8
+Normal year 10   6 6 4.08 6.8
+Good year 15   9 9 7.08 11.8  
+*Somdett’s after-tax profits are given by .6(EBIT −  $3.2 million).
+†ROE = net profit/equity. Somdett’s equity is only $60 million.
+Table 19.5
+Impact of financial  
+leverage on ROE
+To illustrate the application of Equation 19.1, look at Table 19.5. In a normal year, Nodett has 
+an ROE of 6%, which is .6 (i.e., 1 minus the tax rate) times its ROA of 10%. However, Somdett, 
+which borrows at an interest rate of 8% and maintains a debt-to-equity ratio of ⅔, has an ROE 
+of 6.8%. The calculation using Equation 19.1 is
+  ROE  =  .6 [10%  +  (10%  −  8%)  2 ⁄ 3     ]        =  .6 [10%  +  4 ⁄ 3 %]  = 6.8%   
+Somdett’s debt makes a positive contribution to ROE in this scenario because the firm’s 
+ROA exceeds the interest rate on its debt.
+Example 19.1  Leverage and ROE
+Final PDF to printer
+
+PDF PAGE 651
+622 PART V  Security Analysis
+bod77178_ch19_613-656.indd 622 04/03/17  07:44 PM
+Table 19.5 shows that financial leverage increases the risk of the equityholder returns. 
+Somdett’s ROE is worse than Nodett’s in bad years, but it is better in good years. The 
+presence of debt makes Somdett’s ROE more sensitive to the business cycle. Even though 
+the two companies have equal business risk (reflected in their identical EBITs in all three 
+scenarios), Somdett’s stockholders bear greater financial risk than Nodett’s because all of 
+the firm’s business risk is absorbed by a smaller base of equity investors.
+Even if financial leverage increases the expected ROE of Somdett relative to Nodett (as 
+it seems to in Table 19.5), this does not imply that Somdett’s share price will be higher. 
+Financial leverage increases the risk of the firm’s equity as surely as it raises the expected 
+ROE, and the higher discount rate will offset the higher expected earnings.
+Mordett is a company with the same assets as Nodett and Somdett but it has a debt-to-equity ratio of 1.0 and an 
+interest rate of 9%. What would its net profit and ROE be in a bad year, a normal year, and a good year?
+Concept Check 19.1
+Economic Value Added
+While profitability measures such as ROA, ROC, and ROE are commonly used to measure 
+performance, profitability is really not enough. A firm should be viewed as successful 
+only if the return on its projects is better than the rate investors could expect to earn for 
+themselves (on a risk-adjusted basis) in the capital market. Plowing back funds into the 
+firm increases stock price only if the firm earns a higher rate of return on the reinvested 
+funds than the opportunity cost of capital, that is, the market capitalization rate. To account 
+for this opportunity cost, we might measure the success of the firm using the difference 
+between the return on capital, ROC, and the opportunity cost of capital, k. Economic 
+value added (EVA) is the spread between ROC and k multiplied by the capital invested in 
+the firm. It therefore measures the dollar value of the firm’s return in excess of its opportu-
+nity cost. Another term for EVA (the term coined by Stern Stewart, a consulting firm that 
+has promoted its use) is residual income.
+In 2015, HD had a weighted-average cost of capital of 7.7% (based on its cost of debt, its 
+capital structure, its equity beta, and estimates derived from the CAPM for the cost of equity). 
+Its return on capital was 17.5%, fully 9.8% greater than the opportunity cost of capital on 
+its investments in plant, equipment, and know-how. In other words, each dollar invested by 
+HD earned about 9.8 cents more than the return that investors could have anticipated by 
+investing in equivalent-risk stocks. HD earned this superior rate of return on a capital base of 
+$27.15 billion. Its economic value added, that is, its return in excess of opportunity cost, was 
+therefore (.175 −  .077) × $27.15 = $2.66 billion.
+Example 19.2  Economic Value Added
+Table 19.6 shows EVA for a small sample of firms. The EVA leader in this sample 
+was Apple. Notice that Walmart’s EVA was greater than HD’s, despite a smaller margin 
+between its ROC and the cost of capital. This is because Walmart applied its margin to a 
+much larger capital base. At the other extreme, Honda and Pfizer earned less than their 
+opportunity costs of capital, which resulted in negative EVAs.
+Final PDF to printer
+
+PDF PAGE 654
+ CHAPTER 19  Financial Statement Analysis 625
+bod77178_ch19_613-656.indd 625 04/03/17  07:44 PM
+A high coverage ratio indicates that the likelihood of bankruptcy is low because annual 
+earnings are significantly greater than annual interest obligations. It is widely used by both 
+lenders and borrowers in determining the firm’s debt capacity and is a major determinant 
+of the firm’s bond rating.
+Factor 5, the ratio of assets to equity, is a measure of the firm’s degree of financial 
+leverage. It is called the leverage ratio and is equal to 1 plus the total debt-to-equity 
+ratio.4 As shown in Table 19.7, Nodett has a leverage ratio of 1, while Somdett’s leverage 
+ratio is 1.667.
+From our discussion in Section 19.2, we know that financial leverage helps boost ROE 
+only if ROA is greater than the interest rate on the firm’s debt. How is this fact reflected in 
+the ratios of Table 19.7?
+The answer is that the full impact of leverage in this framework equals the product of 
+the interest burden and leverage ratios (i.e., factors 2 and 5 in Table 19.7). This product 
+is called the compound leverage factor   and is shown in Column 6. Nodett’s compound 
+leverage factor equals 1.0 in all three scenarios. In contrast, Somdett’s compound leverage 
+factor is greater than 1.0 in normal years (1.134) and in good years (1.311), indicating a 
+positive contribution of financial leverage to ROE. It is less than 1 in bad years, reflecting 
+the fact that when ROA falls below the interest rate, ROE falls with increased use of debt.
+We can summarize all of these relationships as follows. From Equation 19.2,
+  ROE = Tax burden × Interest burden × Margin × Turnover × Leverage 
+Because
+  ROA = Margin × Turnover  (19.3)
+and
+  Compound leverage factor = Interest burden × Leverage 
+we can decompose ROE equivalently as follows:
+  ROE = Tax burden × ROA × Compound leverage factor  (19.4)
+Equation 19.3 shows that ROA is the product of margin and turnover. High values of 
+one of these ratios are often accompanied by low values of the other. For example, Walmart 
+has low profit margins but high turnover, while Tiffany has high margins but low turnover. 
+Firms would love to have high values for both margin and turnover, but this generally will 
+not be possible: Retailers with high markups will sacrifice sales volume, and conversely, 
+those with low turnover need high margins just to remain viable. Therefore, comparing 
+these ratios in isolation usually is meaningful only in evaluating firms following similar 
+strategies in the same industry. Cross-industry comparisons can be misleading.
+Figure 19.2 shows evidence of the turnover-profit margin trade-off. Each point in the 
+figure corresponds to the profit margin-turnover pair for one particular industry. Indus -
+tries with high turnover, such as food stores, tend to have low profit margins, while 
+industries with high margins, such as computer peripherals, tend to have low turnover. 
+The two curved lines in the figure trace out turnover-margin combinations that result in 
+an ROA of either 3% or 10%. You can see that most industries lie inside of this range, 
+so ROA across industries demonstrates far less variation than either turnover or margin 
+taken in isolation.
+4
+   Assets ______ Equity   =   Equity + Debt  ___________ Equity   = 1 +   Debt ______ Equity   
+Final PDF to printer
+
+PDF PAGE 672
+ CHAPTER 19  Financial Statement Analysis 643
+bod77178_ch19_613-656.indd 643 04/03/17  07:44 PM
+years, he developed many different rules for determining the most important financial 
+ratios and the critical values for judging a stock to be undervalued. Through many editions, 
+his book has been so influential and successful that widespread adoption of Graham’s 
+techniques has led to the elimination of the very bargains they are designed to identify.
+In a 1976 seminar, Graham said:
+I am no longer an advocate of elaborate techniques of security analysis in order to find 
+superior value opportunities. This was a rewarding activity, say, forty years ago, when 
+our textbook “Graham and Dodd” was first published; but the situation has changed a 
+good deal since then. In the old days any well-trained security analyst could do a good 
+professional job of selecting undervalued issues through detailed studies; but in the light 
+of the enormous amount of research now being carried on, I doubt whether in most cases 
+such extensive efforts will generate sufficiently superior selections to justify their cost. 
+To that very limited extent I’m on the side of the “efficient market” school of thought 
+now generally accepted by the professors.9
+Nonetheless, in that same seminar, Graham suggested a simplified approach to identifying 
+bargain stocks:
+My first, more limited, technique confines itself to the purchase of common stocks at 
+less than their working-capital value, or net current-asset value, giving no weight to the 
+plant and other fixed assets, and deducting all liabilities in full from the current assets. 
+We used this approach extensively in managing investment funds, and over a 30-odd-year 
+period we must have earned an average of some 20 percent per year from this source. I 
+consider it a foolproof method of systematic investment—once again, not on the basis of 
+individual results but in terms of the expectable group income.
+There are two convenient sources of information for those interested in trying out the 
+Graham technique: Both Standard & Poor’s Outlook and The Value Line Investment Survey 
+carry lists of stocks selling below net working capital value.
+9As cited by John Train in Money Masters (New York: Harper & Row, 1987).
+ 1. The primary focus of the security analyst should be the firm’s real economic earnings rather than 
+its reported earnings. Accounting earnings as reported in financial statements can be a biased 
+estimate of real economic earnings, although empirical studies reveal that reported earnings con-
+vey considerable information concerning a firm’s prospects.
+ 2. Firm profitability depends on both the efficiency with which it uses its assets (commonly measured 
+by turnover ratios) as well as the profitability of sales (commonly measured by profit margins). 
+Financing decisions also should be prudent, so analysts also take great interest in leverage ratios 
+and liquidity ratios.
+ 3. A firm’s ROE is a key determinant of the growth rate of its earnings. ROE is affected profoundly 
+by the firm’s degree of financial leverage. An increase in a firm’s debt-to-equity ratio will raise 
+its ROE and hence its growth rate only if the interest rate on the debt is less than the firm’s return 
+on assets.
+ 4. It is often helpful to the analyst to decompose a firm’s ROE ratio into the product of several 
+accounting ratios and to analyze their separate behavior over time and across companies within an 
+industry. A useful breakdown is
+ ROE =   Net profits ____________  Pretax profits   ×   Pretax profits  ____________ EBIT   ×   EBIT _____ Sales   ×   Sales ______ Assets   ×   Assets ______ Equity   
+SUMMARY
+Final PDF to printer
+
+PDF PAGE 673
+644 PART V  Security Analysis
+bod77178_ch19_613-656.indd 644 04/03/17  07:44 PM
+ 5. Other accounting ratios that have a bearing on a firm’s profitability and/or risk are fixed-asset 
+turnover, inventory turnover, days sales in receivables, and the current, quick, and interest cov-
+erage ratios.
+ 6. Two ratios that make use of the market price of the firm’s common stock in addition to its finan-
+cial statements are the ratios of market-to-book value and price to earnings. Analysts sometimes 
+take low values for these ratios as a margin of safety or a sign that the stock is a bargain. How-
+ever, both ratios may be better interpreted as signals of growth prospects.
+ 7. Good firms are not necessarily good investments. Stock market prices of successful firms may 
+be bid up to levels that reflect that success. If so, the price of these firms relative to their earn -
+ings prospects may not constitute a bargain.
+ 8. A major problem in the use of data obtained from a firm’s financial statements is comparabil -
+ity. Firms have a great deal of latitude in how they choose to compute various items of revenue 
+and expense. It is, therefore, necessary for the security analyst to adjust accounting earnings and 
+financial ratios to a uniform standard before attempting to compare financial results across firms.
+ 9. Comparability problems can be acute in a period of inflation. Inflation can create distortions in 
+accounting for inventories, depreciation, and interest expense.
+ 10. Fair value or mark-to-market accounting requires that most assets be valued at current market 
+value rather than historical cost. This policy has proved to be controversial because ascertaining 
+true market value in many instances is difficult, and critics contend that financial statements 
+are therefore unduly volatile. Advocates argue that financial statements should reflect the best 
+estimate of current asset values.
+ 11. International financial reporting standards have become progressively accepted throughout the 
+world, even to some extent in the United States. They differ from traditional U.S. GAAP proce-
+dures in that they are principles-based rather than rules-based.
+income statement
+economic earnings
+accounting earnings
+balance sheet
+treasury stock
+issued shares
+outstanding shares
+statement of cash flows
+return on assets (ROA)
+return on capital (ROC)
+return on equity (ROE)
+economic value added (EVA)
+KEY TERMS residual income
+DuPont system
+profit margin
+return on sales (ROS)
+total asset turnover (ATO)
+interest coverage ratio
+times interest earned
+leverage ratio
+inventory turnover ratio
+average collection period
+liquidity
+current ratio
+quick ratio
+acid test ratio
+cash ratio
+market–book-value (P/B) ratio
+price–earnings (P/E) ratio
+LIFO
+FIFO
+fair value accounting
+mark-to-market accounting
+quality of earnings
+international financial  
+reporting standards (IFRS)
+ROE and leverage:  ROE = (1 − Tax rate)  (ROA + (ROA − Interest rate)   Debt ______ Equity  )   
+DuPont formula:  ROE =    Net profits ____________  Pretax profits   ×   Pretax profits  ____________ EBIT   ×   EBIT _____ Sales   ×   Sales ______ Assets   ×   Assets ______ Equity   
+Another DuPont formula:   ROA  =  Margin × Turnover  
+KEY EQUATIONS
+ 1. Use the financial statements of Heifer Sports Inc. in Table 19A to find the following information 
+for Heifer’s:
+ a. Inventory turnover ratio in 2017.
+ b. Debt/equity ratio in 2017.
+PROBLEM SETS
+Final PDF to printer
+
+PDF PAGE 676
+ CHAPTER 19  Financial Statement Analysis 647
+bod77178_ch19_613-656.indd 647 04/03/17  07:44 PM
+ b. Reduce its cost of goods sold and increase its profitability.
+ c. Increase its operating margins relative to industry peers.
+ 12. The SEC due diligence team is searching for the reason behind Hatfield’s inventory build-up 
+relative to its sales growth. One way to identify a deliberate manipulation of financial results by 
+Hatfield is to search for:
+ a. A decline in inventory turnover.
+ b. Receivables that are growing faster than sales.
+ c. A delay in the recognition of expenses.
+ 13. A firm has an ROE of 3%, a debt-to-equity ratio of .5, and a tax rate of 35% and pays an interest 
+rate of 6% on its debt. What is its operating ROA?
+ 14. A firm has a tax burden ratio of .75, a leverage ratio of 1.25, an interest burden of .6, and a return 
+on sales of 10%. The firm generates $2.40 in sales per dollar of assets. What is the firm’s ROE?
+ 15. Use the following cash flow data for Rocket Transport to find Rocket’s
+ a. Net cash provided by or used in investing activities.
+ b. Net cash provided by or used in financing activities.
+ c. Net increase or decrease in cash for the year.
+ 16. Consider the following data for the firms Acme and Apex:
+Cash dividend $  80,000
+Purchase of bus $  33,000
+Interest paid on debt $  25,000
+Sales of old equipment $  72,000
+Repurchase of stock $  55,000
+Cash payments to suppliers $  95,000
+Cash collections from customers $300,000
+ a. Which firm has the higher economic value added?
+ b. Which firm has the higher economic value added per dollar of invested capital?
+ 
+Equity  
+($ million)
+Debt  
+($ million)
+ROC  
+(%)
+Cost of Capital  
+(%)
+Acme 100 50 17 9
+Apex 450 150   15 10 
+ 1. The information in the following exhibit comes from the notes to the financial statements of 
+QuickBrush Company and SmileWhite Corporation:
+  QuickBrush SmileWhite
+Goodwill The company amortizes goodwill  
+over 20 years.
+The company amortizes goodwill  
+over 5 years.
+Property, plant,  
+and equipment
+The company uses a straight-line 
+depreciation method over the  
+economic lives of the assets, which 
+range from 5 to 20 years for  
+buildings.
+The company uses an accelerated 
+depreciation method over the  
+economic lives of the assets, which 
+range from 5 to 20 years for  
+buildings.
+Accounts  
+receivable
+The company uses a bad debt  
+allowance of 2% of accounts 
+receivable.
+The company uses a bad debt  
+allowance of 5% of accounts 
+receivable.
+  Determine which company has the higher quality of earnings by discussing each of the three notes.
+Final PDF to printer
+
+PDF PAGE 684
+ CHAPTER 19  Financial Statement Analysis 655
+bod77178_ch19_613-656.indd 655 04/03/17  07:44 PM
+E-INVESTMENTS EXERCISES
+ 1.  Go to finance.yahoo.com  to find information about Vulcan Materials Company (VMC), 
+Southwest Airlines (LUV), Honda Motor Company (HMC), Nordstrom, Inc. (JWN), and Abbott 
+Laboratories (ABT). Download the most recent income statement and balance sheet for 
+each company.
+ a. Calculate the operating profit margin (Operating profit/Sales) and the asset turnover 
+(Sales/Assets) for each firm.
+ b. Calculate the return on assets directly (ROA = Operating profit/Total assets), and then 
+confirm it by calculating ROA = Operating margin × Asset turnover.
+ c. In what industries do these firms operate? Do the ratios make sense when you consider 
+the industry types?
+ d. For the firms that have relatively low ROAs, does the source of the problem seem to be 
+the operating profit margin, the asset turnover, or both?
+ e. Calculate the return on equity (ROE = Net income/Equity) for each firm. For the two firms 
+with the lowest ROEs, perform a DuPont analysis to isolate the source(s) of the problem.
+ 2. From Yahoo’s Industry Center (biz.yahoo.com/ie/) select Complete Industry List and then the 
+Toys & Games industry. Pick two companies from the list and do the following for each firm:
+ a. Retrieve the latest annual balance sheet for each company. Calculate the common-size 
+percentages for the balance sheet in the new column.
+ b. Compare the firms’ investments in accounts receivable, inventory, and net plant, property, 
+and equipment. Which firm has more invested in these items on a percentage basis?
+ c. Compare the firms’ investments in current liabilities and long-term liabilities. Does one firm 
+have a significantly higher burden in either of these areas?
+ d. Analyze the firms’ capital structures by examining the debt ratios and the percentages of 
+preferred and common equity. How much do the firms’ capital structures differ from each 
+other?
+ 3. Select a company of interest to you and link to its annual cash flow statement under the com-
+pany’s Financials tab. Answer the following questions about the firm’s cash flow activities.
+ a. Did the firm have positive or negative cash flow from operations?
+ b. Did the firm invest in or sell off long-term investments?
+ c. What were the major sources of financing for the firm?
+ d. What was the net change in cash?
+ e. Did exchange rates have any effect on the firm’s cash flows?
+  Now answer these questions:
+ f. How liquid is the firm?
+ g. How well is the firm using its assets?
+ h. How effectively is the firm using leverage?
+ i. How profitable is the firm?
+SOLUTIONS TO CONCEPT CHECKS
+ 1. A debt-to-equity ratio of 1 implies that Mordett will have $50 million of debt and $50 million of 
+equity. Interest expense will be .09 × $50 million, or $4.5 million per year. Mordett’s net profits 
+and ROE over the business cycle will therefore be
+Final PDF to printer

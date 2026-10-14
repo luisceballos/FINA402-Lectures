@@ -1,0 +1,18 @@
+LATEST: Activity compares DDM and FCFE total equity values ($m); no division by shares. L=D/A and +/-1% relative tolerance retained. Prior per-share submissions preserved on resubmission.
+LECTURE 08 - October 14, 2026
+Leverage now L=D/A, assuming A=D+E and no other liabilities.
+Stable financing: ER=(1-L)*(Net CapEx + change WC).
+General identity: ER=Net CapEx + change WC - net debt issuance.
+Slides, worked airline example, individual cases, grading and notes use this definition.
+Activity retains price-per-share comparison. Numerical tolerance is exactly +/-1% of the correct answer (machine-rounding allowance only).
+137 cases tested at both tolerance boundaries and immediately outside; per-share and historical-response preservation tests passed with mocked Firebase.
+Earlier leverage responses preserved on revised submission in fcfeActivityPriorLeverage; old scores are not regraded.
+No production Firebase, portfolio or GitHub checkout changes.
+Upload all files preserving paths:
+Lec08_FCF.html
+Review_Notes_Lec08.pdf
+assets/js/lec08-classroom.js
+assets/js/lec08-pacing.js
+assets/js/lecture-platform.js
+assets/js/lecture-adapter.js
+assets/js/hub-platform.js

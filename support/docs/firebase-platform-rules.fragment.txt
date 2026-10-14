@@ -1,0 +1,95 @@
+FIRESTORE RULES INTEGRATION — REVIEW BEFORE DEPLOYMENT
+
+This is a merge fragment, NOT a replacement for the project's deployed rules.
+No Firebase rules have been deployed. Obtain the current rules first. Firestore
+allow rules are additive: an existing broad allow can bypass these restrictions.
+Remove/limit overlapping broad allows, and preserve the project's other apps and
+any existing server-side grading validation. Test with the Firestore emulator.
+
+Inside match /databases/{database}/documents:
+
+function platformInstructor() {
+  return request.auth != null
+    && request.auth.token.email == 'luisceballos@gmail.com'
+    && request.auth.token.email_verified == true;
+}
+function platformPolicy(lectureId) {
+  return get(/databases/$(database)/documents/lectures_hub/config)
+    .data.accessPolicies[lectureId];
+}
+function platformLive(lectureId, section) {
+  let policy = platformPolicy(lectureId);
+  return policy.status == 'student' && policy.sections[section] == true;
+}
+function platformClaim(lectureId, studentId) {
+  let claimId = lectureId + '--' + studentId;
+  return get(/databases/$(database)/documents/lectures_hub/config/claims/$(claimId)).data;
+}
+function platformOwns(lectureId, studentId) {
+  let claim = platformClaim(lectureId, studentId);
+  return request.auth != null && claim.ownerUid == request.auth.uid;
+}
+
+match /lectures_hub/config {
+  allow read: if true;
+  allow write: if platformInstructor();
+
+  match /claims/{claimId} {
+    // Needed for the name selector. These documents contain no plaintext password.
+    allow read: if request.auth != null;
+    allow create: if request.auth != null
+      && request.resource.data.ownerUid == request.auth.uid
+      && claimId == request.resource.data.lectureId + '--' + request.resource.data.studentId
+      && platformLive(request.resource.data.lectureId, request.resource.data.section)
+      && request.resource.data.codeHash == platformPolicy(request.resource.data.lectureId).codeHash;
+    allow update: if request.auth != null
+      && resource.data.ownerUid == request.auth.uid
+      && request.resource.data.ownerUid == resource.data.ownerUid
+      && request.resource.data.lectureId == resource.data.lectureId
+      && request.resource.data.studentId == resource.data.studentId
+      && request.resource.data.section == resource.data.section
+      && request.resource.data.name == resource.data.name
+      && request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['lastSeen', 'sessionId', 'codeHash']);
+    allow delete: if platformInstructor();
+  }
+}
+
+ADDITIONAL REQUIRED INTEGRATION (depends on existing rules)
+
+1. Permit instructor-only writes to the lecture configuration documents:
+   lec04/publicConfig
+   fina402_free/course/lectures/lec05
+   lec06/publicConfig
+   lec07/publicConfig
+   fina402_free/course/lectures/lec01, lec02, lec03
+
+2. Permit instructor reads/writes of each lecture's sessions, savedScores and
+   participationSnapshots. Students must not be able to write configuration,
+   session metadata, archived scores, or roster records.
+
+3. For access and participants writes in a student's session, use getAfter on
+   the claim document (join creates it atomically in the same transaction),
+   require matching auth.uid, studentId, section, current sessionId, and Live
+   policy. Allow owner-only lastSeen updates for heartbeat.
+
+4. For results writes require platformOwns(lectureId, studentId), platformLive
+   for the claim's section, and the current sessionId. Preserve existing grading
+   validation and verify allowed fields, attempt increments and activity order.
+   Never grant unrestricted student writes to result/score collections.
+
+5. Lecture 04 also writes lec04_p1/{studentName}, lec04_p2/{studentName}, and
+   lec04_sr/{studentName}. Apply the same claim ownership + Live checks. These
+   are legacy mirrors; the session result document is also written atomically.
+
+6. Allow the necessary roster reads and instructor collection-list reads for
+   history. Session listings cannot discover old subcollections whose parent
+   document was never created; preserve scoreHistory and savedScores archives.
+
+7. Test two different anonymous users racing for one name: one succeeds, one
+   fails. Test forged writes, Review/Closed submissions, config writes by a
+   student, release + reclaim, same-owner heartbeat and returning sessions.
+
+The local mock tests validate application behavior, not these deployed rules.
+Do not claim server-enforced protection until the merged rules pass emulator
+tests and are deployed to the intended project.

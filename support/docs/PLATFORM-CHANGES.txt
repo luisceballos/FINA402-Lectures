@@ -1,0 +1,72 @@
+CENTRAL LECTURE HUB — LOCAL WORKING COPY
+
+Scope: only files directly in AI-powered/Lectures were changed. The nested
+FINA402-Lectures GitHub repository and production Firebase data were not changed.
+Original root HTML files: support/backups/lectures-before-central-hub.zip.
+
+Open Lecture-hub.html through a local HTTP server or authorized hosting origin.
+Use the existing verified instructor Firebase Authentication account. Open each
+lecture from its hub settings with "Open instructor view" (same browser profile).
+
+Central controls:
+- Closed / Live / Review, section selection, per-lecture student password.
+- Notes, PDF and video links; Lecture 07 is included in the local hub.
+- Attendance, recent heartbeat, submitted/missing activities, scores and CSV.
+- Session archives; release a reserved name without deleting its prior scores.
+- Instructor password is Firebase Auth; no local hardcoded instructor PIN.
+
+Assignments:
+- Lecture 04: P1 3 points, P2 1, Sharpe 1 (user confirmed).
+- Lectures 05–07: Activity 1 3 points, Activity 2 2 points.
+- Lectures 01–03: attendance only; no assignment exists, so show N/A, not 0/5.
+- Review opens without a student password and disables assignment submission.
+- Correct answers must be acknowledged by Firestore before success is shown.
+
+Identity:
+- Names are reserved across sessions for that lecture, keyed by lecture/student.
+- A transaction prevents two ordinary clients claiming the same name.
+- The same anonymous Firebase user can return; signing out of a lecture keeps
+  that identity. Clearing browser storage or using another browser requires an
+  instructor release. Name selection alone does not verify a person's identity.
+- Reservation is never automatically released on disconnect.
+- Heartbeat every 30 seconds; considered connected within 90 seconds. Background
+  tabs may be classified offline, but their reservation and grades remain.
+
+Data preservation:
+- Existing lecture, roster, session and score paths are retained.
+- New hub accessPolicies mirror the lecture array for Firestore rules.
+- New claims live under lectures_hub/config/claims.
+- Lecture 04 keeps its old result collections and adds session result records.
+- Starting a session indexes the previous session instead of deleting data.
+- Legacy Lecture 04 participation snapshots only document P1; they cannot
+  reconstruct full 5-point scores. Unindexed historical session subcollections
+  may require a separate recovery pass after reviewing Firebase access.
+
+DEPENDENCY BEFORE PRODUCTION USE
+Review and integrate the deployed Firestore rules. See
+support/docs/firebase-platform-rules.fragment.txt. Client code is not an authorization
+boundary. The rules must enforce claims, Live-only submission, instructor-only
+settings and existing grading validation. No rules have been deployed here.
+Enable anonymous Firebase Authentication if it is not already enabled.
+
+Files that travel together: the HTML pages plus assets/js/lecture-platform.js,
+assets/js/hub-platform.js and assets/js/lecture-adapter.js. Backups, tests and this note are local
+support files and need not be published. No deployment has been performed.
+
+Verification commands (Node.js):
+  node support/tests/platform-tests.cjs
+  node support/tests/platform-browser-tests.cjs
+The browser test requires the bundled Playwright path and Microsoft Edge.
+It replaces Firebase with a mock and blocks real Firestore/auth endpoints.
+
+Compatibility corrections (2026-10-08):
+- Lecture 01-03 configuration lives under lectures_hub/config/lectures.
+- Lecture 04 keeps lec04/publicConfig; new tracked sessions live under
+  lectures_hub/config/lectures/lec04/sessions, since the supplied rules do not
+  grant access to subcollections of lec04/publicConfig.
+- Shared instructor-account password changes are not offered in the hub.
+- Unavailable saved-score archives display a warning; current records can load.
+- Roster validation precedes name reservation; closing a lecture requires rejoin.
+- Unit tests and all eight HTML browser checks passed with Firebase mocks.
+- No production Firebase data, rules, authentication settings or portfolio files
+  were changed. Server-side security still requires a separate scoped review.

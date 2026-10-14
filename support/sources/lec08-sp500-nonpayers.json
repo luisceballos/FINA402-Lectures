@@ -1,0 +1,482 @@
+{
+  "retrieved": "2026-10-14",
+  "source": "https://finviz.com/screener.ashx?v=111&f=idx_sp500,fa_div_none&o=-marketcap",
+  "definition": "S&P 500 constituents with Dividend Yield filter None; current screening status, not a claim of never paying dividends.",
+  "companies": [
+    {
+      "ticker": "AMZN",
+      "name": "Amazon.com Inc",
+      "industry": "Internet Retail"
+    },
+    {
+      "ticker": "TSLA",
+      "name": "Tesla Inc",
+      "industry": "Auto Manufacturers"
+    },
+    {
+      "ticker": "BRK-B",
+      "name": "Berkshire Hathaway Inc",
+      "industry": "Insurance - Diversified"
+    },
+    {
+      "ticker": "AMD",
+      "name": "Advanced Micro Devices Inc",
+      "industry": "Semiconductors"
+    },
+    {
+      "ticker": "PLTR",
+      "name": "Palantir Technologies Inc",
+      "industry": "Software - Infrastructure"
+    },
+    {
+      "ticker": "PANW",
+      "name": "Palo Alto Networks Inc",
+      "industry": "Software - Infrastructure"
+    },
+    {
+      "ticker": "NFLX",
+      "name": "Netflix Inc",
+      "industry": "Entertainment"
+    },
+    {
+      "ticker": "CRWD",
+      "name": "Crowdstrike Holdings Inc",
+      "industry": "Software - Infrastructure"
+    },
+    {
+      "ticker": "ANET",
+      "name": "Arista Networks Inc",
+      "industry": "Computer Hardware"
+    },
+    {
+      "ticker": "SNDK",
+      "name": "Sandisk Corp",
+      "industry": "Computer Hardware"
+    },
+    {
+      "ticker": "ISRG",
+      "name": "Intuitive Surgical Inc",
+      "industry": "Medical Instruments & Supplies"
+    },
+    {
+      "ticker": "NOW",
+      "name": "ServiceNow Inc",
+      "industry": "Software - Application"
+    },
+    {
+      "ticker": "UBER",
+      "name": "Uber Technologies Inc",
+      "industry": "Software - Application"
+    },
+    {
+      "ticker": "FTNT",
+      "name": "Fortinet Inc",
+      "industry": "Software - Infrastructure"
+    },
+    {
+      "ticker": "VRTX",
+      "name": "Vertex Pharmaceuticals Inc",
+      "industry": "Biotechnology"
+    },
+    {
+      "ticker": "ABNB",
+      "name": "Airbnb Inc",
+      "industry": "Travel Services"
+    },
+    {
+      "ticker": "DDOG",
+      "name": "Datadog Inc",
+      "industry": "Software - Application"
+    },
+    {
+      "ticker": "SNPS",
+      "name": "Synopsys Inc",
+      "industry": "Software - Infrastructure"
+    },
+    {
+      "ticker": "HOOD",
+      "name": "Robinhood Markets Inc",
+      "industry": "Capital Markets"
+    },
+    {
+      "ticker": "ADBE",
+      "name": "Adobe Inc",
+      "industry": "Software - Application"
+    },
+    {
+      "ticker": "CDNS",
+      "name": "Cadence Design Systems Inc",
+      "industry": "Software - Application"
+    },
+    {
+      "ticker": "APP",
+      "name": "Applovin Corp",
+      "industry": "Advertising Agencies"
+    },
+    {
+      "ticker": "MRNA",
+      "name": "Moderna Inc",
+      "industry": "Biotechnology"
+    },
+    {
+      "ticker": "MNST",
+      "name": "Monster Beverage Corp",
+      "industry": "Beverages - Non-Alcoholic"
+    },
+    {
+      "ticker": "LITE",
+      "name": "Lumentum Holdings Inc",
+      "industry": "Communication Equipment"
+    },
+    {
+      "ticker": "DASH",
+      "name": "DoorDash Inc",
+      "industry": "Internet Retail"
+    },
+    {
+      "ticker": "BE",
+      "name": "Bloom Energy Corp",
+      "industry": "Electrical Equipment & Parts"
+    },
+    {
+      "ticker": "ORLY",
+      "name": "O'Reilly Automotive Inc",
+      "industry": "Auto Parts"
+    },
+    {
+      "ticker": "CVNA",
+      "name": "Carvana Co",
+      "industry": "Auto & Truck Dealerships"
+    },
+    {
+      "ticker": "KEYS",
+      "name": "Keysight Technologies Inc",
+      "industry": "Scientific & Technical Instruments"
+    },
+    {
+      "ticker": "BSX",
+      "name": "Boston Scientific Corp",
+      "industry": "Medical Devices"
+    },
+    {
+      "ticker": "CIEN",
+      "name": "CIENA Corp",
+      "industry": "Communication Equipment"
+    },
+    {
+      "ticker": "HONA",
+      "name": "Honeywell Aerospace Inc",
+      "industry": "Aerospace & Defense"
+    },
+    {
+      "ticker": "VYLR",
+      "name": "Vylor Inc",
+      "industry": "Shell Companies"
+    },
+    {
+      "ticker": "EW",
+      "name": "Edwards Lifesciences Corp",
+      "industry": "Medical Devices"
+    },
+    {
+      "ticker": "P",
+      "name": "Everpure Inc",
+      "industry": "Computer Hardware"
+    },
+    {
+      "ticker": "ADSK",
+      "name": "Autodesk Inc",
+      "industry": "Software - Application"
+    },
+    {
+      "ticker": "VEEV",
+      "name": "Veeva Systems Inc",
+      "industry": "Health Information Services"
+    },
+    {
+      "ticker": "AZO",
+      "name": "Autozone Inc",
+      "industry": "Auto Parts"
+    },
+    {
+      "ticker": "COIN",
+      "name": "Coinbase Global Inc",
+      "industry": "Financial Data & Stock Exchanges"
+    },
+    {
+      "ticker": "XYZ",
+      "name": "Block Inc",
+      "industry": "Software - Infrastructure"
+    },
+    {
+      "ticker": "WDAY",
+      "name": "Workday Inc",
+      "industry": "Software - Application"
+    },
+    {
+      "ticker": "IQV",
+      "name": "IQVIA Holdings Inc",
+      "industry": "Diagnostics & Research"
+    },
+    {
+      "ticker": "TWLO",
+      "name": "Twilio Inc",
+      "industry": "Software - Infrastructure"
+    },
+    {
+      "ticker": "WAT",
+      "name": "Waters Corp",
+      "industry": "Diagnostics & Research"
+    },
+    {
+      "ticker": "IDXX",
+      "name": "Idexx Laboratories Inc",
+      "industry": "Diagnostics & Research"
+    },
+    {
+      "ticker": "ILMN",
+      "name": "Illumina Inc",
+      "industry": "Diagnostics & Research"
+    },
+    {
+      "ticker": "LYV",
+      "name": "Live Nation Entertainment Inc",
+      "industry": "Entertainment"
+    },
+    {
+      "ticker": "FLEX",
+      "name": "Flex Ltd",
+      "industry": "Electronic Components"
+    },
+    {
+      "ticker": "CMG",
+      "name": "Chipotle Mexican Grill",
+      "industry": "Restaurants"
+    },
+    {
+      "ticker": "TTWO",
+      "name": "Take-Two Interactive Software Inc",
+      "industry": "Electronic Gaming & Multimedia"
+    },
+    {
+      "ticker": "CBRE",
+      "name": "CBRE Group Inc",
+      "industry": "Real Estate Services"
+    },
+    {
+      "ticker": "BIIB",
+      "name": "Biogen Inc",
+      "industry": "Drug Manufacturers - General"
+    },
+    {
+      "ticker": "CNC",
+      "name": "Centene Corp",
+      "industry": "Healthcare Plans"
+    },
+    {
+      "ticker": "AXON",
+      "name": "Axon Enterprise Inc",
+      "industry": "Aerospace & Defense"
+    },
+    {
+      "ticker": "UAL",
+      "name": "United Airlines Holdings Inc",
+      "industry": "Airlines"
+    },
+    {
+      "ticker": "MTD",
+      "name": "Mettler-Toledo International Inc",
+      "industry": "Diagnostics & Research"
+    },
+    {
+      "ticker": "DXCM",
+      "name": "Dexcom Inc",
+      "industry": "Medical Devices"
+    },
+    {
+      "ticker": "RDDT",
+      "name": "Reddit Inc",
+      "industry": "Internet Content & Information"
+    },
+    {
+      "ticker": "ON",
+      "name": "ON Semiconductor Corp",
+      "industry": "Semiconductors"
+    },
+    {
+      "ticker": "TDY",
+      "name": "Teledyne Technologies Inc",
+      "industry": "Scientific & Technical Instruments"
+    },
+    {
+      "ticker": "FFIV",
+      "name": "F5 Inc",
+      "industry": "Software - Infrastructure"
+    },
+    {
+      "ticker": "ECHO",
+      "name": "EchoStar Corp",
+      "industry": "Telecom Services"
+    },
+    {
+      "ticker": "CPAY",
+      "name": "Corpay Inc",
+      "industry": "Software - Infrastructure"
+    },
+    {
+      "ticker": "ULTA",
+      "name": "Ulta Beauty Inc",
+      "industry": "Specialty Retail"
+    },
+    {
+      "ticker": "SMCI",
+      "name": "Super Micro Computer Inc",
+      "industry": "Computer Hardware"
+    },
+    {
+      "ticker": "FISV",
+      "name": "Fiserv Inc",
+      "industry": "Information Technology Services"
+    },
+    {
+      "ticker": "CPRT",
+      "name": "Copart Inc",
+      "industry": "Specialty Business Services"
+    },
+    {
+      "ticker": "INCY",
+      "name": "Incyte Corp",
+      "industry": "Biotechnology"
+    },
+    {
+      "ticker": "DLTR",
+      "name": "Dollar Tree Inc",
+      "industry": "Discount Stores"
+    },
+    {
+      "ticker": "PTC",
+      "name": "PTC Inc",
+      "industry": "Software - Application"
+    },
+    {
+      "ticker": "FSLR",
+      "name": "First Solar Inc",
+      "industry": "Solar"
+    },
+    {
+      "ticker": "ZBRA",
+      "name": "Zebra Technologies Corp",
+      "industry": "Communication Equipment"
+    },
+    {
+      "ticker": "FDXF",
+      "name": "FedEx Freight Holding Company Inc",
+      "industry": "Integrated Freight & Logistics"
+    },
+    {
+      "ticker": "FICO",
+      "name": "Fair Isaac Corp",
+      "industry": "Software - Application"
+    },
+    {
+      "ticker": "NVR",
+      "name": "NVR Inc",
+      "industry": "Residential Construction"
+    },
+    {
+      "ticker": "SOLV",
+      "name": "Solventum Corp",
+      "industry": "Medical Instruments & Supplies"
+    },
+    {
+      "ticker": "CRL",
+      "name": "Charles River Laboratories International Inc",
+      "industry": "Diagnostics & Research"
+    },
+    {
+      "ticker": "TYL",
+      "name": "Tyler Technologies Inc",
+      "industry": "Software - Application"
+    },
+    {
+      "ticker": "TRMB",
+      "name": "Trimble Inc",
+      "industry": "Scientific & Technical Instruments"
+    },
+    {
+      "ticker": "AKAM",
+      "name": "Akamai Technologies Inc",
+      "industry": "Software - Infrastructure"
+    },
+    {
+      "ticker": "GDDY",
+      "name": "Godaddy Inc",
+      "industry": "Software - Infrastructure"
+    },
+    {
+      "ticker": "IT",
+      "name": "Gartner Inc",
+      "industry": "Information Technology Services"
+    },
+    {
+      "ticker": "GNRC",
+      "name": "Generac Holdings Inc",
+      "industry": "Specialty Industrial Machinery"
+    },
+    {
+      "ticker": "CSGP",
+      "name": "Costar Group Inc",
+      "industry": "Real Estate Services"
+    },
+    {
+      "ticker": "DVA",
+      "name": "DaVita Inc",
+      "industry": "Medical Care Facilities"
+    },
+    {
+      "ticker": "DECK",
+      "name": "Deckers Outdoor Corp",
+      "industry": "Footwear & Accessories"
+    },
+    {
+      "ticker": "LULU",
+      "name": "Lululemon Athletica Inc",
+      "industry": "Apparel Retail"
+    },
+    {
+      "ticker": "COO",
+      "name": "Cooper Companies Inc",
+      "industry": "Medical Instruments & Supplies"
+    },
+    {
+      "ticker": "ALGN",
+      "name": "Align Technology Inc",
+      "industry": "Medical Instruments & Supplies"
+    },
+    {
+      "ticker": "PODD",
+      "name": "Insulet Corp",
+      "industry": "Medical Devices"
+    },
+    {
+      "ticker": "HSIC",
+      "name": "Henry Schein Inc",
+      "industry": "Medical Distribution"
+    },
+    {
+      "ticker": "APTV",
+      "name": "Aptiv Plc",
+      "industry": "Auto Parts"
+    },
+    {
+      "ticker": "MGM",
+      "name": "MGM Resorts International",
+      "industry": "Resorts & Casinos"
+    },
+    {
+      "ticker": "NCLH",
+      "name": "Norwegian Cruise Line Holdings Ltd",
+      "industry": "Travel Services"
+    }
+  ]
+}

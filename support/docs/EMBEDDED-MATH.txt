@@ -1,0 +1,6 @@
+Lectures 07 and 08: LaTeX formulas rendered into inline data:image/svg+xml images.
+Static SVGs are embedded in each HTML. Dynamic expressions use MathJax 3.2.2 tex-svg embedded in the same HTML; no CDN, math font or external math asset requests.
+MathJax license: support/sources/mathjax/LICENSE.
+Source layer: support/docs/embedded-math-runtime.js. Build: support/docs/build-embedded-math.cjs.
+Regression: support/tests/embedded-math-check.cjs; lecture 7 and 8 classroom tests.
+Only mathematical presentation changed; no Firebase production writes.

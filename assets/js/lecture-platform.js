@@ -7,8 +7,8 @@
   const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function compareStudents(a,b) { const name=x=>String(x.name||'').trim(),surname=x=>String(x.lastName||x.last_name||name(x).split(',')[0]).trim();return surname(a).localeCompare(surname(b),'en',{sensitivity:'base'})||name(a).localeCompare(name(b),'en',{sensitivity:'base'}); }
   const millis = v => v?.toMillis ? v.toMillis() : typeof v === 'number' ? v : v?.seconds ? v.seconds*1000 : 0;
-  function score(id,r) { return id==='lec04' ? (r.p1?3:0)+(r.p2?1:0)+(r.sr?1:0) : (r.activity1?3:0)+(r.activity2?2:0); }
-  function missing(id,r) { return (id==='lec04' ? [['p1','P1'],['p2','P2'],['sr','Sharpe']] : [['activity1','Activity 1'],['activity2','Activity 2']]).filter(([k])=>!r[k]).map(([,v])=>v); }
+  function score(id,r) { if(id==='lec08'&&r.fcfeActivity?.model==='fcfe-unified-v3'){const a=r.fcfeActivity;return ['fcfe','g','k',a.valuationBasis==='per-share'?'price':'equity'].filter(k=>a.correct?.[k]===true).length+(a.reviewPoints===1?1:0);} return id==='lec04' ? (r.p1?3:0)+(r.p2?1:0)+(r.sr?1:0) : (r.activity1?3:0)+(r.activity2?2:0); }
+  function missing(id,r) { if(id==='lec08'&&r.fcfeActivity?.model==='fcfe-unified-v3'){const a=r.fcfeActivity;return [...[['fcfe','a: FCFE'],['g','b: growth'],['k','c: cost of equity'],[a.valuationBasis==='per-share'?'price':'equity',a.valuationBasis==='per-share'?'d: price per share':'d: equity value']].filter(([k])=>!a.correct?.[k]).map(([,v])=>v),...(a.reviewPoints===null?['e: instructor review pending']:a.reviewPoints===0?['e: 0 points']:[])];}if(id==='lec08'&&!r.activity1&&!r.activity2)return ['FCFE activity']; return (id==='lec04' ? [['p1','P1'],['p2','P2'],['sr','Sharpe']] : [['activity1','Activity 1'],['activity2','Activity 2']]).filter(([k])=>!r[k]).map(([,v])=>v); }
   function teacher(user) { return !!user && user.email===EMAIL && user.emailVerified===true; }
   function init() { if(!root.firebase)throw Error('Firebase is unavailable. Reconnect and reload.');if(!firebase.apps.length)firebase.initializeApp(cfg);return firebase.firestore(); }
   function hub() { return init().doc('lectures_hub/config'); }
@@ -46,10 +46,17 @@
       const claim=cs.data();if(!claim||claim.ownerUid!==user.uid)throw Error('This name is reserved by another login.');
       assertOpen((hs.data()?.lectures||[]).find(x=>x.id===id),claim.section);
       if(ls.data()?.sessionId!==sessionId)throw Error('The session changed. Rejoin from the hub.');
-      if(id==='lec07'){const pacing=ls.data()?.activityPacing;if(pacing?.sessionId!==sessionId||pacing.sections?.[claim.section]?.['activity'+activity]!==true)throw Error('Wait for your instructor to open this activity.');}
+      if(id==='lec07'||id==='lec08'){const pacing=ls.data()?.activityPacing;if(pacing?.sessionId!==sessionId||pacing.sections?.[claim.section]?.['activity'+activity]!==true)throw Error('Wait for your instructor to open this activity.');}
       const prior=rs.data()||{};if(activity===2&&!prior.activity1)throw Error('Complete Activity 1 first.');
       const update={section:claim.section,caseId,ownerUid:user.uid,updatedAt:stamp(),['attempts'+activity]:(prior['attempts'+activity]||0)+1};
-      if(grade.ok)update['activity'+activity]=grade.result;
+      if(id==='lec08'&&activity===1&&grade.result?.model==='fcfe-unified-v3'){
+        const previous=prior.fcfeActivity,next={...grade.result};
+        if(previous?.model===next.model&&previous.valuationBasis===next.valuationBasis&&previous.leverageBasis===next.leverageBasis&&previous.reflection===next.reflection){next.reviewPoints=previous.reviewPoints;if(previous.reviewedAt)next.reviewedAt=previous.reviewedAt;}
+        if(previous&&previous.valuationBasis!==next.valuationBasis){if(previous.valuationBasis==='per-share')update.fcfeActivityPriorPerShare=previous;else update.fcfeActivityPriorTotal=previous;}
+        if(previous&&previous.leverageBasis!==next.leverageBasis)update.fcfeActivityPriorLeverage=previous;
+        delete update.attempts1;update.attemptsUnified=(prior.attemptsUnified||0)+1;
+        update.fcfeActivity=next;grade.result=next;
+      }else if(grade.ok)update['activity'+activity]=grade.result;
       tx.set(result,update,{merge:true});
     });
     return grade;

@@ -1,0 +1,39 @@
+/* Lec07 instructor-paced activities. One configuration update when an activity opens. */
+(function(){
+'use strict';
+const P=LecturePlatform,previousRender=renderActivity;
+const pending=new Set();
+function allowed(a){
+ const p=S.config?.activityPacing;
+ return p?.sessionId===S.sessionId&&p.sections?.[S.section]?.['activity'+a]===true;
+}
+async function open(a){
+ const sec=window.lectureTeachingSection?.()||S.section,session=S.sessionId;
+ const key=session+'/'+sec+'/'+a;
+ if(!session||pending.has(key)||!P.teacher(firebase.auth().currentUser))return;
+ if(S.config?.activityPacing?.sessionId===session&&S.config.activityPacing.sections?.[sec]?.['activity'+a])return;
+ pending.add(key);
+ try{
+  await P.init().runTransaction(async tx=>{
+   const ref=P.lecture('lec07'),[doc,hub]=await Promise.all([tx.get(ref),tx.get(P.hub())]);
+   const cfg=doc.data(),policy=(hub.data()?.lectures||[]).find(l=>l.id==='lec07');
+   if(cfg?.sessionId!==session)throw Error('Session changed. Reopen the lecture from the Hub.');
+   if(policy?.hubStatus!=='student'||!policy.hubSections?.[sec]||!cfg.sessionActive||!cfg.activeSections?.[sec])return;
+   const prior=cfg.activityPacing?.sessionId===session?cfg.activityPacing:{sessionId:session,sections:{}};
+   if(prior.sections?.[sec]?.['activity'+a])return;
+   tx.update(ref,{activityPacing:{sessionId:session,sections:{...prior.sections,[sec]:{...prior.sections?.[sec],['activity'+a]:true}}}});
+  });
+ }catch(e){notify('Activity could not open: '+e.message,true);}
+ finally{pending.delete(key);}
+}
+renderActivity=function(){
+ const a=activityNumber();
+ if(S.role==='student'&&!allowed(a)){
+  $('activity-'+a).innerHTML='<div class="card"><h3>Activity '+a+' is not open yet</h3><p>Waiting for the instructor to reach this activity for your section. Keep following the lecture.</p></div>';
+  return;
+ }
+ previousRender();
+ if(S.role==='instructor'&&!S.previewId)open(a);
+};
+window.Lec07Pacing={allowed,onConfig(){if(isActivity())renderActivity();}};
+})();

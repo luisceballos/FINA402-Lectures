@@ -1,0 +1,58 @@
+
+(async()=>{
+const server=http.createServer((req,res)=>{const n=decodeURIComponent(req.url.split('?')[0]).slice(1);if(n.includes('..'))return res.writeHead(404).end();try{res.setHeader('Content-Type',n.endsWith('.js')?'application/javascript':'text/html');res.end(fs.readFileSync(path.join(ROOT,n)));}catch{res.writeHead(404).end();}});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;
+try{
+ browser=await chromium.launch({channel:'msedge',headless:true});const ctx=await browser.newContext({viewport:{width:1440,height:960}});
+ await ctx.route('**/*',route=>{const u=route.request().url();if(u.includes('firebase-')&&u.endsWith('.js'))return route.fulfill({contentType:'application/javascript',body:stub});if(/firestore.googleapis|identitytoolkit.googleapis|securetoken.googleapis/.test(u))return route.abort();return route.continue();});
+ const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>{window.__teacherMode=true;window.__testMode='student';sessionStorage.setItem('lecture-hub-entry',JSON.stringify({lectureId:'lec08',role:'instructor',issuedAt:Date.now()}));});
+ await page.goto('http://127.0.0.1:'+server.address().port+'/Lec08_FCF.html',{waitUntil:'networkidle'});
+ assert.equal(await page.locator('#deck .slide').count(),13);assert.equal(await page.locator('[data-activity]').count(),1);
+ for(let i=0;i<13;i++){await page.evaluate(i=>goSlide(i),i);const reveal=page.locator('.slide.active [data-reveal]');if(await reveal.count())await reveal.click();await page.waitForTimeout(70);await page.screenshot({path:path.join(ROOT,'support/previews/lec08-v3-slide-'+(i+1)+'.png')});}
+ assert.deepEqual(errors,[]);
+ assert.equal(await page.locator('#deck').innerText().then(t=>/DCF2|FCFF/.test(t)),false);
+ await page.evaluate(()=>{const cases=LOGIN_ROSTER.map(s=>lec08Assignment(s.id));if(new Set(cases.map(d=>JSON.stringify([d.ni,d.leverage,d.beta,d.capex]))).size!==cases.length)throw Error('Duplicate cases');for(let i=0;i<cases.length;i++){const d=cases[i],a=fcfeAnswer(d);if(!(a.fcfe>0&&a.g>0&&a.k>a.g))throw Error('Unsustainable case');const ans={...a,reflection:'I would use FCFE because payout may omit cash retained for future shareholder distributions.'};if(practiceGrade(d,1,ans).result.numericScore!==4)throw Error('Correct numerical answers rejected');if(practiceGrade(d,1,{...ans,fcfe:a.fcfe*1.2}).result.numericScore!==3)throw Error('Wrong answer awarded point');if(practiceGrade(d,1,{...ans,reflection:''}).ok)throw Error('Blank explanation accepted');if(JSON.stringify(d)!==JSON.stringify(lec08Assignment(LOGIN_ROSTER[i].id)))throw Error('Unstable case');}});
+ console.log('PASS 13 slides, embedded images, 137 unique stable cases, four independent numerical scores and required explanation.');
+ await page.evaluate(async()=>{
+ stopLive();await firebase.auth().signOut();await firebase.auth().signInAnonymously();
+ const students=LOGIN_ROSTER.filter(s=>s.section==='S01').slice(0,3).map(s=>({...s,assignment:lec08Assignment(s.id)}));window.__students=students;
+ for(const st of students)window.__testData.set('fina402_free/course/students/'+st.id,st);
+ window.__testData.get('lectures_hub/config').lectures.find(l=>l.id==='lec08').hubCodeHash=await LecturePlatform.hash('class-password');
+ const joined=await LecturePlatform.join('lec08',students[0],'class-password');Object.assign(S,joined,{role:'student',assignment:students[0].assignment,open:true,students,results:[]});
+ document.getElementById('gate').hidden=true;goSlide(11);startPolling();
+ });
+ assert.equal(await page.locator('#answer-fcfe').count(),0);
+ await page.evaluate(async()=>{let rejected=false;try{await LecturePlatform.submit('lec08',S.studentId,S.sessionId,1,practiceGrade(S.assignment,1,{...fcfeAnswer(S.assignment),reflection:'Use FCFE because dividend policy does not reflect available cash.'}),S.assignment.caseId);}catch(e){rejected=e.message.includes('instructor');}if(!rejected)throw Error('Lock bypassed');window.__testTeacher();S.role='instructor';renderActivity();});
+ await page.locator('#pacing-toggle').click();
+ await page.waitForFunction(()=>window.__testData.get('lectures_hub/config/lectures/lec08').activityPacing?.sections?.S01?.activity1);
+ await page.evaluate(async()=>{const p=S.config.activityPacing;if(p.sections.S02||p.sections.S01.activity2)throw Error('Other activity/section unlocked');await firebase.auth().signOut();await firebase.auth().signInAnonymously();S.role='student';renderActivity();const r=fcfeAnswer(S.assignment);for(const[k]of f8fields())document.getElementById('answer-'+k).value=r[k];document.getElementById('answer-fcfe').value=r.fcfe*1.2;document.getElementById('answer-reflection').value='I prefer FCFE here because dividends may omit retained cash available for eventual distributions. I would check whether the DDM accounts for that cash.';});
+ await page.locator('#submit-answer-1').click();
+ await page.waitForFunction(()=>S.results.find(r=>r.id===S.studentId)?.fcfeActivity?.numericScore===3);
+ assert.ok((await page.locator('#activity-message-1').innerText()).includes('3/4'));
+ await page.evaluate(()=>document.getElementById('answer-fcfe').value=fcfeAnswer(S.assignment).fcfe);
+ await page.locator('#submit-answer-1').click();
+ await page.waitForFunction(()=>S.results.find(r=>r.id===S.studentId)?.fcfeActivity?.numericScore===4);
+ await page.screenshot({path:path.join(ROOT,'support/previews/lec08-v3-student.png')});
+ await page.evaluate(()=>{const row=window.__testData.get('lectures_hub/config/lectures/lec08/sessions/test/results/'+S.studentId);if(row.attemptsUnified!==2||LecturePlatform.score('lec08',row)!==4||!LecturePlatform.missing('lec08',row).includes('e: instructor review pending'))throw Error('Partial score or persistence failed');window.__testTeacher();S.role='instructor';S.previewId='';renderActivity();});
+ await page.locator('#activity-1 details').first().locator('summary').click();
+ await page.locator('[data-points="1"]').first().click();
+ await page.waitForFunction(()=>S.results.find(r=>r.id===S.studentId)?.fcfeActivity.reviewPoints===1);
+ assert.equal(await page.evaluate(()=>LecturePlatform.score('lec08',S.results.find(r=>r.id===S.studentId))),5);
+ await page.screenshot({path:path.join(ROOT,'support/previews/lec08-v3-instructor-review.png')});
+ // A stale instructor tab cannot score a revised response.
+ await page.evaluate(async()=>{await f8review(S.studentId,0,'old explanation');if(S.results.find(r=>r.id===S.studentId).fcfeActivity.reviewPoints!==1)throw Error('Stale review overwrote score');});
+ // Same explanation keeps review; revised explanation returns to pending.
+ await page.evaluate(async()=>{await firebase.auth().signOut();await firebase.auth().signInAnonymously();S.role='student';renderActivity();const a={...fcfeAnswer(S.assignment),reflection:f8record().reflection};let x=await api('lec08Submit',{activity:1,answer:a});if(x.result.reviewPoints!==1)throw Error('Unchanged explanation lost review');a.reflection+=' Additional analysis of payout sustainability.';x=await api('lec08Submit',{activity:1,answer:a});if(x.result.reviewPoints!==null)throw Error('Changed explanation kept old grade');});
+ console.log('PASS manual opening, section isolation, partial answers saved, instructor scoring to 5/5 and safe re-review.');
+ // Student cannot invoke instructor review.
+ await page.evaluate(async()=>{const n=window.__writeCount;await f8review(S.studentId,1,f8record().reflection);if(window.__writeCount!==n)throw Error('Student review wrote');window.__testTeacher();S.role='instructor';S.previewId=S.students[1].id;renderActivity();const d=currentStudent().assignment,a=fcfeAnswer(d);for(const[k]of f8fields())document.getElementById('answer-'+k).value=a[k];document.getElementById('answer-reflection').value='Demonstration choice based on payout and retained cash assumptions.';const count=window.__writeCount;await submitAnswer({preventDefault(){}},1);if(window.__writeCount!==count)throw Error('Preview wrote');});
+ await page.evaluate(()=>{S.previewId='';S.role='instructor';renderActivity();document.getElementById('pacing-toggle').click();});
+ await page.waitForFunction(()=>!window.__testData.get('lectures_hub/config/lectures/lec08').activityPacing.sections.S01.activity1);
+ await page.evaluate(async()=>{await firebase.auth().signOut();await firebase.auth().signInAnonymously();S.role='student';renderActivity();if(document.getElementById('answer-fcfe'))throw Error('Close failed');if(!S.results.find(r=>r.id===S.studentId)?.fcfeActivity)throw Error('Close deleted record');});
+ await page.addInitScript(()=>{window.__testMode='guest';window.__teacherMode=false;});await page.reload({waitUntil:'networkidle'});await page.evaluate(()=>goSlide(11));
+ assert.equal(await page.locator('#submit-answer-1').isDisabled(),true);assert.equal(await page.locator('#answer-reflection').isDisabled(),true);
+ assert.deepEqual(errors,[]);console.log('PASS no-write preview, student review denied, close preserves records, Review disables numerical inputs and explanation.');
+ await ctx.close();
+}finally{await browser?.close();server.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});
