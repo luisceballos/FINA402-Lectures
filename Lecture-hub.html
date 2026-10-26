@@ -437,7 +437,8 @@ function renderCards() {
         <div class="card-title">${lec.title}</div>
         <div class="card-topic">${lec.topic}</div>
       </div>
-      ${(active && lec.videoUrl) || (isGuest && lec.reviewPdf) ? `<div class="pdf-row">${active && lec.videoUrl ? `<a class="video-link" href="${lec.videoUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">▶ Watch lecture video</a>` : ''}${isGuest && lec.reviewPdf ? `<a class="pdf-link" href="${lec.reviewPdf}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 ${pdfName(lec.reviewPdf)}</a>` : ''}</div>` : ''}
+      ${(active && lec.videoUrl) || (isGuest && lec.reviewPdf) ? `<div class="pdf-row">${active && lec.videoUrl ? `<a class="video-link" href="${lec.videoUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">▶ Watch lecture video</a>` : ''}${isGuest && lec.reviewPdf ? `<a class="pdf-link" href="${lec.reviewPdf}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Review Notes</a>` : ''}</div>` : ''}
+      ${isGuest && lec.examplesPdf ? `<div class="pdf-row"><a class="pdf-link examples-link" href="${lec.examplesPdf}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Examples</a></div>` : ''}
       <div class="card-ft">
         ${footerLeft}
         ${hasNotes ? '<span class="notes-badge">📄 Notes available</span>' : ''}
@@ -488,7 +489,7 @@ function showNotes(i) {
   const pdfBtn = document.getElementById('notes-pdf-btn');
   if (lec.status === 'guest' && lec.reviewPdf) {
     pdfBtn.href = lec.reviewPdf;
-    pdfBtn.textContent = '📄 ' + pdfName(lec.reviewPdf);
+    pdfBtn.textContent = 'Review Notes';
     pdfBtn.style.display = '';
   } else {
     pdfBtn.style.display = 'none';
@@ -643,7 +644,7 @@ document.querySelectorAll('.overlay').forEach(ov => {
 });
 
 </script>
-<script src="assets/js/lecture-platform.js"></script>
-<script src="assets/js/hub-platform.js"></script>
+<script src="assets/js/lecture-platform.js?v=20261026-five6"></script>
+<script src="assets/js/hub-platform.js?v=20261026-five6"></script>
 </body>
 </html>
