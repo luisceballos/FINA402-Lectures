@@ -78,9 +78,10 @@ function renderComparison(){
  const select=$('compare-st'),host=$('compare-case');if(!select||!host)return;
  host.innerHTML=$('compare-template-'+select.value).innerHTML;const button=host.querySelector('.solution');button.hidden=!teacher();const panel=button.nextElementSibling,blank=button.previousElementSibling;if(state.role==='review'){panel.hidden=false;blank.hidden=true;}button.onclick=()=>{if(!teacher())return;panel.hidden=!panel.hidden;blank.hidden=!panel.hidden;button.textContent=panel.hidden?'Show solution':'Hide solution';};select.onchange=renderComparison;
 }
+const pollDrafts={};
 function renderPoll(){
  const host=$('strike-poll');if(!host)return;
- const saved=result(state.student?.id).strikePoll;
+ const saved=result(state.student?.id).strikePoll;const draftId=[state.session,state.student?.id].join('|'),draft=pollDrafts[draftId]||{};
  if(teacher()){
   const rows=state.results.filter(r=>r.section===state.section&&r.strikePoll);
   const bars=['call','put'].map(k=>'<div class="card" style="padding:12px"><b>Which '+k.toUpperCase()+' contract is more expensive?</b>'+[['below','K < Sₜ','#6b1a2b'],['above','K > Sₜ','#1976a3']].map(([v,label,color])=>{const n=rows.filter(r=>r.strikePoll[k]===v).length,pct=rows.length?Math.round(100*n/rows.length):0;return '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:14px"><span>'+esc(label==='K < Sₜ'?'Strike below stock price (K < Sₜ)':'Strike above stock price (K > Sₜ)')+'</span><b>'+pct+'% · '+n+' vote'+(n===1?'':'s')+'</b></div><div style="height:24px;background:#e8e4df;border-radius:4px;margin-top:4px;overflow:hidden"><div data-poll-bar="'+k+'-'+v+'" data-count="'+n+'" style="height:24px;width:'+pct+'%;background:'+color+';transition:width .25s"></div></div></div>';}).join('')+'</div>').join('');
@@ -89,6 +90,7 @@ function renderPoll(){
  }
  if(state.role!=='student'||!live()){host.innerHTML='<p>Poll available during the live lecture.</p>';return;}
  host.innerHTML='<h3>Which contract is more expensive?</h3><p>Same stock, expiration and other inputs. Compare only the strike price.</p>'+(saved?'<div class="note-box">Answer recorded and locked.<br>CALL: '+(saved.call==='below'?'K &lt; Sₜ':'K &gt; Sₜ')+' · PUT: '+(saved.put==='below'?'K &lt; Sₜ':'K &gt; Sₜ')+'<br>Correct: lower-strike call; higher-strike put.</div>':'<form id="strike-poll-form"><div class="cols">'+['call','put'].map(k=>'<label><b>Which '+k.toUpperCase()+' contract is more expensive?</b><select id="poll-'+k+'" required><option value="">Choose</option><option value="below">Strike below stock price (K &lt; Sₜ)</option><option value="above">Strike above stock price (K &gt; Sₜ)</option></select></label>').join('')+'</div><button class="btn btn-accent">Submit once</button><p id="poll-feedback"></p></form>');
+ if(!saved){for(const k of ['call','put']){$('poll-'+k).value=draft[k]||'';$('poll-'+k).onchange=()=>{pollDrafts[draftId]={call:$('poll-call').value,put:$('poll-put').value};};}}
  if(!saved)$('strike-poll-form').onsubmit=async e=>{e.preventDefault();const btn=e.target.querySelector('button');btn.disabled=true;try{const vote={call:$('poll-call').value,put:$('poll-put').value};await savePoll(vote);renderPoll();}catch(err){$('poll-feedback').textContent=err.message;btn.disabled=false;}};
 }
 async function savePoll(vote){
